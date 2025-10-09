@@ -1327,24 +1327,22 @@ function NavigationButtons() {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <Router>
-        <Routes>
-          <Route path="/" element={<SignupLogin />} />
-          <Route path="/login" element={<SignupLogin />} />
-          <Route path="/onboarding" element={<OnboardingWizard />} />
-          <Route path="/connect-accounts" element={<ConnectAccounts />} />
-          <Route path="/add-mutual-funds" element={<AddMutualFunds />} />
-          <Route path="/add-insurance" element={<AddInsurance />} />
-          <Route path="/add-real-estate" element={<AddRealEstate />} />
-          <Route path="/add-liabilities" element={<AddLiabilities />} />
-          <Route path="/income-expenses" element={<IncomeExpenses />} />
-          <Route path="/setup-complete" element={<SetupComplete />} />
-          <Route path="/dashboard" element={<MainDashboard />} />
-        </Routes>
-        <NavigationButtons />
-      </Router>
-    </ErrorBoundary>
+    <Router>
+      <Routes>
+        <Route path="/" element={<SignupLogin />} />
+        <Route path="/login" element={<SignupLogin />} />
+        <Route path="/onboarding" element={<OnboardingWizard />} />
+        <Route path="/connect-accounts" element={<ConnectAccounts />} />
+        <Route path="/add-mutual-funds" element={<AddMutualFunds />} />
+        <Route path="/add-insurance" element={<AddInsurance />} />
+        <Route path="/add-real-estate" element={<AddRealEstate />} />
+        <Route path="/add-liabilities" element={<AddLiabilities />} />
+        <Route path="/income-expenses" element={<IncomeExpenses />} />
+        <Route path="/setup-complete" element={<SetupComplete />} />
+        <Route path="/dashboard" element={<MainDashboard />} />
+      </Routes>
+      <NavigationButtons />
+    </Router>
   );
 }
 
