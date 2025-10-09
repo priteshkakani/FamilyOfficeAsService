@@ -3,7 +3,9 @@ function ConnectAccounts() {
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Connect Accounts</Typography>
-      <Typography color="text.secondary">Account connection coming soon.</Typography>
+      <Typography color="text.secondary">
+        Account connection coming soon.
+      </Typography>
     </Box>
   );
 }
