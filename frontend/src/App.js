@@ -1,14 +1,32 @@
 // NotFoundPage for unmatched routes
 function NotFoundPage() {
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#fffbe9" }}>
-      <Box sx={{ textAlign: "center", p: 4, borderRadius: 2, boxShadow: 2, bgcolor: "#fff" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "#fffbe9",
+      }}
+    >
+      <Box
+        sx={{
+          textAlign: "center",
+          p: 4,
+          borderRadius: 2,
+          boxShadow: 2,
+          bgcolor: "#fff",
+        }}
+      >
         <Typography variant="h3" color="error" gutterBottom>
           404: Page Not Found
         </Typography>
         <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-          The page you are looking for does not exist.<br />
-          If you are a developer, check your router configuration and Netlify/Vercel _redirects settings for client-side routing support.
+          The page you are looking for does not exist.
+          <br />
+          If you are a developer, check your router configuration and
+          Netlify/Vercel _redirects settings for client-side routing support.
         </Typography>
         <Button variant="contained" color="primary" href="/">
           Go to Home
@@ -1140,19 +1158,8 @@ const MainDashboard = () => {
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/advisor" element={<AdvisorPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          {/* Default route */}
-          <Route
-            path="*"
-            element={
-              <DashboardHome
-                summary={summary}
-                adviceOpen={adviceOpen}
-                setAdviceOpen={setAdviceOpen}
-                investmentAdvice={investmentAdvice}
-                familyMembers={familyMembers}
-              />
-            }
-          />
+          {/* Default route for unmatched dashboard subroutes */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Box>
     </Box>
