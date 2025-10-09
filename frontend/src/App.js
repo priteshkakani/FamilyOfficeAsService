@@ -1,3 +1,22 @@
+// NotFoundPage for unmatched routes
+function NotFoundPage() {
+  return (
+    <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#fffbe9" }}>
+      <Box sx={{ textAlign: "center", p: 4, borderRadius: 2, boxShadow: 2, bgcolor: "#fff" }}>
+        <Typography variant="h3" color="error" gutterBottom>
+          404: Page Not Found
+        </Typography>
+        <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+          The page you are looking for does not exist.<br />
+          If you are a developer, check your router configuration and Netlify/Vercel _redirects settings for client-side routing support.
+        </Typography>
+        <Button variant="contained" color="primary" href="/">
+          Go to Home
+        </Button>
+      </Box>
+    </Box>
+  );
+}
 // Stub for missing ConnectAccounts component to prevent blank screen
 function ConnectAccounts() {
   return (
@@ -48,13 +67,21 @@ function LandingPage() {
           Consolidate your entire family’s finances
         </Typography>
         <Typography variant="h5" color="text.secondary" sx={{ mb: 4 }}>
-          — investments, insurance, real estate, loans — in one secure dashboard.
+          — investments, insurance, real estate, loans — in one secure
+          dashboard.
         </Typography>
         <Button
           variant="contained"
           color="primary"
           size="large"
-          sx={{ px: 6, py: 1.5, fontWeight: 700, fontSize: 20, borderRadius: 2, boxShadow: 2 }}
+          sx={{
+            px: 6,
+            py: 1.5,
+            fontWeight: 700,
+            fontSize: 20,
+            borderRadius: 2,
+            boxShadow: 2,
+          }}
           onClick={() => navigate("/login")}
         >
           Start Free →
@@ -112,9 +139,25 @@ function LandingPage() {
         }}
       >
         {[
-          ["Basic", "Free forever", ["Net worth dashboard", "Manual asset entry"]],
-          ["Premium", "₹499/mo", ["Auto-fetch via Account Aggregator", "Insurance tracker", "Advisor chat"]],
-          ["Family Office Concierge", "Custom", ["Dedicated advisor", "Custom reporting", "White-glove onboarding"]],
+          [
+            "Basic",
+            "Free forever",
+            ["Net worth dashboard", "Manual asset entry"],
+          ],
+          [
+            "Premium",
+            "₹499/mo",
+            [
+              "Auto-fetch via Account Aggregator",
+              "Insurance tracker",
+              "Advisor chat",
+            ],
+          ],
+          [
+            "Family Office Concierge",
+            "Custom",
+            ["Dedicated advisor", "Custom reporting", "White-glove onboarding"],
+          ],
         ].map(([tier, price, features]) => (
           <Box
             key={tier}
@@ -134,7 +177,14 @@ function LandingPage() {
             <Typography variant="h5" color="primary" fontWeight={800}>
               {price}
             </Typography>
-            <ul style={{ textAlign: "left", margin: "16px 0 0 0", padding: 0, listStyle: "none" }}>
+            <ul
+              style={{
+                textAlign: "left",
+                margin: "16px 0 0 0",
+                padding: 0,
+                listStyle: "none",
+              }}
+            >
               {features.map((f) => (
                 <li key={f} style={{ marginBottom: 8 }}>
                   <span style={{ color: "#4caf50", marginRight: 6 }}>✔</span>
@@ -1490,6 +1540,8 @@ function App() {
         <Route path="/income-expenses" element={<IncomeExpenses />} />
         <Route path="/setup-complete" element={<SetupComplete />} />
         <Route path="/dashboard" element={<MainDashboard />} />
+        {/* Catch-all for unmatched routes */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <NavigationButtons />
     </Router>
