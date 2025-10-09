@@ -910,26 +910,6 @@ const MainDashboard = () => {
 };
 
 // Simple pages for each tab (move outside MainDashboard)
-function AdvisorPage() {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Advisor / Chat</Typography>
-      <Typography color="text.secondary">
-        Chat with your advisor coming soon.
-      </Typography>
-    </Box>
-  );
-}
-function SettingsPage() {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Settings / Billing</Typography>
-      <Typography color="text.secondary">
-        Settings and billing info will appear here.
-      </Typography>
-    </Box>
-  );
-}
 // Dashboard Home Page
 function DashboardHome({
   summary,
