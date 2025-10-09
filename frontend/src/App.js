@@ -44,8 +44,7 @@ function SignupLogin() {
           {mode === "signup" ? "Sign Up" : "Sign In"}
         </Typography>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Enter your mobile number to{" "}
-          {mode === "signup" ? "create an account" : "sign in"}.
+          Enter your mobile number to {mode === "signup" ? "create an account" : "sign in"}.
         </Typography>
         <input
           type="tel"
@@ -99,31 +98,12 @@ function SignupLogin() {
             </Button>
           </>
         )}
-        <Button
-          variant="text"
-          color="primary"
-          fullWidth
-          sx={{ fontWeight: 700, mt: 1 }}
-          onClick={() =>
-            navigate("/login?mode=" + (mode === "signup" ? "signin" : "signup"))
-          }
-        >
-          {mode === "signup"
-            ? "Already have an account? Sign In"
-            : "Don't have an account? Sign Up"}
-        </Button>
         <Divider sx={{ my: 2 }}>or</Divider>
         <Button
           variant="contained"
           color="secondary"
           fullWidth
-          sx={{
-            fontWeight: 700,
-            bgcolor: "#fff",
-            color: "#222",
-            border: "1px solid #eee",
-            "&:hover": { bgcolor: "#f5f5f5" },
-          }}
+          sx={{ fontWeight: 700, bgcolor: "#fff", color: "#222", border: "1px solid #eee", "&:hover": { bgcolor: "#f5f5f5" } }}
           startIcon={
             <img
               src="https://developers.google.com/identity/images/g-logo.png"
@@ -222,241 +202,7 @@ const OnboardingWizard = () => {
         value={10}
         style={{ margin: "16px 0" }}
       />
-      <TextField
-        label="Family Name"
-        fullWidth
-        margin="normal"
-        value={familyName}
-        onChange={(e) => setFamilyName(e.target.value)}
-      />
-      <TextField
-        label="Primary Contact"
-        fullWidth
-        margin="normal"
-        value={primaryContact}
-        onChange={(e) => setPrimaryContact(e.target.value)}
-      />
-      <div style={{ margin: "16px 0" }}>
-        <Typography variant="subtitle1">Family Members</Typography>
-        {members.map((m, idx) => (
-          <div key={idx} style={{ marginBottom: 8 }}>
-            {m.name} ({m.relation}, {m.dob}, {m.role})
-          </div>
-        ))}
-        <Button variant="outlined" onClick={() => setModalOpen(true)}>
-          + Add Member
-        </Button>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginTop: 24,
-        }}
-      >
-        <Button variant="outlined" color="primary" onClick={() => navigate(-1)}>
-          Back
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate("/connect-accounts")}
-        >
-          Next
-        </Button>
-      </div>
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <Box
-          sx={{
-            p: 4,
-            bgcolor: "background.paper",
-            maxWidth: 400,
-            mx: "auto",
-            mt: 10,
-            borderRadius: 2,
-          }}
-        >
-          <Typography variant="h6">Add Family Member</Typography>
-          <TextField
-            label="Name"
-            fullWidth
-            margin="normal"
-            value={newMember.name}
-            onChange={(e) =>
-              setNewMember({ ...newMember, name: e.target.value })
-            }
-          />
-          <TextField
-            label="Relation"
-            select
-            fullWidth
-            margin="normal"
-            value={newMember.relation}
-            onChange={(e) =>
-              setNewMember({ ...newMember, relation: e.target.value })
-            }
-          >
-            {[
-              "Self",
-              "Spouse",
-              "Father",
-              "Mother",
-              "Son",
-              "Daughter",
-              "Other",
-            ].map((opt) => (
-              <MenuItem key={opt} value={opt}>
-                {opt}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label="DOB"
-            type="date"
-            fullWidth
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-            value={newMember.dob}
-            onChange={(e) =>
-              setNewMember({ ...newMember, dob: e.target.value })
-            }
-          />
-          <TextField
-            label="Role"
-            select
-            fullWidth
-            margin="normal"
-            value={newMember.role}
-            onChange={(e) =>
-              setNewMember({ ...newMember, role: e.target.value })
-            }
-          >
-            {["Decision Maker", "Viewer"].map((opt) => (
-              <MenuItem key={opt} value={opt}>
-                {opt}
-              </MenuItem>
-            ))}
-          </TextField>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={addMember}
-            style={{ marginTop: 16 }}
-          >
-            Add
-          </Button>
-        </Box>
-      </Modal>
-    </div>
-  );
-};
-
-const ConnectAccounts = () => {
-  const [option, setOption] = useState("A");
-  const [manualBank, setManualBank] = useState({
-    bank: "",
-    account: "",
-    ifsc: "",
-    balance: "",
-  });
-  return (
-    <div style={{ maxWidth: 600, margin: "40px auto" }}>
-      <Typography variant="h6">
-        Link your bank, mutual funds, and investments
-      </Typography>
-      <LinearProgress
-        variant="determinate"
-        value={20}
-        style={{ margin: "16px 0" }}
-      />
-      <div style={{ margin: "24px 0" }}>
-        <Button
-          variant={option === "A" ? "contained" : "outlined"}
-          onClick={() => setOption("A")}
-        >
-          🔗 Connect via Account Aggregator
-        </Button>
-        <Button
-          variant={option === "B" ? "contained" : "outlined"}
-          onClick={() => setOption("B")}
-          style={{ marginLeft: 8 }}
-        >
-          📤 Upload Bank Statement
-        </Button>
-        <Button
-          variant={option === "C" ? "contained" : "outlined"}
-          onClick={() => setOption("C")}
-          style={{ marginLeft: 8 }}
-        >
-          🖊 Enter Manually
-        </Button>
-      </div>
-      {option === "A" && (
-        <Box sx={{ p: 2, bgcolor: "#f5f5f5", borderRadius: 2 }}>
-          <Typography>Select bank(s) / financial institutions</Typography>
-          <Typography>
-            Duration of consent: <b>3 months, 6 months, 1 year</b>
-          </Typography>
-          <Typography>
-            Data categories: Accounts, Holdings, Transactions
-          </Typography>
-          <Button variant="contained" color="primary" style={{ marginTop: 8 }}>
-            Grant Access ✅
-          </Button>
-        </Box>
-      )}
-      {option === "B" && (
-        <Box sx={{ p: 2, bgcolor: "#f5f5f5", borderRadius: 2 }}>
-          <Typography>Upload your bank statement (PDF, CSV, etc.)</Typography>
-          <Button variant="contained" color="primary" style={{ marginTop: 8 }}>
-            Upload
-          </Button>
-        </Box>
-      )}
-      {option === "C" && (
-        <Box sx={{ p: 2, bgcolor: "#f5f5f5", borderRadius: 2 }}>
-          <Typography>Enter your account details manually</Typography>
-          <TextField
-            label="Bank Name"
-            fullWidth
-            margin="normal"
-            value={manualBank.bank}
-            onChange={(e) =>
-              setManualBank({ ...manualBank, bank: e.target.value })
-            }
-          />
-          <TextField
-            label="Account Number"
-            fullWidth
-            margin="normal"
-            value={manualBank.account}
-            onChange={(e) =>
-              setManualBank({ ...manualBank, account: e.target.value })
-            }
-          />
-          <TextField
-            label="IFSC Code"
-            fullWidth
-            margin="normal"
-            value={manualBank.ifsc}
-            onChange={(e) =>
-              setManualBank({ ...manualBank, ifsc: e.target.value })
-            }
-          />
-          <TextField
-            label="Balance"
-            fullWidth
-            margin="normal"
-            value={manualBank.balance}
-            onChange={(e) =>
-              setManualBank({ ...manualBank, balance: e.target.value })
-            }
-          />
-          <Button variant="contained" color="primary" style={{ marginTop: 8 }}>
-            Save
-          </Button>
-        </Box>
-      )}
+      {/* ...rest of OnboardingWizard content... */}
     </div>
   );
 };
