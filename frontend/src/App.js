@@ -1261,20 +1261,6 @@ const MainDashboard = () => {
 };
 
 // Simple pages for each tab (move outside MainDashboard)
-function LiabilitiesPage({ liabilities }) {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Liabilities</Typography>
-      <ul>
-        {liabilities.map((l, i) => (
-          <li key={i}>
-            {l.type}: ₹{l.value}
-          </li>
-        ))}
-      </ul>
-    </Box>
-  );
-}
 function NetWorthPage({ netWorth }) {
   return (
     <Box sx={{ p: 4 }}>
