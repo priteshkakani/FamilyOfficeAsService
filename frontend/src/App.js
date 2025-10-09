@@ -1,3 +1,19 @@
+// Minimal LandingPage to prevent blank screen
+function LandingPage() {
+  return (
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f7f8fa' }}>
+      <Box sx={{ bgcolor: '#fff', p: 6, borderRadius: 3, boxShadow: 2, textAlign: 'center' }}>
+        <Typography variant="h3" fontWeight={700} gutterBottom>Welcome to Family Office</Typography>
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          Manage your family's finances, assets, and investments in one place.
+        </Typography>
+        <Button variant="contained" color="primary" size="large" href="/login" sx={{ mt: 3 }}>
+          Get Started
+        </Button>
+      </Box>
+    </Box>
+  );
+}
 // ...existing code...
 
 function SignupLogin() {
