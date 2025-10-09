@@ -14,7 +14,11 @@ class ErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.hasError) {
-      return <div style={{ padding: 32, color: 'red' }}>Something went wrong: {String(this.state.error)}</div>;
+      return (
+        <div style={{ padding: 32, color: "red" }}>
+          Something went wrong: {String(this.state.error)}
+        </div>
+      );
     }
     return this.props.children;
   }
@@ -26,6 +30,7 @@ import {
   Routes,
   Route,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 
 function LandingPage() {
@@ -1399,7 +1404,6 @@ const pageOrder = [
   "/setup-complete", // SetupComplete
   "/dashboard", // MainDashboard
 ];
-
 
 function NavigationButtons() {
   const navigate = useNavigate();
