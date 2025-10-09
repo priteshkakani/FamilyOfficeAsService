@@ -910,14 +910,6 @@ const MainDashboard = () => {
 };
 
 // Simple pages for each tab (move outside MainDashboard)
-function InsightsPage() {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Insights & Alerts</Typography>
-      <Typography color="text.secondary">No insights available.</Typography>
-    </Box>
-  );
-}
 function AdvisorPage() {
   return (
     <Box sx={{ p: 4 }}>
