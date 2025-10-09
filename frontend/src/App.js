@@ -1195,7 +1195,10 @@ const MainDashboard = () => {
             fullWidth
             sx={{ justifyContent: "flex-start", mb: 1 }}
             startIcon={<span>{icon}</span>}
-            onClick={() => window.location.pathname !== path && window.history.pushState({}, '', path)}
+            onClick={() =>
+              window.location.pathname !== path &&
+              window.history.pushState({}, "", path)
+            }
           >
             {label}
           </Button>
@@ -1205,44 +1208,68 @@ const MainDashboard = () => {
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {/* Dashboard Routing */}
         <Routes>
-          <Route path="/dashboard" element={<DashboardHome summary={summary} adviceOpen={adviceOpen} setAdviceOpen={setAdviceOpen} investmentAdvice={investmentAdvice} familyMembers={familyMembers} />} />
+          <Route
+            path="/dashboard"
+            element={
+              <DashboardHome
+                summary={summary}
+                adviceOpen={adviceOpen}
+                setAdviceOpen={setAdviceOpen}
+                investmentAdvice={investmentAdvice}
+                familyMembers={familyMembers}
+              />
+            }
+          />
           <Route path="/assets" element={<AssetsPage assets={assets} />} />
-          <Route path="/liabilities" element={<LiabilitiesPage liabilities={liabilities} />} />
-          <Route path="/net-worth" element={<NetWorthPage netWorth={hardcodedNetWorth} />} />
-          <Route path="/cashflow" element={<CashflowPage cashflows={cashflows} />} />
+          <Route
+            path="/liabilities"
+            element={<LiabilitiesPage liabilities={liabilities} />}
+          />
+          <Route
+            path="/net-worth"
+            element={<NetWorthPage netWorth={hardcodedNetWorth} />}
+          />
+          <Route
+            path="/cashflow"
+            element={<CashflowPage cashflows={cashflows} />}
+          />
           <Route path="/documents" element={<DocumentsPage />} />
-          <Route path="/family" element={<FamilyPage familyMembers={familyMembers} />} />
+          <Route
+            path="/family"
+            element={<FamilyPage familyMembers={familyMembers} />}
+          />
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/advisor" element={<AdvisorPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           {/* Default route */}
-          <Route path="*" element={<DashboardHome summary={summary} adviceOpen={adviceOpen} setAdviceOpen={setAdviceOpen} investmentAdvice={investmentAdvice} familyMembers={familyMembers} />} />
+          <Route
+            path="*"
+            element={
+              <DashboardHome
+                summary={summary}
+                adviceOpen={adviceOpen}
+                setAdviceOpen={setAdviceOpen}
+                investmentAdvice={investmentAdvice}
+                familyMembers={familyMembers}
+              />
+            }
+          />
         </Routes>
       </Box>
     </Box>
   );
-}
+};
 
 // Simple pages for each tab (move outside MainDashboard)
-function AssetsPage({ assets }) {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Assets</Typography>
-      <ul>
-        {assets.map((a, i) => (
-          <li key={i}>{a.type}: ₹{a.value}</li>
-        ))}
-      </ul>
-    </Box>
-  );
-}
 function LiabilitiesPage({ liabilities }) {
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Liabilities</Typography>
       <ul>
         {liabilities.map((l, i) => (
-          <li key={i}>{l.type}: ₹{l.value}</li>
+          <li key={i}>
+            {l.type}: ₹{l.value}
+          </li>
         ))}
       </ul>
     </Box>
@@ -1262,7 +1289,9 @@ function CashflowPage({ cashflows }) {
       <Typography variant="h5">Cashflow & Expenses</Typography>
       <ul>
         {cashflows.map((c, i) => (
-          <li key={i}>{c.source}: ₹{c.value}</li>
+          <li key={i}>
+            {c.source}: ₹{c.value}
+          </li>
         ))}
       </ul>
     </Box>
@@ -1282,7 +1311,9 @@ function FamilyPage({ familyMembers }) {
       <Typography variant="h5">Family Members</Typography>
       <ul>
         {familyMembers.map((m, i) => (
-          <li key={i}>{m.name} ({m.role}) - Assets: {m.assets} - Income: ₹{m.income}</li>
+          <li key={i}>
+            {m.name} ({m.role}) - Assets: {m.assets} - Income: ₹{m.income}
+          </li>
         ))}
       </ul>
     </Box>
@@ -1300,7 +1331,9 @@ function AdvisorPage() {
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Advisor / Chat</Typography>
-      <Typography color="text.secondary">Chat with your advisor coming soon.</Typography>
+      <Typography color="text.secondary">
+        Chat with your advisor coming soon.
+      </Typography>
     </Box>
   );
 }
@@ -1308,12 +1341,20 @@ function SettingsPage() {
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Settings / Billing</Typography>
-      <Typography color="text.secondary">Settings and billing info will appear here.</Typography>
+      <Typography color="text.secondary">
+        Settings and billing info will appear here.
+      </Typography>
     </Box>
   );
 }
 // Dashboard Home Page
-function DashboardHome({ summary, adviceOpen, setAdviceOpen, investmentAdvice, familyMembers }) {
+function DashboardHome({
+  summary,
+  adviceOpen,
+  setAdviceOpen,
+  investmentAdvice,
+  familyMembers,
+}) {
   return (
     <Box sx={{ display: "flex", flex: 1, overflow: "auto" }}>
       {/* Main Section */}
@@ -1358,9 +1399,7 @@ function DashboardHome({ summary, adviceOpen, setAdviceOpen, investmentAdvice, f
             {investmentAdvice.map((item) => (
               <Box key={item.type} sx={{ mb: 2 }}>
                 <Typography variant="subtitle1">{item.type}</Typography>
-                <Typography color="text.secondary">
-                  {item.advice}
-                </Typography>
+                <Typography color="text.secondary">{item.advice}</Typography>
               </Box>
             ))}
             <Button
@@ -1440,9 +1479,7 @@ function DashboardHome({ summary, adviceOpen, setAdviceOpen, investmentAdvice, f
         >
           <Typography variant="subtitle1">Recent Transactions</Typography>
           <Box sx={{ mt: 1 }}>
-            <Typography color="text.secondary">
-              [Table Placeholder]
-            </Typography>
+            <Typography color="text.secondary">[Table Placeholder]</Typography>
           </Box>
         </Box>
         {/* Alerts & Renewals */}
@@ -1520,7 +1557,9 @@ function AssetsPage({ assets }) {
       <Typography variant="h5">Assets</Typography>
       <ul>
         {assets.map((a, i) => (
-          <li key={i}>{a.type}: ₹{a.value}</li>
+          <li key={i}>
+            {a.type}: ₹{a.value}
+          </li>
         ))}
       </ul>
     </Box>
@@ -1532,7 +1571,9 @@ function LiabilitiesPage({ liabilities }) {
       <Typography variant="h5">Liabilities</Typography>
       <ul>
         {liabilities.map((l, i) => (
-          <li key={i}>{l.type}: ₹{l.value}</li>
+          <li key={i}>
+            {l.type}: ₹{l.value}
+          </li>
         ))}
       </ul>
     </Box>
@@ -1552,7 +1593,9 @@ function CashflowPage({ cashflows }) {
       <Typography variant="h5">Cashflow & Expenses</Typography>
       <ul>
         {cashflows.map((c, i) => (
-          <li key={i}>{c.source}: ₹{c.value}</li>
+          <li key={i}>
+            {c.source}: ₹{c.value}
+          </li>
         ))}
       </ul>
     </Box>
@@ -1572,7 +1615,9 @@ function FamilyPage({ familyMembers }) {
       <Typography variant="h5">Family Members</Typography>
       <ul>
         {familyMembers.map((m, i) => (
-          <li key={i}>{m.name} ({m.role}) - Assets: {m.assets} - Income: ₹{m.income}</li>
+          <li key={i}>
+            {m.name} ({m.role}) - Assets: {m.assets} - Income: ₹{m.income}
+          </li>
         ))}
       </ul>
     </Box>
@@ -1590,7 +1635,9 @@ function AdvisorPage() {
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Advisor / Chat</Typography>
-      <Typography color="text.secondary">Chat with your advisor coming soon.</Typography>
+      <Typography color="text.secondary">
+        Chat with your advisor coming soon.
+      </Typography>
     </Box>
   );
 }
@@ -1598,46 +1645,13 @@ function SettingsPage() {
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Settings / Billing</Typography>
-      <Typography color="text.secondary">Settings and billing info will appear here.</Typography>
+      <Typography color="text.secondary">
+        Settings and billing info will appear here.
+      </Typography>
     </Box>
   );
 }
-                        width: 40,
-                        height: 40,
-                        bgcolor: "#e0e0e0",
-                        borderRadius: "50%",
-                        mr: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Typography>{m.name ? m.name[0] : "?"}</Typography>
-                    </Box>
-                    <Box>
-                      <Typography>
-                        {m.name} {m.age ? `(${m.age})` : ""}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {m.role} {m.assets ? `| ${m.assets}` : ""}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))
-              )}
-            </Box>
-            <Box sx={{ bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1 }}>
-              <Typography variant="subtitle1">Advisor Notes</Typography>
-              <Typography color="text.secondary" sx={{ mt: 1 }}>
-                [Reminders/Notes Placeholder]
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
-  );
-};
+// ...existing code...
 
 const pageOrder = [
   "/", // LandingPage
