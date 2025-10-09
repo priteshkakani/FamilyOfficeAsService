@@ -1419,6 +1419,8 @@ function NavigationButtons() {
   );
 }
 
+
+function App() {
   return (
     <Router>
       <Routes>
