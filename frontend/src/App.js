@@ -1,6 +1,30 @@
+// Stub for missing ConnectAccounts component to prevent blank screen
+function ConnectAccounts() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Connect Accounts</Typography>
+      <Typography color="text.secondary">Account connection coming soon.</Typography>
+    </Box>
+  );
+}
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { Box, Typography, Button, Divider, LinearProgress, Modal, TextField, MenuItem } from "@mui/material";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import {
+  Box,
+  Typography,
+  Button,
+  Divider,
+  LinearProgress,
+  Modal,
+  TextField,
+  MenuItem,
+} from "@mui/material";
 
 // Minimal LandingPage to prevent blank screen
 function LandingPage() {
