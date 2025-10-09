@@ -910,20 +910,6 @@ const MainDashboard = () => {
 };
 
 // Simple pages for each tab (move outside MainDashboard)
-function FamilyPage({ familyMembers }) {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Family Members</Typography>
-      <ul>
-        {familyMembers.map((m, i) => (
-          <li key={i}>
-            {m.name} ({m.role}) - Assets: {m.assets} - Income: ₹{m.income}
-          </li>
-        ))}
-      </ul>
-    </Box>
-  );
-}
 function InsightsPage() {
   return (
     <Box sx={{ p: 4 }}>
