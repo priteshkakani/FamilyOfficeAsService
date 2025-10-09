@@ -44,7 +44,8 @@ function SignupLogin() {
           {mode === "signup" ? "Sign Up" : "Sign In"}
         </Typography>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Enter your mobile number to {mode === "signup" ? "create an account" : "sign in"}.
+          Enter your mobile number to{" "}
+          {mode === "signup" ? "create an account" : "sign in"}.
         </Typography>
         <input
           type="tel"
@@ -103,7 +104,13 @@ function SignupLogin() {
           variant="contained"
           color="secondary"
           fullWidth
-          sx={{ fontWeight: 700, bgcolor: "#fff", color: "#222", border: "1px solid #eee", "&:hover": { bgcolor: "#f5f5f5" } }}
+          sx={{
+            fontWeight: 700,
+            bgcolor: "#fff",
+            color: "#222",
+            border: "1px solid #eee",
+            "&:hover": { bgcolor: "#f5f5f5" },
+          }}
           startIcon={
             <img
               src="https://developers.google.com/identity/images/g-logo.png"
@@ -903,20 +910,6 @@ const MainDashboard = () => {
 };
 
 // Simple pages for each tab (move outside MainDashboard)
-function CashflowPage({ cashflows }) {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Cashflow & Expenses</Typography>
-      <ul>
-        {cashflows.map((c, i) => (
-          <li key={i}>
-            {c.source}: ₹{c.value}
-          </li>
-        ))}
-      </ul>
-    </Box>
-  );
-}
 function DocumentsPage() {
   return (
     <Box sx={{ p: 4 }}>
