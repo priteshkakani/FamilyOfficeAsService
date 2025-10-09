@@ -1,9 +1,36 @@
+// ErrorBoundary to catch and display errors
+import React from "react";
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    // log error
+    console.error("ErrorBoundary caught:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div style={{ padding: 32, color: 'red' }}>Something went wrong: {String(this.state.error)}</div>;
+    }
+    return this.props.children;
+  }
+}
 import React, { useState } from "react";
 import { Button, Typography, Box, Divider } from "@mui/material";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from "react-router-dom";
 
 function LandingPage() {
   const navigate = useNavigate();
+  console.log("Rendering LandingPage");
   return (
     <Box
       sx={{
@@ -220,7 +247,6 @@ function SignupLogin() {
     </Box>
   );
 }
-
 
 const dashboardTabs = [
   { icon: "🏠", label: "Dashboard" },
@@ -1419,25 +1445,25 @@ function NavigationButtons() {
   );
 }
 
-
-function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<SignupLogin />} />
-        <Route path="/onboarding" element={<OnboardingWizard />} />
-        <Route path="/connect-accounts" element={<ConnectAccounts />} />
-        <Route path="/add-mutual-funds" element={<AddMutualFunds />} />
-        <Route path="/add-insurance" element={<AddInsurance />} />
-        <Route path="/add-real-estate" element={<AddRealEstate />} />
-        <Route path="/add-liabilities" element={<AddLiabilities />} />
-        <Route path="/income-expenses" element={<IncomeExpenses />} />
-        <Route path="/setup-complete" element={<SetupComplete />} />
-        <Route path="/dashboard" element={<MainDashboard />} />
-      </Routes>
-      <NavigationButtons />
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<SignupLogin />} />
+          <Route path="/onboarding" element={<OnboardingWizard />} />
+          <Route path="/connect-accounts" element={<ConnectAccounts />} />
+          <Route path="/add-mutual-funds" element={<AddMutualFunds />} />
+          <Route path="/add-insurance" element={<AddInsurance />} />
+          <Route path="/add-real-estate" element={<AddRealEstate />} />
+          <Route path="/add-liabilities" element={<AddLiabilities />} />
+          <Route path="/income-expenses" element={<IncomeExpenses />} />
+          <Route path="/setup-complete" element={<SetupComplete />} />
+          <Route path="/dashboard" element={<MainDashboard />} />
+        </Routes>
+        <NavigationButtons />
+      </Router>
+    </ErrorBoundary>
   );
 }
 
