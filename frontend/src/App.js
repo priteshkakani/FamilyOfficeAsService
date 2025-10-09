@@ -1096,26 +1096,23 @@ const MainDashboard = () => {
           Family Office
         </Typography>
         {[
-          ["🏠", "Dashboard", "/dashboard"],
-          ["💰", "Assets", "/assets"],
-          ["📉", "Liabilities", "/liabilities"],
-          ["📊", "Net Worth", "/net-worth"],
-          ["🧾", "Cashflow & Expenses", "/cashflow"],
-          ["📁", "Documents", "/documents"],
-          ["󰰁", "Family Members", "/family"],
-          ["📅", "Insights & Alerts", "/insights"],
-          ["󰞴", "Advisor / Chat", "/advisor"],
-          ["⚙️", "Settings / Billing", "/settings"],
-        ].map(([icon, label, path]) => (
+          ["🏠", "Dashboard", ""],
+          ["💰", "Assets", "assets"],
+          ["📉", "Liabilities", "liabilities"],
+          ["📊", "Net Worth", "net-worth"],
+          ["🧾", "Cashflow & Expenses", "cashflow"],
+          ["📁", "Documents", "documents"],
+          ["󰰁", "Family Members", "family"],
+          ["📅", "Insights & Alerts", "insights"],
+          ["󰞴", "Advisor / Chat", "advisor"],
+          ["⚙️", "Settings / Billing", "settings"],
+        ].map(([icon, label, subpath]) => (
           <Button
             key={label}
             fullWidth
             sx={{ justifyContent: "flex-start", mb: 1 }}
             startIcon={<span>{icon}</span>}
-            onClick={() =>
-              window.location.pathname !== path &&
-              window.history.pushState({}, "", path)
-            }
+            onClick={() => navigate(`/dashboard/${subpath}`)}
           >
             {label}
           </Button>
@@ -1123,10 +1120,10 @@ const MainDashboard = () => {
       </Box>
       {/* Main Content */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        {/* Dashboard Routing */}
+        {/* Dashboard Routing (nested) */}
         <Routes>
           <Route
-            path="/dashboard"
+            path="/"
             element={
               <DashboardHome
                 summary={summary}
@@ -1137,27 +1134,27 @@ const MainDashboard = () => {
               />
             }
           />
-          <Route path="/assets" element={<AssetsPage assets={assets} />} />
+          <Route path="assets" element={<AssetsPage assets={assets} />} />
           <Route
-            path="/liabilities"
+            path="liabilities"
             element={<LiabilitiesPage liabilities={liabilities} />}
           />
           <Route
-            path="/net-worth"
+            path="net-worth"
             element={<NetWorthPage netWorth={hardcodedNetWorth} />}
           />
           <Route
-            path="/cashflow"
+            path="cashflow"
             element={<CashflowPage cashflows={cashflows} />}
           />
-          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="documents" element={<DocumentsPage />} />
           <Route
-            path="/family"
+            path="family"
             element={<FamilyPage familyMembers={familyMembers} />}
           />
-          <Route path="/insights" element={<InsightsPage />} />
-          <Route path="/advisor" element={<AdvisorPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="insights" element={<InsightsPage />} />
+          <Route path="advisor" element={<AdvisorPage />} />
+          <Route path="settings" element={<SettingsPage />} />
           {/* Default route for unmatched dashboard subroutes */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
@@ -1546,7 +1543,8 @@ function App() {
         <Route path="/add-liabilities" element={<AddLiabilities />} />
         <Route path="/income-expenses" element={<IncomeExpenses />} />
         <Route path="/setup-complete" element={<SetupComplete />} />
-        <Route path="/dashboard" element={<MainDashboard />} />
+        {/* Nested dashboard routes for tabs */}
+        <Route path="/dashboard/*" element={<MainDashboard />} />
         {/* Catch-all for unmatched routes */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
