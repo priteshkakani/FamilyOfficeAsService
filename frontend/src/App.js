@@ -49,6 +49,14 @@ function SignupLogin() {
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
 
+  // Check if user is already authenticated (simulate with localStorage key 'foas_token')
+  useEffect(() => {
+    const token = localStorage.getItem("foas_token");
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
   const handleSendOtp = async () => {
     setError("");
     // TODO: Call backend for OTP send (login or signup)
@@ -57,6 +65,8 @@ function SignupLogin() {
   const handleVerifyOtp = async () => {
     setError("");
     // TODO: Call backend for OTP verify
+    // On success, set token and redirect
+    localStorage.setItem("foas_token", "demo_token");
     navigate("/dashboard");
   };
 
