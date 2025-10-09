@@ -28,190 +28,6 @@ function NotFoundPage() {
           If you are a developer, check your router configuration and
           Netlify/Vercel _redirects settings for client-side routing support.
         </Typography>
-        <Button variant="contained" color="primary" href="/">
-          Go to Home
-        </Button>
-      </Box>
-    </Box>
-  );
-}
-// Stub for missing ConnectAccounts component to prevent blank screen
-function ConnectAccounts() {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Connect Accounts</Typography>
-      <Typography color="text.secondary">
-        Account connection coming soon.
-      </Typography>
-    </Box>
-  );
-}
-import React, { useState, useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Button,
-  Divider,
-  LinearProgress,
-  Modal,
-  TextField,
-  MenuItem,
-} from "@mui/material";
-
-// Professional LandingPage with hero, features, pricing, security, and floating CTA
-function LandingPage() {
-  const navigate = useNavigate();
-  return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f7f8fa", position: "relative" }}>
-      {/* Hero Banner */}
-      <Box
-        sx={{
-          maxWidth: 700,
-          mx: "auto",
-          pt: 12,
-          pb: 6,
-          px: 2,
-          textAlign: "center",
-        }}
-      >
-        <Typography variant="h2" fontWeight={800} gutterBottom>
-          Consolidate your entire family’s finances
-        </Typography>
-        <Typography variant="h5" color="text.secondary" sx={{ mb: 4 }}>
-          — investments, insurance, real estate, loans — in one secure
-          dashboard.
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          sx={{
-            px: 6,
-            py: 1.5,
-            fontWeight: 700,
-            fontSize: 20,
-            borderRadius: 2,
-            boxShadow: 2,
-          }}
-          onClick={() => navigate("/login")}
-        >
-          Start Free →
-        </Button>
-      </Box>
-      {/* Key Features */}
-      <Box
-        sx={{
-          maxWidth: 900,
-          mx: "auto",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 4,
-          justifyContent: "center",
-          mb: 6,
-        }}
-      >
-        {[
-          ["🔗", "Auto-fetch data via Account Aggregator"],
-          ["💰", "Consolidated Net Worth"],
-          ["🛡️", "Insurance & Policy tracker"],
-          ["💼", "ESOP/RSU management"],
-          ["🤝", "Advisor chat & reports"],
-        ].map(([icon, text]) => (
-          <Box
-            key={text}
-            sx={{
-              flex: "1 1 220px",
-              bgcolor: "#fff",
-              p: 3,
-              borderRadius: 2,
-              boxShadow: 1,
-              minWidth: 220,
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <span style={{ fontSize: 32 }}>{icon}</span>
-            <Typography variant="subtitle1" fontWeight={600}>
-              {text}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-      {/* Pricing Tiers */}
-      <Box
-        sx={{
-          maxWidth: 900,
-          mx: "auto",
-          display: "flex",
-          gap: 4,
-          justifyContent: "center",
-          mb: 6,
-        }}
-      >
-        {[
-          [
-            "Basic",
-            "Free forever",
-            ["Net worth dashboard", "Manual asset entry"],
-          ],
-          [
-            "Premium",
-            "₹499/mo",
-            [
-              "Auto-fetch via Account Aggregator",
-              "Insurance tracker",
-              "Advisor chat",
-            ],
-          ],
-          [
-            "Family Office Concierge",
-            "Custom",
-            ["Dedicated advisor", "Custom reporting", "White-glove onboarding"],
-          ],
-        ].map(([tier, price, features]) => (
-          <Box
-            key={tier}
-            sx={{
-              flex: "1 1 220px",
-              bgcolor: "#fff",
-              p: 3,
-              borderRadius: 2,
-              boxShadow: 1,
-              minWidth: 220,
-              textAlign: "center",
-            }}
-          >
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
-              {tier}
-            </Typography>
-            <Typography variant="h5" color="primary" fontWeight={800}>
-              {price}
-            </Typography>
-            <ul
-              style={{
-                textAlign: "left",
-                margin: "16px 0 0 0",
-                padding: 0,
-                listStyle: "none",
-              }}
-            >
-              {features.map((f) => (
-                <li key={f} style={{ marginBottom: 8 }}>
-                  <span style={{ color: "#4caf50", marginRight: 6 }}>✔</span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-          </Box>
-        ))}
       </Box>
       {/* Security Assurance */}
       <Box
@@ -1165,13 +981,71 @@ const MainDashboard = () => {
 
 // Simple pages for each tab (move outside MainDashboard)
 // Dashboard Home Page
-function DashboardHome({
-  summary,
-  adviceOpen,
-  setAdviceOpen,
-  investmentAdvice,
-  familyMembers,
-}) {
+import { useState } from "react";
+function DashboardHome() {
+  // Hardcoded data for all calculations
+  const [adviceOpen, setAdviceOpen] = useState(false);
+  const investmentAdvice = [
+    { type: "Smallcases", advice: "Diversify with top smallcases for 2025." },
+    { type: "Mutual Funds", advice: "Increase SIP in large-cap funds." },
+    { type: "Stocks", advice: "Review direct equity for rebalancing." },
+    { type: "Real Estate", advice: "Consider REITs for liquidity." },
+  ];
+  const familyMembers = [
+    { name: "Amit", age: 45, role: "Primary", assets: "₹7L", income: 70000 },
+    { name: "Priya", age: 42, role: "Spouse", assets: "₹5L", income: 50000 },
+  ];
+  const assets = [
+    { type: "Bank Account", value: 400000 },
+    { type: "Mutual Funds", value: 300000 },
+    { type: "Stocks", value: 200000 },
+    { type: "Real Estate", value: 100000 },
+  ];
+  const liabilities = [
+    { type: "Home Loan", value: 150000 },
+    { type: "Car Loan", value: 50000 },
+  ];
+  const cashflows = [
+    { source: "Salary", value: 70000 },
+    { source: "Business", value: 50000 },
+  ];
+  const netWorthTrend = [
+    { month: "Jan", value: 1000000 },
+    { month: "Feb", value: 1100000 },
+    { month: "Mar", value: 1200000 },
+    { month: "Apr", value: 1300000 },
+    { month: "May", value: 1400000 },
+  ];
+  const assetAllocation = [
+    { type: "Bank Account", value: 40 },
+    { type: "Mutual Funds", value: 30 },
+    { type: "Stocks", value: 20 },
+    { type: "Real Estate", value: 10 },
+  ];
+  // Calculations
+  const totalAssets = assets.reduce((sum, a) => sum + a.value, 0);
+  const totalLiabilities = liabilities.reduce((sum, l) => sum + l.value, 0);
+  const totalNetWorth = totalAssets + totalLiabilities;
+  const monthlyIncome = familyMembers.reduce((sum, m) => sum + (m.income || 0), 0);
+  const monthlySavings = 30000; // Hardcoded for now
+  const monthlyCashflow = monthlyIncome - (liabilities.reduce((sum, l) => sum + l.value/12, 0));
+  // Summary cards
+  const summary = [
+    { label: "Total Net Worth", value: `₹${totalNetWorth}` },
+    { label: "Total Assets", value: `₹${totalAssets}` },
+    { label: "Total Liabilities", value: `₹${totalLiabilities}` },
+    { label: "Monthly Income", value: `₹${monthlyIncome}` },
+    { label: "Monthly Savings", value: `₹${monthlySavings}` },
+    { label: "Monthly Cashflow", value: `₹${monthlyCashflow}` },
+    {
+      label: "Investment Advice",
+      value: (
+        <Button variant="outlined" color="secondary" onClick={() => setAdviceOpen(true)}>
+          View Advice
+        </Button>
+      ),
+    },
+  ];
   return (
     <Box sx={{ display: "flex", flex: 1, overflow: "auto" }}>
       {/* Main Section */}
@@ -1200,100 +1074,54 @@ function DashboardHome({
         </Box>
         {/* Investment Advice Modal */}
         <Modal open={adviceOpen} onClose={() => setAdviceOpen(false)}>
-          <Box
-            sx={{
-              p: 4,
-              bgcolor: "background.paper",
-              maxWidth: 400,
-              mx: "auto",
-              mt: 10,
-              borderRadius: 2,
-            }}
-          >
-            <Typography variant="h6" gutterBottom>
-              Investment Advice
-            </Typography>
+          <Box sx={{ p: 4, bgcolor: "background.paper", maxWidth: 400, mx: "auto", mt: 10, borderRadius: 2 }}>
+            <Typography variant="h6" gutterBottom>Investment Advice</Typography>
             {investmentAdvice.map((item) => (
               <Box key={item.type} sx={{ mb: 2 }}>
                 <Typography variant="subtitle1">{item.type}</Typography>
                 <Typography color="text.secondary">{item.advice}</Typography>
               </Box>
             ))}
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setAdviceOpen(false)}
-              fullWidth
-            >
-              Close
-            </Button>
+            <Button variant="contained" color="primary" onClick={() => setAdviceOpen(false)} fullWidth>Close</Button>
           </Box>
         </Modal>
         {/* Charts */}
         <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-          <Box
-            sx={{
-              flex: 2,
-              bgcolor: "#fff",
-              p: 2,
-              borderRadius: 2,
-              boxShadow: 1,
-            }}
-          >
+          <Box sx={{ flex: 2, bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1 }}>
             <Typography variant="subtitle1">Net Worth Trend</Typography>
-            <Box
-              sx={{
-                height: 180,
-                bgcolor: "#f5f5f5",
-                borderRadius: 1,
-                mt: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography color="text.secondary">
-                [Line Chart Placeholder]
-              </Typography>
+            <Box sx={{ height: 180, bgcolor: "#f5f5f5", borderRadius: 1, mt: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {/* Simple SVG line chart */}
+              <svg width="100%" height="100%" viewBox="0 0 300 120">
+                <polyline
+                  fill="none"
+                  stroke="#1976d2"
+                  strokeWidth="3"
+                  points="0,100 60,80 120,60 180,40 240,20 300,10"
+                />
+                <circle cx="0" cy="100" r="3" fill="#1976d2" />
+                <circle cx="60" cy="80" r="3" fill="#1976d2" />
+                <circle cx="120" cy="60" r="3" fill="#1976d2" />
+                <circle cx="180" cy="40" r="3" fill="#1976d2" />
+                <circle cx="240" cy="20" r="3" fill="#1976d2" />
+                <circle cx="300" cy="10" r="3" fill="#1976d2" />
+              </svg>
             </Box>
           </Box>
-          <Box
-            sx={{
-              flex: 1,
-              bgcolor: "#fff",
-              p: 2,
-              borderRadius: 2,
-              boxShadow: 1,
-            }}
-          >
+          <Box sx={{ flex: 1, bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1 }}>
             <Typography variant="subtitle1">Asset Allocation</Typography>
-            <Box
-              sx={{
-                height: 180,
-                bgcolor: "#f5f5f5",
-                borderRadius: 1,
-                mt: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography color="text.secondary">
-                [Bar Chart Placeholder]
-              </Typography>
+            <Box sx={{ height: 180, bgcolor: "#f5f5f5", borderRadius: 1, mt: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {/* Simple SVG bar chart */}
+              <svg width="100%" height="100%" viewBox="0 0 120 120">
+                <rect x="10" y="60" width="15" height="50" fill="#1976d2" />
+                <rect x="35" y="40" width="15" height="70" fill="#388e3c" />
+                <rect x="60" y="80" width="15" height="30" fill="#fbc02d" />
+                <rect x="85" y="90" width="15" height="20" fill="#d32f2f" />
+              </svg>
             </Box>
           </Box>
         </Box>
         {/* Recent Transactions Table */}
-        <Box
-          sx={{
-            bgcolor: "#fff",
-            p: 2,
-            borderRadius: 2,
-            boxShadow: 1,
-            mb: 3,
-          }}
-        >
+        <Box sx={{ bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1, mb: 3 }}>
           <Typography variant="subtitle1">Recent Transactions</Typography>
           <Box sx={{ mt: 1 }}>
             <Typography color="text.secondary">[Table Placeholder]</Typography>
@@ -1310,47 +1138,19 @@ function DashboardHome({
       </Box>
       {/* Right Panel */}
       <Box sx={{ flex: 1, p: 3, minWidth: 280 }}>
-        <Box
-          sx={{
-            bgcolor: "#fff",
-            p: 2,
-            borderRadius: 2,
-            boxShadow: 1,
-            mb: 3,
-          }}
-        >
+        <Box sx={{ bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1, mb: 3 }}>
           <Typography variant="subtitle1">Family Members</Typography>
           {familyMembers.length === 0 ? (
-            <Typography color="text.secondary">
-              No family members found.
-            </Typography>
+            <Typography color="text.secondary">No family members found.</Typography>
           ) : (
             familyMembers.map((m) => (
-              <Box
-                key={m.name}
-                sx={{ display: "flex", alignItems: "center", mt: 2 }}
-              >
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: "#e0e0e0",
-                    borderRadius: "50%",
-                    mr: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+              <Box key={m.name} sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                <Box sx={{ width: 40, height: 40, bgcolor: "#e0e0e0", borderRadius: "50%", mr: 2, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Typography>{m.name ? m.name[0] : "?"}</Typography>
                 </Box>
                 <Box>
-                  <Typography>
-                    {m.name} {m.age ? `(${m.age})` : ""}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {m.role} {m.assets ? `| ${m.assets}` : ""}
-                  </Typography>
+                  <Typography>{m.name} {m.age ? `(${m.age})` : ""}</Typography>
+                  <Typography variant="caption" color="text.secondary">{m.role} {m.assets ? `| ${m.assets}` : ""}</Typography>
                 </Box>
               </Box>
             ))
@@ -1358,9 +1158,7 @@ function DashboardHome({
         </Box>
         <Box sx={{ bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1 }}>
           <Typography variant="subtitle1">Advisor Notes</Typography>
-          <Typography color="text.secondary" sx={{ mt: 1 }}>
-            [Reminders/Notes Placeholder]
-          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 1 }}>[Reminders/Notes Placeholder]</Typography>
         </Box>
       </Box>
     </Box>
@@ -1368,7 +1166,14 @@ function DashboardHome({
 }
 
 // Simple pages for each tab
-function AssetsPage({ assets }) {
+function AssetsPage() {
+  // Hardcoded asset data
+  const assets = [
+    { type: "Bank Account", value: 400000 },
+    { type: "Mutual Funds", value: 300000 },
+    { type: "Stocks", value: 200000 },
+    { type: "Real Estate", value: 100000 },
+  ];
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Assets</Typography>
@@ -1382,7 +1187,12 @@ function AssetsPage({ assets }) {
     </Box>
   );
 }
-function LiabilitiesPage({ liabilities }) {
+function LiabilitiesPage() {
+  // Hardcoded liabilities
+  const liabilities = [
+    { type: "Home Loan", value: 150000 },
+    { type: "Car Loan", value: 50000 },
+  ];
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Liabilities</Typography>
@@ -1396,15 +1206,25 @@ function LiabilitiesPage({ liabilities }) {
     </Box>
   );
 }
-function NetWorthPage({ netWorth }) {
+function NetWorthPage() {
+  // Hardcoded calculation
+  const assets = 400000 + 300000 + 200000 + 100000;
+  const liabilities = 150000 + 50000;
+  const netWorth = assets + liabilities;
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Net Worth</Typography>
       <Typography>Current Net Worth: ₹{netWorth}</Typography>
+      <Typography color="text.secondary">(Assets: ₹{assets} + Liabilities: ₹{liabilities})</Typography>
     </Box>
   );
 }
-function CashflowPage({ cashflows }) {
+function CashflowPage() {
+  // Hardcoded cashflow
+  const cashflows = [
+    { source: "Salary", value: 70000 },
+    { source: "Business", value: 50000 },
+  ];
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Cashflow & Expenses</Typography>
@@ -1419,42 +1239,71 @@ function CashflowPage({ cashflows }) {
   );
 }
 function DocumentsPage() {
+  // Hardcoded documents
+  const documents = [
+    { name: "PAN Card.pdf", type: "PDF", uploaded: true },
+    { name: "Aadhaar Card.pdf", type: "PDF", uploaded: true },
+  ];
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Documents</Typography>
-      <Typography color="text.secondary">No documents uploaded yet.</Typography>
+      <ul>
+        {documents.map((doc, i) => (
+          <li key={i}>{doc.name} ({doc.type}) - {doc.uploaded ? "Uploaded" : "Not uploaded"}</li>
+        ))}
+      </ul>
     </Box>
   );
 }
-function FamilyPage({ familyMembers }) {
+function FamilyPage() {
+  // Hardcoded family
+  const familyMembers = [
+    { name: "Amit", role: "Primary", assets: "₹7L", income: 70000 },
+    { name: "Priya", role: "Spouse", assets: "₹5L", income: 50000 },
+  ];
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Family Members</Typography>
       <ul>
         {familyMembers.map((m, i) => (
-          <li key={i}>
-            {m.name} ({m.role}) - Assets: {m.assets} - Income: ₹{m.income}
-          </li>
+          <li key={i}>{m.name} ({m.role}) - Assets: {m.assets} - Income: ₹{m.income}</li>
         ))}
       </ul>
     </Box>
   );
 }
 function InsightsPage() {
+  // Hardcoded insights
+  const insights = [
+    "LIC policy renewal in 15 days",
+    "ESOP vesting due next month",
+  ];
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Insights & Alerts</Typography>
-      <Typography color="text.secondary">No insights available.</Typography>
+      <ul>
+        {insights.map((ins, i) => (
+          <li key={i}>{ins}</li>
+        ))}
+      </ul>
     </Box>
   );
 }
 function AdvisorPage() {
+  // Hardcoded advisor contact
+  const advisor = {
+    name: "Rohit Sharma",
+    email: "advisor@familyoffice.com",
+    phone: "+91-9876543210",
+    notes: "Reach out for any investment or planning queries."
+  };
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h5">Advisor / Chat</Typography>
-      <Typography color="text.secondary">
-        Chat with your advisor coming soon.
-      </Typography>
+      <Typography>Name: {advisor.name}</Typography>
+      <Typography>Email: {advisor.email}</Typography>
+      <Typography>Phone: {advisor.phone}</Typography>
+      <Typography color="text.secondary" sx={{ mt: 2 }}>{advisor.notes}</Typography>
     </Box>
   );
 }
