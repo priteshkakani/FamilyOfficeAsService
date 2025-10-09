@@ -910,14 +910,6 @@ const MainDashboard = () => {
 };
 
 // Simple pages for each tab (move outside MainDashboard)
-function DocumentsPage() {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Documents</Typography>
-      <Typography color="text.secondary">No documents uploaded yet.</Typography>
-    </Box>
-  );
-}
 function FamilyPage({ familyMembers }) {
   return (
     <Box sx={{ p: 4 }}>
