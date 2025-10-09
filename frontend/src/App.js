@@ -1,152 +1,236 @@
 import React from "react";
 import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
+  import axios from "axios";
+  const dashboardTabs = [
+    { icon: "🏠", label: "Dashboard" },
+    { icon: "💰", label: "Assets" },
+    { icon: "📉", label: "Liabilities" },
+    { icon: "📊", label: "Net Worth" },
+    { icon: "🧾", label: "Cashflow & Expenses" },
+    { icon: "📁", label: "Documents" },
+    { icon: "󰰁", label: "Family Members" },
+    { icon: "📅", label: "Insights & Alerts" },
+    { icon: "󰞴", label: "Advisor / Chat" },
+    { icon: "⚙️", label: "Settings / Billing" },
+  ];
 
-import {
-  Button,
-  TextField,
-  Modal,
-  Box,
-  Typography,
-  LinearProgress,
-  MenuItem,
-} from "@mui/material";
-import { useState } from "react";
+  const defaultAssets = [
+    { type: "Bank Account", value: 100000 },
+    { type: "Mutual Funds", value: 200000 },
+    { type: "Stocks", value: 150000 },
+    { type: "Real Estate", value: 500000 },
+    { type: "Gold", value: 50000 },
+  ];
+  const defaultLiabilities = [
+    { type: "Home Loan", value: 200000 },
+    { type: "Car Loan", value: 50000 },
+  ];
+  const defaultIncome = [
+    { source: "Salary", value: 100000 },
+    { source: "Business", value: 20000 },
+  ];
+  const defaultExpenses = [
+    { category: "EMI", value: 15000 },
+    { category: "Groceries", value: 8000 },
+    { category: "Utilities", value: 4000 },
+  ];
+  const defaultFamily = [
+    { name: "Amit", age: 45, role: "Primary", assets: "₹1.2Cr" },
+    { name: "Priya", age: 42, role: "Spouse", assets: "₹80L" },
+  ];
+  const investmentAdvice = [
+    { type: "Smallcases", advice: "Diversify with top smallcases for 2025." },
+    { type: "Mutual Funds", advice: "Increase SIP in large-cap funds." },
+    { type: "Stocks", advice: "Review direct equity for rebalancing." },
+    { type: "Real Estate", advice: "Consider REITs for liquidity." },
+  ];
 
-const LandingPage = () => {
-  const navigate = useNavigate();
-  return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-      }}
-    >
-      <Box sx={{ mb: 4 }}>
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-          alt="Family Office Logo"
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: 16,
-            boxShadow: "0 2px 8px #bdbdbd",
-          }}
-        />
-      </Box>
-      <Box sx={{ maxWidth: 480, width: "100%" }}>
-        <Box
-          sx={{
-            bgcolor: "#fff",
-            borderRadius: 4,
-            boxShadow: 3,
-            p: 4,
-            textAlign: "center",
-          }}
-        >
-          <Typography
-            variant="h4"
-            fontWeight={700}
-            color="primary.main"
-            gutterBottom
-          >
-            Family Office Platform
-          </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-            Consolidate your entire family’s finances — investments, insurance,
-            real estate, loans — in one secure dashboard.
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            sx={{
-              my: 2,
-              fontWeight: "bold",
-              fontSize: 20,
-              px: 6,
-              py: 1.5,
-              borderRadius: 3,
-              boxShadow: 2,
-            }}
-            onClick={() => navigate("/login")}
-          >
-            Sign In / Login
-          </Button>
-          <Box sx={{ mt: 4, mb: 2 }}>
-            <Typography
-              variant="subtitle1"
-              fontWeight={600}
-              color="primary.dark"
-            >
-              Key Features
-            </Typography>
-            <ul
-              style={{
-                textAlign: "left",
-                display: "inline-block",
-                margin: 0,
-                paddingLeft: 20,
-              }}
-            >
-              <li>Auto-fetch data via Account Aggregator</li>
-              <li>Consolidated Net Worth</li>
-              <li>Insurance & Policy tracker</li>
-              <li>ESOP/RSU management</li>
-              <li>Advisor chat & reports</li>
+  const MainDashboard = () => {
+    const [tab, setTab] = useState("Dashboard");
+    // Use hardcoded defaults for demo; in real app, fetch from backend
+    const assets = defaultAssets;
+    const liabilities = defaultLiabilities;
+    const income = defaultIncome;
+    const expenses = defaultExpenses;
+    const familyMembers = defaultFamily;
+    const totalAssets = assets.reduce((sum, a) => sum + (a.value || 0), 0);
+    const totalLiabilities = liabilities.reduce((sum, l) => sum + (l.value || 0), 0);
+    const totalIncome = income.reduce((sum, i) => sum + (i.value || 0), 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + (e.value || 0), 0);
+    const monthlySavings = totalIncome - totalLiabilities - totalExpenses;
+    const netWorth = totalAssets + totalLiabilities;
+    // For trend, just show 6 months of net worth
+    const netWorthTrend = [
+      { month: "Apr", value: netWorth - 20000 },
+      { month: "May", value: netWorth - 10000 },
+      { month: "Jun", value: netWorth },
+      { month: "Jul", value: netWorth + 10000 },
+      { month: "Aug", value: netWorth + 20000 },
+      { month: "Sep", value: netWorth + 30000 },
+    ];
+    const assetAllocation = [
+      { type: "Cash", value: 100000 },
+      { type: "Mutual Funds", value: 200000 },
+      { type: "Stocks", value: 150000 },
+      { type: "Loans", value: 250000 },
+      { type: "Real Estate", value: 500000 },
+    ];
+
+    // Tab content logic
+    let tabContent = null;
+    if (tab === "Dashboard") {
+      tabContent = (
+        <>
+          {/* Summary Cards */}
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <Box sx={{ flex: 1, bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1, textAlign: 'center' }}>
+              <Typography variant="subtitle2" color="text.secondary">Total Net Worth</Typography>
+              <Typography variant="h6">₹{netWorth}</Typography>
+            </Box>
+            <Box sx={{ flex: 1, bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1, textAlign: 'center' }}>
+              <Typography variant="subtitle2" color="text.secondary">Total Assets</Typography>
+              <Typography variant="h6">₹{totalAssets}</Typography>
+            </Box>
+            <Box sx={{ flex: 1, bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1, textAlign: 'center' }}>
+              <Typography variant="subtitle2" color="text.secondary">Total Liabilities</Typography>
+              <Typography variant="h6">₹{totalLiabilities}</Typography>
+            </Box>
+            <Box sx={{ flex: 1, bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1, textAlign: 'center' }}>
+              <Typography variant="subtitle2" color="text.secondary">Monthly Income</Typography>
+              <Typography variant="h6">₹{totalIncome}</Typography>
+            </Box>
+            <Box sx={{ flex: 1, bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1, textAlign: 'center' }}>
+              <Typography variant="subtitle2" color="text.secondary">Monthly Savings</Typography>
+              <Typography variant="h6">₹{monthlySavings}</Typography>
+            </Box>
+          </Box>
+          {/* Charts */}
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <Box sx={{ flex: 2, bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+              <Typography variant="subtitle1">Net Worth Trend</Typography>
+              <Box sx={{ height: 180, bgcolor: '#f5f5f5', borderRadius: 1, mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography color="text.secondary">{netWorthTrend.map(n => `${n.month}: ₹${n.value}`).join(' | ')}</Typography>
+              </Box>
+            </Box>
+            <Box sx={{ flex: 1, bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+              <Typography variant="subtitle1">Asset Allocation</Typography>
+              <Box sx={{ height: 180, bgcolor: '#f5f5f5', borderRadius: 1, mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography color="text.secondary">{assetAllocation.map(a => `${a.type}: ₹${a.value}`).join(' | ')}</Typography>
+              </Box>
+            </Box>
+          </Box>
+          {/* Investment Advice */}
+          <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1, mb: 3 }}>
+            <Typography variant="subtitle1">Investment Advice</Typography>
+            <ul style={{ margin: 0, paddingLeft: 20 }}>
+              {investmentAdvice.map((adv, idx) => (
+                <li key={idx}><b>{adv.type}:</b> {adv.advice}</li>
+              ))}
             </ul>
           </Box>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              <b>Pricing tiers:</b> Basic | Premium | Family Office Concierge
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              <b>Security Assurance:</b> DPDP-compliant, 256-bit encryption,
-              SEBI registered (if applicable)
-            </Typography>
+        </>
+      );
+    } else if (tab === "Assets") {
+      tabContent = (
+        <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="h6">Assets</Typography>
+          <ul>{assets.map((a, idx) => <li key={idx}>{a.type}: ₹{a.value}</li>)}</ul>
+          {assets.length === 0 && <Typography>No assets found. (₹0)</Typography>}
+        </Box>
+      );
+    } else if (tab === "Liabilities") {
+      tabContent = (
+        <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="h6">Liabilities</Typography>
+          <ul>{liabilities.map((l, idx) => <li key={idx}>{l.type}: ₹{l.value}</li>)}</ul>
+          {liabilities.length === 0 && <Typography>No liabilities found. (₹0)</Typography>}
+        </Box>
+      );
+    } else if (tab === "Net Worth") {
+      tabContent = (
+        <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="h6">Net Worth</Typography>
+          <Typography>Total Net Worth: ₹{netWorth}</Typography>
+          <Typography>Total Assets: ₹{totalAssets}</Typography>
+          <Typography>Total Liabilities: ₹{totalLiabilities}</Typography>
+        </Box>
+      );
+    } else if (tab === "Cashflow & Expenses") {
+      tabContent = (
+        <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="h6">Cashflow & Expenses</Typography>
+          <Typography>Monthly Income: ₹{totalIncome}</Typography>
+          <Typography>Monthly Expenses: ₹{totalExpenses}</Typography>
+          <Typography>Monthly Savings: ₹{monthlySavings}</Typography>
+        </Box>
+      );
+    } else if (tab === "Documents") {
+      tabContent = (
+        <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="h6">Documents</Typography>
+          <Typography>No documents uploaded yet.</Typography>
+        </Box>
+      );
+    } else if (tab === "Family Members") {
+      tabContent = (
+        <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="h6">Family Members</Typography>
+          <ul>{familyMembers.map((m, idx) => <li key={idx}>{m.name} ({m.role}) - {m.assets}</li>)}</ul>
+          {familyMembers.length === 0 && <Typography>No family members found.</Typography>}
+        </Box>
+      );
+    } else if (tab === "Insights & Alerts") {
+      tabContent = (
+        <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="h6">Insights & Alerts</Typography>
+          <Typography>No alerts at this time.</Typography>
+        </Box>
+      );
+    } else if (tab === "Advisor / Chat") {
+      tabContent = (
+        <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="h6">Advisor / Chat</Typography>
+          <Typography>Chat feature coming soon.</Typography>
+        </Box>
+      );
+    } else if (tab === "Settings / Billing") {
+      tabContent = (
+        <Box sx={{ bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="h6">Settings / Billing</Typography>
+          <Typography>Settings and billing info coming soon.</Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Box sx={{ display: "flex", height: "100vh", bgcolor: "#f7f8fa" }}>
+        {/* Sidebar */}
+        <Box sx={{ width: 220, bgcolor: "#fff", borderRight: "1px solid #eee", p: 2 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Family Office</Typography>
+          {dashboardTabs.map(({ icon, label }) => (
+            <Button key={label} fullWidth sx={{ justifyContent: 'flex-start', mb: 1, fontWeight: tab === label ? 700 : 400, bgcolor: tab === label ? '#e3eafe' : undefined }} startIcon={<span>{icon}</span>} onClick={() => setTab(label)}>{label}</Button>
+          ))}
+        </Box>
+        {/* Main Content */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: '#fff', px: 3, py: 2, borderBottom: '1px solid #eee' }}>
+            <Box sx={{ flex: 1 }}>
+              <Button variant="text">Kakani Family ▼</Button>
+            </Box>
+            <Box sx={{ flex: 1, textAlign: 'center' }}>{new Date().toLocaleDateString()}</Box>
+            <Box sx={{ flex: 1, textAlign: 'right' }}>
+              <Button><span role="img" aria-label="notifications">🔔</span></Button>
+              <Button><span role="img" aria-label="help">❓</span></Button>
+              <Button><span role="img" aria-label="profile">👤</span></Button>
+            </Box>
           </Box>
+          {/* Tab Content */}
+          <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>{tabContent}</Box>
         </Box>
       </Box>
-    </Box>
-  );
-};
-
-const SignupLogin = () => {
-  const navigate = useNavigate();
-  const [mobile, setMobile] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [referral, setReferral] = useState("");
-  return (
-    <div style={{ maxWidth: 400, margin: "40px auto" }}>
-      <h2>Welcome Back / Create Account</h2>
-      <TextField
-        label="📱 Mobile Number"
-        fullWidth
-        margin="normal"
-        value={mobile}
-        onChange={(e) => setMobile(e.target.value)}
-      />
-      {!otpSent && (
-        <Button variant="contained" onClick={() => setOtpSent(true)}>
-          Get OTP
-        </Button>
-      )}
-      {otpSent && (
-        <>
-          <TextField
-            label="OTP"
+    );
+  };
             fullWidth
             margin="normal"
             value={otp}
@@ -173,11 +257,27 @@ const SignupLogin = () => {
             value={referral}
             onChange={(e) => setReferral(e.target.value)}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
-            <Button variant="outlined" color="primary" onClick={() => navigate(-1)}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: 24,
+            }}
+          >
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => navigate(-1)}
+            >
               Back
             </Button>
-            <Button variant="contained" color="primary" onClick={() => navigate("/onboarding")}>Continue</Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => navigate("/onboarding")}
+            >
+              Continue
+            </Button>
           </div>
         </>
       )}
@@ -243,11 +343,23 @@ const OnboardingWizard = () => {
           + Add Member
         </Button>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginTop: 24,
+        }}
+      >
         <Button variant="outlined" color="primary" onClick={() => navigate(-1)}>
           Back
         </Button>
-        <Button variant="contained" color="primary" onClick={() => navigate("/connect-accounts")}>Next</Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate("/connect-accounts")}
+        >
+          Next
+        </Button>
       </div>
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box
