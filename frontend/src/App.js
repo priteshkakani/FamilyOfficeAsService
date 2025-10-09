@@ -1,5 +1,5 @@
 // ErrorBoundary to catch and display errors
-import React from "react";
+// ErrorBoundary to catch and display errors
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
