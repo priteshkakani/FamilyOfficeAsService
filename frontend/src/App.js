@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+// import axios from "axios";
 
 const dashboardTabs = [
   { icon: "🏠", label: "Dashboard" },
@@ -14,37 +14,36 @@ const dashboardTabs = [
   { icon: "⚙️", label: "Settings / Billing" },
 ];
 
-  const defaultAssets = [
-    { type: "Bank Account", value: 100000 },
-    { type: "Mutual Funds", value: 200000 },
-    { type: "Stocks", value: 150000 },
-    { type: "Real Estate", value: 500000 },
-    { type: "Gold", value: 50000 },
-  ];
-  const defaultLiabilities = [
-    { type: "Home Loan", value: 200000 },
-    { type: "Car Loan", value: 50000 },
-  ];
-  const defaultIncome = [
-    { source: "Salary", value: 100000 },
-    { source: "Business", value: 20000 },
-  ];
-  const defaultExpenses = [
-    { category: "EMI", value: 15000 },
-    { category: "Groceries", value: 8000 },
-    { category: "Utilities", value: 4000 },
-  ];
-  const defaultFamily = [
-    { name: "Amit", age: 45, role: "Primary", assets: "₹1.2Cr" },
-    { name: "Priya", age: 42, role: "Spouse", assets: "₹80L" },
-  ];
-  const investmentAdvice = [
-    { type: "Smallcases", advice: "Diversify with top smallcases for 2025." },
-    { type: "Mutual Funds", advice: "Increase SIP in large-cap funds." },
-    { type: "Stocks", advice: "Review direct equity for rebalancing." },
-    { type: "Real Estate", advice: "Consider REITs for liquidity." },
-  ];
-
+const defaultAssets = [
+  { type: "Bank Account", value: 100000 },
+  { type: "Mutual Funds", value: 200000 },
+  { type: "Stocks", value: 150000 },
+  { type: "Real Estate", value: 500000 },
+  { type: "Gold", value: 50000 },
+];
+const defaultLiabilities = [
+  { type: "Home Loan", value: 200000 },
+  { type: "Car Loan", value: 50000 },
+];
+const defaultIncome = [
+  { source: "Salary", value: 100000 },
+  { source: "Business", value: 20000 },
+];
+const defaultExpenses = [
+  { category: "EMI", value: 15000 },
+  { category: "Groceries", value: 8000 },
+  { category: "Utilities", value: 4000 },
+];
+const defaultFamily = [
+  { name: "Amit", age: 45, role: "Primary", assets: "₹1.2Cr" },
+  { name: "Priya", age: 42, role: "Spouse", assets: "₹80L" },
+];
+const investmentAdvice = [
+  { type: "Smallcases", advice: "Diversify with top smallcases for 2025." },
+  { type: "Mutual Funds", advice: "Increase SIP in large-cap funds." },
+  { type: "Stocks", advice: "Review direct equity for rebalancing." },
+  { type: "Real Estate", advice: "Consider REITs for liquidity." },
+];
 
 const OnboardingWizard = () => {
   const navigate = useNavigate();
