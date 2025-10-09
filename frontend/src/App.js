@@ -92,16 +92,17 @@ function NotFoundPage() {
 }
 // ...existing code...
 
+import { useRef } from "react";
 function SignupLogin() {
   const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const mode = params.get("mode") || "signin";
-  const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState(1);
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const emailInput = useRef();
 
-  // Check if user is already authenticated (simulate with localStorage key 'foas_token')
   useEffect(() => {
     const token = localStorage.getItem("foas_token");
     if (token) {
@@ -109,17 +110,29 @@ function SignupLogin() {
     }
   }, [navigate]);
 
-  const handleSendOtp = async () => {
+  const handleEmailSignIn = async (e) => {
+    e.preventDefault();
     setError("");
-    // TODO: Call backend for OTP send (login or signup)
-    setStep(2);
-  };
-  const handleVerifyOtp = async () => {
-    setError("");
-    // TODO: Call backend for OTP verify
-    // On success, set token and redirect
-    localStorage.setItem("foas_token", "demo_token");
-    navigate("/dashboard");
+    setMessage("");
+    setLoading(true);
+    try {
+      // Call backend to send magic link
+      const res = await fetch("/api/v1/users/send-magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage("Check your email for the login link.");
+      } else {
+        setError(data.error || "Failed to send magic link");
+      }
+    } catch (err) {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -146,61 +159,37 @@ function SignupLogin() {
           {mode === "signup" ? "Sign Up" : "Sign In"}
         </Typography>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Enter your mobile number to{" "}
+          Enter your email to{" "}
           {mode === "signup" ? "create an account" : "sign in"}.
         </Typography>
-        <input
-          type="tel"
-          placeholder="Mobile Number"
-          value={mobile}
-          onChange={(e) => setMobile(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 12,
-            fontSize: 16,
-            borderRadius: 6,
-            border: "1px solid #ccc",
-            marginBottom: 16,
-          }}
-        />
-        {step === 1 && (
+        <form onSubmit={handleEmailSignIn}>
+          <input
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            ref={emailInput}
+            required
+            style={{
+              width: "100%",
+              padding: 12,
+              fontSize: 16,
+              borderRadius: 6,
+              border: "1px solid #ccc",
+              marginBottom: 16,
+            }}
+          />
           <Button
             variant="contained"
             color="primary"
             fullWidth
             sx={{ fontWeight: 700, mb: 2 }}
-            onClick={handleSendOtp}
+            type="submit"
+            disabled={loading}
           >
-            Get OTP
+            {loading ? "Sending..." : "Send Magic Link"}
           </Button>
-        )}
-        {step === 2 && (
-          <>
-            <input
-              type="text"
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              style={{
-                width: "100%",
-                padding: 12,
-                fontSize: 16,
-                borderRadius: 6,
-                border: "1px solid #ccc",
-                marginBottom: 16,
-              }}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              sx={{ fontWeight: 700, mb: 2 }}
-              onClick={handleVerifyOtp}
-            >
-              Verify OTP
-            </Button>
-          </>
-        )}
+        </form>
         <Divider sx={{ my: 2 }}>or</Divider>
         <Button
           variant="contained"
@@ -224,6 +213,11 @@ function SignupLogin() {
         >
           Sign in with Google
         </Button>
+        {message && (
+          <Typography color="primary" sx={{ mt: 2 }}>
+            {message}
+          </Typography>
+        )}
         {error && (
           <Typography color="error" sx={{ mt: 2 }}>
             {error}
