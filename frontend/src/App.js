@@ -1,18 +1,18 @@
-import React from "react";
-import {
-  import axios from "axios";
-  const dashboardTabs = [
-    { icon: "🏠", label: "Dashboard" },
-    { icon: "💰", label: "Assets" },
-    { icon: "📉", label: "Liabilities" },
-    { icon: "📊", label: "Net Worth" },
-    { icon: "🧾", label: "Cashflow & Expenses" },
-    { icon: "📁", label: "Documents" },
-    { icon: "󰰁", label: "Family Members" },
-    { icon: "📅", label: "Insights & Alerts" },
-    { icon: "󰞴", label: "Advisor / Chat" },
-    { icon: "⚙️", label: "Settings / Billing" },
-  ];
+import React, { useState } from "react";
+import axios from "axios";
+
+const dashboardTabs = [
+  { icon: "🏠", label: "Dashboard" },
+  { icon: "💰", label: "Assets" },
+  { icon: "📉", label: "Liabilities" },
+  { icon: "📊", label: "Net Worth" },
+  { icon: "🧾", label: "Cashflow & Expenses" },
+  { icon: "📁", label: "Documents" },
+  { icon: "󰰁", label: "Family Members" },
+  { icon: "📅", label: "Insights & Alerts" },
+  { icon: "󰞴", label: "Advisor / Chat" },
+  { icon: "⚙️", label: "Settings / Billing" },
+];
 
   const defaultAssets = [
     { type: "Bank Account", value: 100000 },
