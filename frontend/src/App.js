@@ -1400,6 +1400,7 @@ const pageOrder = [
   "/dashboard", // MainDashboard
 ];
 
+
 function NavigationButtons() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1445,6 +1446,7 @@ function NavigationButtons() {
   );
 }
 
+function App() {
   return (
     <ErrorBoundary>
       <Router>
