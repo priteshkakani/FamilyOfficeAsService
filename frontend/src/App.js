@@ -28,43 +28,163 @@ import {
   MenuItem,
 } from "@mui/material";
 
-// Minimal LandingPage to prevent blank screen
+// Professional LandingPage with hero, features, pricing, security, and floating CTA
 function LandingPage() {
+  const navigate = useNavigate();
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "#f7f8fa",
-      }}
-    >
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f7f8fa", position: "relative" }}>
+      {/* Hero Banner */}
       <Box
         sx={{
-          bgcolor: "#fff",
-          p: 6,
-          borderRadius: 3,
-          boxShadow: 2,
+          maxWidth: 700,
+          mx: "auto",
+          pt: 12,
+          pb: 6,
+          px: 2,
           textAlign: "center",
         }}
       >
-        <Typography variant="h3" fontWeight={700} gutterBottom>
-          Welcome to Family Office
+        <Typography variant="h2" fontWeight={800} gutterBottom>
+          Consolidate your entire family’s finances
         </Typography>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          Manage your family's finances, assets, and investments in one place.
+        <Typography variant="h5" color="text.secondary" sx={{ mb: 4 }}>
+          — investments, insurance, real estate, loans — in one secure dashboard.
         </Typography>
         <Button
           variant="contained"
           color="primary"
           size="large"
-          href="/login"
-          sx={{ mt: 3 }}
+          sx={{ px: 6, py: 1.5, fontWeight: 700, fontSize: 20, borderRadius: 2, boxShadow: 2 }}
+          onClick={() => navigate("/login")}
         >
-          Get Started
+          Start Free →
         </Button>
       </Box>
+      {/* Key Features */}
+      <Box
+        sx={{
+          maxWidth: 900,
+          mx: "auto",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 4,
+          justifyContent: "center",
+          mb: 6,
+        }}
+      >
+        {[
+          ["🔗", "Auto-fetch data via Account Aggregator"],
+          ["💰", "Consolidated Net Worth"],
+          ["🛡️", "Insurance & Policy tracker"],
+          ["💼", "ESOP/RSU management"],
+          ["🤝", "Advisor chat & reports"],
+        ].map(([icon, text]) => (
+          <Box
+            key={text}
+            sx={{
+              flex: "1 1 220px",
+              bgcolor: "#fff",
+              p: 3,
+              borderRadius: 2,
+              boxShadow: 1,
+              minWidth: 220,
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <span style={{ fontSize: 32 }}>{icon}</span>
+            <Typography variant="subtitle1" fontWeight={600}>
+              {text}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+      {/* Pricing Tiers */}
+      <Box
+        sx={{
+          maxWidth: 900,
+          mx: "auto",
+          display: "flex",
+          gap: 4,
+          justifyContent: "center",
+          mb: 6,
+        }}
+      >
+        {[
+          ["Basic", "Free forever", ["Net worth dashboard", "Manual asset entry"]],
+          ["Premium", "₹499/mo", ["Auto-fetch via Account Aggregator", "Insurance tracker", "Advisor chat"]],
+          ["Family Office Concierge", "Custom", ["Dedicated advisor", "Custom reporting", "White-glove onboarding"]],
+        ].map(([tier, price, features]) => (
+          <Box
+            key={tier}
+            sx={{
+              flex: "1 1 220px",
+              bgcolor: "#fff",
+              p: 3,
+              borderRadius: 2,
+              boxShadow: 1,
+              minWidth: 220,
+              textAlign: "center",
+            }}
+          >
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
+              {tier}
+            </Typography>
+            <Typography variant="h5" color="primary" fontWeight={800}>
+              {price}
+            </Typography>
+            <ul style={{ textAlign: "left", margin: "16px 0 0 0", padding: 0, listStyle: "none" }}>
+              {features.map((f) => (
+                <li key={f} style={{ marginBottom: 8 }}>
+                  <span style={{ color: "#4caf50", marginRight: 6 }}>✔</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </Box>
+        ))}
+      </Box>
+      {/* Security Assurance */}
+      <Box
+        sx={{
+          maxWidth: 700,
+          mx: "auto",
+          bgcolor: "#e3f2fd",
+          p: 3,
+          borderRadius: 2,
+          boxShadow: 0,
+          textAlign: "center",
+          mb: 8,
+        }}
+      >
+        <Typography variant="subtitle1" fontWeight={600}>
+          Security Assurance
+        </Typography>
+        <Typography color="text.secondary" sx={{ mt: 1 }}>
+          DPDP-compliant, 256-bit encryption, SEBI registered (if applicable).
+        </Typography>
+      </Box>
+      {/* Floating Login/Signup CTA */}
+      <Button
+        variant="contained"
+        color="secondary"
+        sx={{
+          position: "fixed",
+          bottom: 32,
+          right: 32,
+          px: 4,
+          py: 1.5,
+          fontWeight: 700,
+          fontSize: 18,
+          borderRadius: 2,
+          boxShadow: 3,
+          zIndex: 2000,
+        }}
+        onClick={() => navigate("/login")}
+      >
+        Login / Signup
+      </Button>
     </Box>
   );
 }
@@ -1359,7 +1479,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<SignupLogin />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<SignupLogin />} />
         <Route path="/onboarding" element={<OnboardingWizard />} />
         <Route path="/connect-accounts" element={<ConnectAccounts />} />
