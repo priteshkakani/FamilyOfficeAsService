@@ -1,5 +1,3 @@
-// ErrorBoundary to catch and display errors
-// ErrorBoundary to catch and display errors
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -9,7 +7,6 @@ class ErrorBoundary extends React.Component {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
-    // log error
     console.error("ErrorBoundary caught:", error, errorInfo);
   }
   render() {
@@ -35,7 +32,6 @@ import {
 
 function LandingPage() {
   const navigate = useNavigate();
-  console.log("Rendering LandingPage");
   return (
     <Box
       sx={{
@@ -1120,11 +1116,18 @@ const MainDashboard = () => {
     { label: "Monthly Income", value: `₹${hardcodedMonthlyIncome}` },
     { label: "Monthly Savings", value: `₹${hardcodedMonthlySavings}` },
     { label: "Monthly Cashflow", value: `₹${hardcodedMonthlyCashflow}` },
-    { label: "Investment Advice", value: (
-        <Button variant="outlined" color="secondary" onClick={() => setAdviceOpen(true)}>
+    {
+      label: "Investment Advice",
+      value: (
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={() => setAdviceOpen(true)}
+        >
           View Advice
         </Button>
-      ) },
+      ),
+    },
   ]);
   // Hardcoded family members and asset allocation for now
   const [familyMembers, setFamilyMembers] = useState([
@@ -1176,22 +1179,23 @@ const MainDashboard = () => {
           Family Office
         </Typography>
         {[
-          ["🏠", "Dashboard"],
-          ["💰", "Assets"],
-          ["📉", "Liabilities"],
-          ["📊", "Net Worth"],
-          ["🧾", "Cashflow & Expenses"],
-          ["📁", "Documents"],
-          ["󰰁", "Family Members"],
-          ["📅", "Insights & Alerts"],
-          ["󰞴", "Advisor / Chat"],
-          ["⚙️", "Settings / Billing"],
-        ].map(([icon, label]) => (
+          ["🏠", "Dashboard", "/dashboard"],
+          ["💰", "Assets", "/assets"],
+          ["📉", "Liabilities", "/liabilities"],
+          ["📊", "Net Worth", "/net-worth"],
+          ["🧾", "Cashflow & Expenses", "/cashflow"],
+          ["📁", "Documents", "/documents"],
+          ["󰰁", "Family Members", "/family"],
+          ["📅", "Insights & Alerts", "/insights"],
+          ["󰞴", "Advisor / Chat", "/advisor"],
+          ["⚙️", "Settings / Billing", "/settings"],
+        ].map(([icon, label, path]) => (
           <Button
             key={label}
             fullWidth
             sx={{ justifyContent: "flex-start", mb: 1 }}
             startIcon={<span>{icon}</span>}
+            onClick={() => window.location.pathname !== path && window.history.pushState({}, '', path)}
           >
             {label}
           </Button>
@@ -1199,192 +1203,405 @@ const MainDashboard = () => {
       </Box>
       {/* Main Content */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            bgcolor: "#fff",
-            px: 3,
-            py: 2,
-            borderBottom: "1px solid #eee",
-          }}
-        >
-          <Box sx={{ flex: 1 }}>
-            <Button variant="text">Kakani Family ▼</Button>
+        {/* Dashboard Routing */}
+        <Routes>
+          <Route path="/dashboard" element={<DashboardHome summary={summary} adviceOpen={adviceOpen} setAdviceOpen={setAdviceOpen} investmentAdvice={investmentAdvice} familyMembers={familyMembers} />} />
+          <Route path="/assets" element={<AssetsPage assets={assets} />} />
+          <Route path="/liabilities" element={<LiabilitiesPage liabilities={liabilities} />} />
+          <Route path="/net-worth" element={<NetWorthPage netWorth={hardcodedNetWorth} />} />
+          <Route path="/cashflow" element={<CashflowPage cashflows={cashflows} />} />
+          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/family" element={<FamilyPage familyMembers={familyMembers} />} />
+          <Route path="/insights" element={<InsightsPage />} />
+          <Route path="/advisor" element={<AdvisorPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          {/* Default route */}
+          <Route path="*" element={<DashboardHome summary={summary} adviceOpen={adviceOpen} setAdviceOpen={setAdviceOpen} investmentAdvice={investmentAdvice} familyMembers={familyMembers} />} />
+        </Routes>
+      </Box>
+    </Box>
+  );
+}
+
+// Simple pages for each tab (move outside MainDashboard)
+function AssetsPage({ assets }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Assets</Typography>
+      <ul>
+        {assets.map((a, i) => (
+          <li key={i}>{a.type}: ₹{a.value}</li>
+        ))}
+      </ul>
+    </Box>
+  );
+}
+function LiabilitiesPage({ liabilities }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Liabilities</Typography>
+      <ul>
+        {liabilities.map((l, i) => (
+          <li key={i}>{l.type}: ₹{l.value}</li>
+        ))}
+      </ul>
+    </Box>
+  );
+}
+function NetWorthPage({ netWorth }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Net Worth</Typography>
+      <Typography>Current Net Worth: ₹{netWorth}</Typography>
+    </Box>
+  );
+}
+function CashflowPage({ cashflows }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Cashflow & Expenses</Typography>
+      <ul>
+        {cashflows.map((c, i) => (
+          <li key={i}>{c.source}: ₹{c.value}</li>
+        ))}
+      </ul>
+    </Box>
+  );
+}
+function DocumentsPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Documents</Typography>
+      <Typography color="text.secondary">No documents uploaded yet.</Typography>
+    </Box>
+  );
+}
+function FamilyPage({ familyMembers }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Family Members</Typography>
+      <ul>
+        {familyMembers.map((m, i) => (
+          <li key={i}>{m.name} ({m.role}) - Assets: {m.assets} - Income: ₹{m.income}</li>
+        ))}
+      </ul>
+    </Box>
+  );
+}
+function InsightsPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Insights & Alerts</Typography>
+      <Typography color="text.secondary">No insights available.</Typography>
+    </Box>
+  );
+}
+function AdvisorPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Advisor / Chat</Typography>
+      <Typography color="text.secondary">Chat with your advisor coming soon.</Typography>
+    </Box>
+  );
+}
+function SettingsPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Settings / Billing</Typography>
+      <Typography color="text.secondary">Settings and billing info will appear here.</Typography>
+    </Box>
+  );
+}
+// Dashboard Home Page
+function DashboardHome({ summary, adviceOpen, setAdviceOpen, investmentAdvice, familyMembers }) {
+  return (
+    <Box sx={{ display: "flex", flex: 1, overflow: "auto" }}>
+      {/* Main Section */}
+      <Box sx={{ flex: 2, p: 3 }}>
+        {/* Summary Cards */}
+        <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+          {summary.map((card) => (
+            <Box
+              key={card.label}
+              sx={{
+                flex: "1 1 220px",
+                bgcolor: "#fff",
+                p: 2,
+                borderRadius: 2,
+                boxShadow: 1,
+                textAlign: "center",
+                minWidth: 180,
+              }}
+            >
+              <Typography variant="subtitle2" color="text.secondary">
+                {card.label}
+              </Typography>
+              <Typography variant="h6">{card.value}</Typography>
+            </Box>
+          ))}
+        </Box>
+        {/* Investment Advice Modal */}
+        <Modal open={adviceOpen} onClose={() => setAdviceOpen(false)}>
+          <Box
+            sx={{
+              p: 4,
+              bgcolor: "background.paper",
+              maxWidth: 400,
+              mx: "auto",
+              mt: 10,
+              borderRadius: 2,
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Investment Advice
+            </Typography>
+            {investmentAdvice.map((item) => (
+              <Box key={item.type} sx={{ mb: 2 }}>
+                <Typography variant="subtitle1">{item.type}</Typography>
+                <Typography color="text.secondary">
+                  {item.advice}
+                </Typography>
+              </Box>
+            ))}
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setAdviceOpen(false)}
+              fullWidth
+            >
+              Close
+            </Button>
           </Box>
-          <Box sx={{ flex: 1, textAlign: "center" }}>
-            {new Date().toLocaleDateString()}
+        </Modal>
+        {/* Charts */}
+        <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+          <Box
+            sx={{
+              flex: 2,
+              bgcolor: "#fff",
+              p: 2,
+              borderRadius: 2,
+              boxShadow: 1,
+            }}
+          >
+            <Typography variant="subtitle1">Net Worth Trend</Typography>
+            <Box
+              sx={{
+                height: 180,
+                bgcolor: "#f5f5f5",
+                borderRadius: 1,
+                mt: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography color="text.secondary">
+                [Line Chart Placeholder]
+              </Typography>
+            </Box>
           </Box>
-          <Box sx={{ flex: 1, textAlign: "right" }}>
-            <Button>
-              <span role="img" aria-label="notifications">
-                🔔
-              </span>
-            </Button>
-            <Button>
-              <span role="img" aria-label="help">
-                ❓
-              </span>
-            </Button>
-            <Button>
-              <span role="img" aria-label="profile">
-                👤
-              </span>
-            </Button>
+          <Box
+            sx={{
+              flex: 1,
+              bgcolor: "#fff",
+              p: 2,
+              borderRadius: 2,
+              boxShadow: 1,
+            }}
+          >
+            <Typography variant="subtitle1">Asset Allocation</Typography>
+            <Box
+              sx={{
+                height: 180,
+                bgcolor: "#f5f5f5",
+                borderRadius: 1,
+                mt: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography color="text.secondary">
+                [Bar Chart Placeholder]
+              </Typography>
+            </Box>
           </Box>
         </Box>
-        {/* Dashboard Content */}
-        <Box sx={{ display: "flex", flex: 1, overflow: "auto" }}>
-          {/* Main Section */}
-          <Box sx={{ flex: 2, p: 3 }}>
-            {/* Summary Cards */}
-            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: 'wrap' }}>
-              {summary.map((card) => (
-                <Box
-                  key={card.label}
-                  sx={{
-                    flex: '1 1 220px',
-                    bgcolor: "#fff",
-                    p: 2,
-                    borderRadius: 2,
-                    boxShadow: 1,
-                    textAlign: "center",
-                    minWidth: 180,
-                  }}
-                >
-                  <Typography variant="subtitle2" color="text.secondary">
-                    {card.label}
-                  </Typography>
-                  <Typography variant="h6">{card.value}</Typography>
-                </Box>
-              ))}
-            </Box>
-            {/* Investment Advice Modal */}
-            <Modal open={adviceOpen} onClose={() => setAdviceOpen(false)}>
-              <Box sx={{
-                p: 4,
-                bgcolor: "background.paper",
-                maxWidth: 400,
-                mx: "auto",
-                mt: 10,
-                borderRadius: 2,
-              }}>
-                <Typography variant="h6" gutterBottom>Investment Advice</Typography>
-                {investmentAdvice.map((item) => (
-                  <Box key={item.type} sx={{ mb: 2 }}>
-                    <Typography variant="subtitle1">{item.type}</Typography>
-                    <Typography color="text.secondary">{item.advice}</Typography>
-                  </Box>
-                ))}
-                <Button variant="contained" color="primary" onClick={() => setAdviceOpen(false)} fullWidth>Close</Button>
-              </Box>
-            </Modal>
-            {/* Charts */}
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-              <Box
-                sx={{
-                  flex: 2,
-                  bgcolor: "#fff",
-                  p: 2,
-                  borderRadius: 2,
-                  boxShadow: 1,
-                }}
-              >
-                <Typography variant="subtitle1">Net Worth Trend</Typography>
-                <Box
-                  sx={{
-                    height: 180,
-                    bgcolor: "#f5f5f5",
-                    borderRadius: 1,
-                    mt: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Typography color="text.secondary">
-                    [Line Chart Placeholder]
-                  </Typography>
-                </Box>
-              </Box>
-              <Box
-                sx={{
-                  flex: 1,
-                  bgcolor: "#fff",
-                  p: 2,
-                  borderRadius: 2,
-                  boxShadow: 1,
-                }}
-              >
-                <Typography variant="subtitle1">Asset Allocation</Typography>
-                <Box
-                  sx={{
-                    height: 180,
-                    bgcolor: "#f5f5f5",
-                    borderRadius: 1,
-                    mt: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Typography color="text.secondary">
-                    [Bar Chart Placeholder]
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-            {/* Recent Transactions Table */}
-            <Box
-              sx={{
-                bgcolor: "#fff",
-                p: 2,
-                borderRadius: 2,
-                boxShadow: 1,
-                mb: 3,
-              }}
-            >
-              <Typography variant="subtitle1">Recent Transactions</Typography>
-              <Box sx={{ mt: 1 }}>
-                <Typography color="text.secondary">
-                  [Table Placeholder]
-                </Typography>
-              </Box>
-            </Box>
-            {/* Alerts & Renewals */}
-            <Box sx={{ bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1 }}>
-              <Typography variant="subtitle1">Alerts & Renewals</Typography>
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                <li>LIC policy renewal in 15 days</li>
-                <li>ESOP vesting due next month</li>
-              </ul>
-            </Box>
+        {/* Recent Transactions Table */}
+        <Box
+          sx={{
+            bgcolor: "#fff",
+            p: 2,
+            borderRadius: 2,
+            boxShadow: 1,
+            mb: 3,
+          }}
+        >
+          <Typography variant="subtitle1">Recent Transactions</Typography>
+          <Box sx={{ mt: 1 }}>
+            <Typography color="text.secondary">
+              [Table Placeholder]
+            </Typography>
           </Box>
-          {/* Right Panel */}
-          <Box sx={{ flex: 1, p: 3, minWidth: 280 }}>
-            <Box
-              sx={{
-                bgcolor: "#fff",
-                p: 2,
-                borderRadius: 2,
-                boxShadow: 1,
-                mb: 3,
-              }}
-            >
-              <Typography variant="subtitle1">Family Members</Typography>
-              {familyMembers.length === 0 ? (
-                <Typography color="text.secondary">
-                  No family members found.
-                </Typography>
-              ) : (
-                familyMembers.map((m) => (
-                  <Box
-                    key={m.name}
-                    sx={{ display: "flex", alignItems: "center", mt: 2 }}
-                  >
-                    <Box
-                      sx={{
+        </Box>
+        {/* Alerts & Renewals */}
+        <Box sx={{ bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="subtitle1">Alerts & Renewals</Typography>
+          <ul style={{ margin: 0, paddingLeft: 20 }}>
+            <li>LIC policy renewal in 15 days</li>
+            <li>ESOP vesting due next month</li>
+          </ul>
+        </Box>
+      </Box>
+      {/* Right Panel */}
+      <Box sx={{ flex: 1, p: 3, minWidth: 280 }}>
+        <Box
+          sx={{
+            bgcolor: "#fff",
+            p: 2,
+            borderRadius: 2,
+            boxShadow: 1,
+            mb: 3,
+          }}
+        >
+          <Typography variant="subtitle1">Family Members</Typography>
+          {familyMembers.length === 0 ? (
+            <Typography color="text.secondary">
+              No family members found.
+            </Typography>
+          ) : (
+            familyMembers.map((m) => (
+              <Box
+                key={m.name}
+                sx={{ display: "flex", alignItems: "center", mt: 2 }}
+              >
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: "#e0e0e0",
+                    borderRadius: "50%",
+                    mr: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography>{m.name ? m.name[0] : "?"}</Typography>
+                </Box>
+                <Box>
+                  <Typography>
+                    {m.name} {m.age ? `(${m.age})` : ""}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {m.role} {m.assets ? `| ${m.assets}` : ""}
+                  </Typography>
+                </Box>
+              </Box>
+            ))
+          )}
+        </Box>
+        <Box sx={{ bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1 }}>
+          <Typography variant="subtitle1">Advisor Notes</Typography>
+          <Typography color="text.secondary" sx={{ mt: 1 }}>
+            [Reminders/Notes Placeholder]
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+// Simple pages for each tab
+function AssetsPage({ assets }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Assets</Typography>
+      <ul>
+        {assets.map((a, i) => (
+          <li key={i}>{a.type}: ₹{a.value}</li>
+        ))}
+      </ul>
+    </Box>
+  );
+}
+function LiabilitiesPage({ liabilities }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Liabilities</Typography>
+      <ul>
+        {liabilities.map((l, i) => (
+          <li key={i}>{l.type}: ₹{l.value}</li>
+        ))}
+      </ul>
+    </Box>
+  );
+}
+function NetWorthPage({ netWorth }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Net Worth</Typography>
+      <Typography>Current Net Worth: ₹{netWorth}</Typography>
+    </Box>
+  );
+}
+function CashflowPage({ cashflows }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Cashflow & Expenses</Typography>
+      <ul>
+        {cashflows.map((c, i) => (
+          <li key={i}>{c.source}: ₹{c.value}</li>
+        ))}
+      </ul>
+    </Box>
+  );
+}
+function DocumentsPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Documents</Typography>
+      <Typography color="text.secondary">No documents uploaded yet.</Typography>
+    </Box>
+  );
+}
+function FamilyPage({ familyMembers }) {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Family Members</Typography>
+      <ul>
+        {familyMembers.map((m, i) => (
+          <li key={i}>{m.name} ({m.role}) - Assets: {m.assets} - Income: ₹{m.income}</li>
+        ))}
+      </ul>
+    </Box>
+  );
+}
+function InsightsPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Insights & Alerts</Typography>
+      <Typography color="text.secondary">No insights available.</Typography>
+    </Box>
+  );
+}
+function AdvisorPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Advisor / Chat</Typography>
+      <Typography color="text.secondary">Chat with your advisor coming soon.</Typography>
+    </Box>
+  );
+}
+function SettingsPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Settings / Billing</Typography>
+      <Typography color="text.secondary">Settings and billing info will appear here.</Typography>
+    </Box>
+  );
+}
                         width: 40,
                         height: 40,
                         bgcolor: "#e0e0e0",
