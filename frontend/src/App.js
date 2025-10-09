@@ -1,3 +1,17 @@
+// Simple LandingPage component to show on root
+import { Button, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+
+function LandingPage() {
+  const navigate = useNavigate();
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#f7f8fa" }}>
+      <Typography variant="h3" gutterBottom>Welcome to Family Office Platform</Typography>
+      <Typography variant="subtitle1" gutterBottom>Manage your family's wealth, assets, and more in one place.</Typography>
+      <Button variant="contained" color="primary" size="large" sx={{ mt: 4, fontWeight: "bold" }} onClick={() => navigate("/login")}>Get Started</Button>
+    </div>
+  );
+}
 import React, { useState } from "react";
 // import axios from "axios";
 
