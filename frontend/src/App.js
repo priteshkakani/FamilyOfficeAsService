@@ -21,37 +21,83 @@ import { useState } from "react";
 const LandingPage = () => {
   const navigate = useNavigate();
   return (
-    <Box sx={{
-      minHeight: '100vh',
-      bgcolor: 'linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexDirection: 'column',
-    }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+      }}
+    >
       <Box sx={{ mb: 4 }}>
-        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Family Office Logo" style={{ width: 80, height: 80, borderRadius: 16, boxShadow: '0 2px 8px #bdbdbd' }} />
+        <img
+          src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+          alt="Family Office Logo"
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: 16,
+            boxShadow: "0 2px 8px #bdbdbd",
+          }}
+        />
       </Box>
-      <Box sx={{ maxWidth: 480, width: '100%' }}>
-        <Box sx={{ bgcolor: '#fff', borderRadius: 4, boxShadow: 3, p: 4, textAlign: 'center' }}>
-          <Typography variant="h4" fontWeight={700} color="primary.main" gutterBottom>
+      <Box sx={{ maxWidth: 480, width: "100%" }}>
+        <Box
+          sx={{
+            bgcolor: "#fff",
+            borderRadius: 4,
+            boxShadow: 3,
+            p: 4,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            variant="h4"
+            fontWeight={700}
+            color="primary.main"
+            gutterBottom
+          >
             Family Office Platform
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-            Consolidate your entire family’s finances — investments, insurance, real estate, loans — in one secure dashboard.
+            Consolidate your entire family’s finances — investments, insurance,
+            real estate, loans — in one secure dashboard.
           </Typography>
           <Button
             variant="contained"
             color="primary"
             size="large"
-            sx={{ my: 2, fontWeight: 'bold', fontSize: 20, px: 6, py: 1.5, borderRadius: 3, boxShadow: 2 }}
+            sx={{
+              my: 2,
+              fontWeight: "bold",
+              fontSize: 20,
+              px: 6,
+              py: 1.5,
+              borderRadius: 3,
+              boxShadow: 2,
+            }}
             onClick={() => navigate("/login")}
           >
             Sign In / Login
           </Button>
           <Box sx={{ mt: 4, mb: 2 }}>
-            <Typography variant="subtitle1" fontWeight={600} color="primary.dark">Key Features</Typography>
-            <ul style={{ textAlign: "left", display: "inline-block", margin: 0, paddingLeft: 20 }}>
+            <Typography
+              variant="subtitle1"
+              fontWeight={600}
+              color="primary.dark"
+            >
+              Key Features
+            </Typography>
+            <ul
+              style={{
+                textAlign: "left",
+                display: "inline-block",
+                margin: 0,
+                paddingLeft: 20,
+              }}
+            >
               <li>Auto-fetch data via Account Aggregator</li>
               <li>Consolidated Net Worth</li>
               <li>Insurance & Policy tracker</li>
@@ -64,7 +110,8 @@ const LandingPage = () => {
               <b>Pricing tiers:</b> Basic | Premium | Family Office Concierge
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              <b>Security Assurance:</b> DPDP-compliant, 256-bit encryption, SEBI registered (if applicable)
+              <b>Security Assurance:</b> DPDP-compliant, 256-bit encryption,
+              SEBI registered (if applicable)
             </Typography>
           </Box>
         </Box>
@@ -74,6 +121,7 @@ const LandingPage = () => {
 };
 
 const SignupLogin = () => {
+  const navigate = useNavigate();
   const [mobile, setMobile] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
@@ -125,9 +173,12 @@ const SignupLogin = () => {
             value={referral}
             onChange={(e) => setReferral(e.target.value)}
           />
-          <Button variant="contained" color="primary" style={{ marginTop: 16 }}>
-            Continue
-          </Button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
+            <Button variant="outlined" color="primary" onClick={() => navigate(-1)}>
+              Back
+            </Button>
+            <Button variant="contained" color="primary" onClick={() => navigate("/onboarding")}>Continue</Button>
+          </div>
         </>
       )}
     </div>
@@ -135,6 +186,7 @@ const SignupLogin = () => {
 };
 
 const OnboardingWizard = () => {
+  const navigate = useNavigate();
   // Step 1: Family Profile
   const [familyName, setFamilyName] = useState("");
   const [primaryContact, setPrimaryContact] = useState("");
@@ -191,9 +243,12 @@ const OnboardingWizard = () => {
           + Add Member
         </Button>
       </div>
-      <Button variant="contained" color="primary">
-        Next →
-      </Button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
+        <Button variant="outlined" color="primary" onClick={() => navigate(-1)}>
+          Back
+        </Button>
+        <Button variant="contained" color="primary" onClick={() => navigate("/connect-accounts")}>Next</Button>
+      </div>
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box
           sx={{
