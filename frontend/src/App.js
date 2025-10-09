@@ -1106,6 +1106,13 @@ const MainDashboard = () => {
   const hardcodedMonthlyIncome = 120000; // sum of family incomes
   const hardcodedMonthlySavings = 30000;
   const hardcodedMonthlyCashflow = 90000;
+  const [adviceOpen, setAdviceOpen] = useState(false);
+  const investmentAdvice = [
+    { type: "Smallcases", advice: "Diversify with top smallcases for 2025." },
+    { type: "Mutual Funds", advice: "Increase SIP in large-cap funds." },
+    { type: "Stocks", advice: "Review direct equity for rebalancing." },
+    { type: "Real Estate", advice: "Consider REITs for liquidity." },
+  ];
   const [summary, setSummary] = useState([
     { label: "Total Net Worth", value: `₹${hardcodedNetWorth}` },
     { label: "Total Assets", value: `₹${hardcodedAssets}` },
@@ -1113,6 +1120,11 @@ const MainDashboard = () => {
     { label: "Monthly Income", value: `₹${hardcodedMonthlyIncome}` },
     { label: "Monthly Savings", value: `₹${hardcodedMonthlySavings}` },
     { label: "Monthly Cashflow", value: `₹${hardcodedMonthlyCashflow}` },
+    { label: "Investment Advice", value: (
+        <Button variant="outlined" color="secondary" onClick={() => setAdviceOpen(true)}>
+          View Advice
+        </Button>
+      ) },
   ]);
   // Hardcoded family members and asset allocation for now
   const [familyMembers, setFamilyMembers] = useState([
@@ -1227,17 +1239,18 @@ const MainDashboard = () => {
           {/* Main Section */}
           <Box sx={{ flex: 2, p: 3 }}>
             {/* Summary Cards */}
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: 'wrap' }}>
               {summary.map((card) => (
                 <Box
                   key={card.label}
                   sx={{
-                    flex: 1,
+                    flex: '1 1 220px',
                     bgcolor: "#fff",
                     p: 2,
                     borderRadius: 2,
                     boxShadow: 1,
                     textAlign: "center",
+                    minWidth: 180,
                   }}
                 >
                   <Typography variant="subtitle2" color="text.secondary">
@@ -1247,6 +1260,26 @@ const MainDashboard = () => {
                 </Box>
               ))}
             </Box>
+            {/* Investment Advice Modal */}
+            <Modal open={adviceOpen} onClose={() => setAdviceOpen(false)}>
+              <Box sx={{
+                p: 4,
+                bgcolor: "background.paper",
+                maxWidth: 400,
+                mx: "auto",
+                mt: 10,
+                borderRadius: 2,
+              }}>
+                <Typography variant="h6" gutterBottom>Investment Advice</Typography>
+                {investmentAdvice.map((item) => (
+                  <Box key={item.type} sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1">{item.type}</Typography>
+                    <Typography color="text.secondary">{item.advice}</Typography>
+                  </Box>
+                ))}
+                <Button variant="contained" color="primary" onClick={() => setAdviceOpen(false)} fullWidth>Close</Button>
+              </Box>
+            </Modal>
             {/* Charts */}
             <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
               <Box
