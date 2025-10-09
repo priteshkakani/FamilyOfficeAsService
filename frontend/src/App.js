@@ -268,6 +268,7 @@ const OnboardingWizard = () => {
 
 const ConnectAccounts = () => {
   const [option, setOption] = useState("A");
+  const [manualBank, setManualBank] = useState({ bank: "", account: "", ifsc: "", balance: "" });
   return (
     <div style={{ maxWidth: 600, margin: "40px auto" }}>
       <Typography variant="h6">
@@ -325,8 +326,12 @@ const ConnectAccounts = () => {
       {option === "C" && (
         <Box sx={{ p: 2, bgcolor: "#f5f5f5", borderRadius: 2 }}>
           <Typography>Enter your account details manually</Typography>
+          <TextField label="Bank Name" fullWidth margin="normal" value={manualBank.bank} onChange={e => setManualBank({ ...manualBank, bank: e.target.value })} />
+          <TextField label="Account Number" fullWidth margin="normal" value={manualBank.account} onChange={e => setManualBank({ ...manualBank, account: e.target.value })} />
+          <TextField label="IFSC Code" fullWidth margin="normal" value={manualBank.ifsc} onChange={e => setManualBank({ ...manualBank, ifsc: e.target.value })} />
+          <TextField label="Balance" fullWidth margin="normal" value={manualBank.balance} onChange={e => setManualBank({ ...manualBank, balance: e.target.value })} />
           <Button variant="contained" color="primary" style={{ marginTop: 8 }}>
-            Continue
+            Save
           </Button>
         </Box>
       )}
@@ -862,19 +867,60 @@ const SetupComplete = () => {
     </div>
   );
 };
+import axios from "axios";
 const MainDashboard = () => {
-  // Placeholder data
-  const summary = [
-    { label: "Total Net Worth", value: "₹2,45,00,000" },
-    { label: "Total Assets", value: "₹3,10,00,000" },
-    { label: "Total Liabilities", value: "₹65,00,000" },
-    { label: "Monthly Cashflow", value: "₹1,20,000" },
-  ];
-  const familyMembers = [
-    { name: "Amit", age: 45, role: "Primary", assets: "₹1.2Cr", photo: "" },
-    { name: "Priya", age: 42, role: "Spouse", assets: "₹80L", photo: "" },
-    { name: "Rohan", age: 18, role: "Son", assets: "₹20L", photo: "" },
-  ];
+  const [summary, setSummary] = useState([
+    { label: "Total Net Worth", value: "-" },
+    { label: "Total Assets", value: "-" },
+    { label: "Total Liabilities", value: "-" },
+    { label: "Monthly Cashflow", value: "-" },
+  ]);
+  const [familyMembers, setFamilyMembers] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [liabilities, setLiabilities] = useState([]);
+  const [cashflows, setCashflows] = useState([]);
+  const [netWorthTrend, setNetWorthTrend] = useState([]);
+  const [assetAllocation, setAssetAllocation] = useState([]);
+
+  React.useEffect(() => {
+    // Fetch assets, liabilities, family, etc. from backend
+    async function fetchData() {
+      // Example: fetch assets for household 1 (replace with real household/user id logic)
+      const householdId = 1;
+      try {
+        const assetsRes = await axios.get(
+          `http://localhost:8000/api/v1/assets/?household_id=${householdId}`
+        );
+        setAssets(assetsRes.data.assets || []);
+        // TODO: fetch liabilities, family, cashflows, etc.
+        // Calculate summary
+        let totalAssets = 0;
+        let totalLiabilities = 0;
+        let monthlyCashflow = 0;
+        // Example: sum asset values if present
+        for (const a of assetsRes.data.assets || []) {
+          if (a.details && a.details.value)
+            totalAssets += Number(a.details.value);
+        }
+        // TODO: fetch and sum liabilities
+        // TODO: fetch and sum cashflows
+        setSummary([
+          {
+            label: "Total Net Worth",
+            value: `₹${totalAssets - totalLiabilities}`,
+          },
+          { label: "Total Assets", value: `₹${totalAssets}` },
+          { label: "Total Liabilities", value: `₹${totalLiabilities}` },
+          { label: "Monthly Cashflow", value: `₹${monthlyCashflow}` },
+        ]);
+        // TODO: set family members, net worth trend, asset allocation
+      } catch (e) {
+        // fallback to empty
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
     <Box sx={{ display: "flex", height: "100vh", bgcolor: "#f7f8fa" }}>
       {/* Sidebar */}
@@ -1023,7 +1069,7 @@ const MainDashboard = () => {
                   }}
                 >
                   <Typography color="text.secondary">
-                    [Donut Chart Placeholder]
+                    [Bar Chart Placeholder]
                   </Typography>
                 </Box>
               </Box>
@@ -1066,35 +1112,41 @@ const MainDashboard = () => {
               }}
             >
               <Typography variant="subtitle1">Family Members</Typography>
-              {familyMembers.map((m) => (
-                <Box
-                  key={m.name}
-                  sx={{ display: "flex", alignItems: "center", mt: 2 }}
-                >
+              {familyMembers.length === 0 ? (
+                <Typography color="text.secondary">
+                  No family members found.
+                </Typography>
+              ) : (
+                familyMembers.map((m) => (
                   <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: "#e0e0e0",
-                      borderRadius: "50%",
-                      mr: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    key={m.name}
+                    sx={{ display: "flex", alignItems: "center", mt: 2 }}
                   >
-                    <Typography>{m.name[0]}</Typography>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        bgcolor: "#e0e0e0",
+                        borderRadius: "50%",
+                        mr: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Typography>{m.name ? m.name[0] : "?"}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography>
+                        {m.name} {m.age ? `(${m.age})` : ""}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {m.role} {m.assets ? `| ${m.assets}` : ""}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Box>
-                    <Typography>
-                      {m.name} ({m.age})
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {m.role} | {m.assets}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
+                ))
+              )}
             </Box>
             <Box sx={{ bgcolor: "#fff", p: 2, borderRadius: 2, boxShadow: 1 }}>
               <Typography variant="subtitle1">Advisor Notes</Typography>
@@ -1127,23 +1179,28 @@ function NavigationButtons() {
   const navigate = useNavigate();
   const location = useLocation();
   const idx = pageOrder.indexOf(location.pathname);
+  // Only show on onboarding pages
+  if (['/', '/login', '/dashboard'].includes(location.pathname)) return null;
   return (
-    <div style={{ margin: "20px 0" }}>
-      <button
+    <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, background: '#fff', padding: 16, display: 'flex', justifyContent: 'center', zIndex: 1000, borderTop: '1px solid #eee' }}>
+      <Button
+        variant="contained"
+        color="primary"
         onClick={() => idx > 0 && navigate(pageOrder[idx - 1])}
         disabled={idx <= 0}
+        sx={{ fontWeight: 'bold', minWidth: 120 }}
       >
         Back
-      </button>
-      <button
-        onClick={() =>
-          idx < pageOrder.length - 1 && navigate(pageOrder[idx + 1])
-        }
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => idx < pageOrder.length - 1 && navigate(pageOrder[idx + 1])}
         disabled={idx >= pageOrder.length - 1}
-        style={{ marginLeft: 8 }}
+        sx={{ fontWeight: 'bold', minWidth: 120, marginLeft: 2 }}
       >
         Next
-      </button>
+      </Button>
     </div>
   );
 }
@@ -1152,7 +1209,6 @@ function App() {
   return (
     <Router>
       <h1>Family Office Platform</h1>
-      <NavigationButtons />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<SignupLogin />} />
@@ -1166,6 +1222,7 @@ function App() {
         <Route path="/setup-complete" element={<SetupComplete />} />
         <Route path="/dashboard" element={<MainDashboard />} />
       </Routes>
+      <NavigationButtons />
     </Router>
   );
 }
