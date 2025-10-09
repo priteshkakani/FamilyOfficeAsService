@@ -1,18 +1,76 @@
-// Simple LandingPage component to show on root
+import React, { useState } from "react";
 import { Button, Typography, Box, Divider } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 
 function LandingPage() {
   const navigate = useNavigate();
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", bgcolor: "#f7f8fa" }}>
-      <Typography variant="h2" fontWeight={700} gutterBottom>Family Office Platform</Typography>
-      <Typography variant="subtitle1" color="text.secondary" gutterBottom>All your family's wealth, assets, and documents in one place.</Typography>
-      <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 2, width: 320 }}>
-        <Button variant="contained" color="primary" size="large" sx={{ fontWeight: 700 }} onClick={() => navigate("/login?mode=signin")}>Sign In</Button>
-        <Button variant="outlined" color="primary" size="large" sx={{ fontWeight: 700 }} onClick={() => navigate("/login?mode=signup")}>Sign Up</Button>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "#f7f8fa",
+      }}
+    >
+      <Typography variant="h2" fontWeight={700} gutterBottom>
+        Family Office Platform
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+        All your family's wealth, assets, and documents in one place.
+      </Typography>
+      <Box
+        sx={{
+          mt: 4,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          width: 320,
+        }}
+      >
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          sx={{ fontWeight: 700 }}
+          onClick={() => navigate("/login?mode=signin")}
+        >
+          Sign In
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          size="large"
+          sx={{ fontWeight: 700 }}
+          onClick={() => navigate("/login?mode=signup")}
+        >
+          Sign Up
+        </Button>
         <Divider sx={{ my: 2 }}>or</Divider>
-        <Button variant="contained" color="secondary" size="large" sx={{ fontWeight: 700, bgcolor: '#fff', color: '#222', border: '1px solid #eee', '&:hover': { bgcolor: '#f5f5f5' } }} startIcon={<img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" style={{ width: 24, height: 24 }} />} onClick={() => window.location.href = "/api/v1/users/google-login"}>Sign in with Google</Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          size="large"
+          sx={{
+            fontWeight: 700,
+            bgcolor: "#fff",
+            color: "#222",
+            border: "1px solid #eee",
+            "&:hover": { bgcolor: "#f5f5f5" },
+          }}
+          startIcon={
+            <img
+              src="https://developers.google.com/identity/images/g-logo.png"
+              alt="Google"
+              style={{ width: 24, height: 24 }}
+            />
+          }
+          onClick={() => (window.location.href = "/api/v1/users/google-login")}
+        >
+          Sign in with Google
+        </Button>
       </Box>
     </Box>
   );
@@ -39,26 +97,130 @@ function SignupLogin() {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", bgcolor: "#f7f8fa" }}>
-      <Box sx={{ width: 340, bgcolor: "#fff", p: 4, borderRadius: 3, boxShadow: 2 }}>
-        <Typography variant="h5" fontWeight={700} gutterBottom>{mode === "signup" ? "Sign Up" : "Sign In"}</Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>Enter your mobile number to {mode === "signup" ? "create an account" : "sign in"}.</Typography>
-        <input type="tel" placeholder="Mobile Number" value={mobile} onChange={e => setMobile(e.target.value)} style={{ width: '100%', padding: 12, fontSize: 16, borderRadius: 6, border: '1px solid #ccc', marginBottom: 16 }} />
-        {step === 1 && <Button variant="contained" color="primary" fullWidth sx={{ fontWeight: 700, mb: 2 }} onClick={handleSendOtp}>Get OTP</Button>}
-        {step === 2 && <>
-          <input type="text" placeholder="Enter OTP" value={otp} onChange={e => setOtp(e.target.value)} style={{ width: '100%', padding: 12, fontSize: 16, borderRadius: 6, border: '1px solid #ccc', marginBottom: 16 }} />
-          <Button variant="contained" color="primary" fullWidth sx={{ fontWeight: 700, mb: 2 }} onClick={handleVerifyOtp}>Verify OTP</Button>
-        </>}
-        <Button variant="text" color="primary" fullWidth sx={{ fontWeight: 700, mt: 1 }} onClick={() => navigate("/login?mode=" + (mode === "signup" ? "signin" : "signup"))}>{mode === "signup" ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}</Button>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "#f7f8fa",
+      }}
+    >
+      <Box
+        sx={{
+          width: 340,
+          bgcolor: "#fff",
+          p: 4,
+          borderRadius: 3,
+          boxShadow: 2,
+        }}
+      >
+        <Typography variant="h5" fontWeight={700} gutterBottom>
+          {mode === "signup" ? "Sign Up" : "Sign In"}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          Enter your mobile number to{" "}
+          {mode === "signup" ? "create an account" : "sign in"}.
+        </Typography>
+        <input
+          type="tel"
+          placeholder="Mobile Number"
+          value={mobile}
+          onChange={(e) => setMobile(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 12,
+            fontSize: 16,
+            borderRadius: 6,
+            border: "1px solid #ccc",
+            marginBottom: 16,
+          }}
+        />
+        {step === 1 && (
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{ fontWeight: 700, mb: 2 }}
+            onClick={handleSendOtp}
+          >
+            Get OTP
+          </Button>
+        )}
+        {step === 2 && (
+          <>
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 12,
+                fontSize: 16,
+                borderRadius: 6,
+                border: "1px solid #ccc",
+                marginBottom: 16,
+              }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              sx={{ fontWeight: 700, mb: 2 }}
+              onClick={handleVerifyOtp}
+            >
+              Verify OTP
+            </Button>
+          </>
+        )}
+        <Button
+          variant="text"
+          color="primary"
+          fullWidth
+          sx={{ fontWeight: 700, mt: 1 }}
+          onClick={() =>
+            navigate("/login?mode=" + (mode === "signup" ? "signin" : "signup"))
+          }
+        >
+          {mode === "signup"
+            ? "Already have an account? Sign In"
+            : "Don't have an account? Sign Up"}
+        </Button>
         <Divider sx={{ my: 2 }}>or</Divider>
-        <Button variant="contained" color="secondary" fullWidth sx={{ fontWeight: 700, bgcolor: '#fff', color: '#222', border: '1px solid #eee', '&:hover': { bgcolor: '#f5f5f5' } }} startIcon={<img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" style={{ width: 24, height: 24 }} />} onClick={() => window.location.href = "/api/v1/users/google-login"}>Sign in with Google</Button>
-        {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
+        <Button
+          variant="contained"
+          color="secondary"
+          fullWidth
+          sx={{
+            fontWeight: 700,
+            bgcolor: "#fff",
+            color: "#222",
+            border: "1px solid #eee",
+            "&:hover": { bgcolor: "#f5f5f5" },
+          }}
+          startIcon={
+            <img
+              src="https://developers.google.com/identity/images/g-logo.png"
+              alt="Google"
+              style={{ width: 24, height: 24 }}
+            />
+          }
+          onClick={() => (window.location.href = "/api/v1/users/google-login")}
+        >
+          Sign in with Google
+        </Button>
+        {error && (
+          <Typography color="error" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
+        )}
       </Box>
     </Box>
   );
 }
-import React, { useState } from "react";
-// import axios from "axios";
+
 
 const dashboardTabs = [
   { icon: "🏠", label: "Dashboard" },
@@ -1257,10 +1419,8 @@ function NavigationButtons() {
   );
 }
 
-function App() {
   return (
     <Router>
-      <h1>Family Office Platform</h1>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<SignupLogin />} />
