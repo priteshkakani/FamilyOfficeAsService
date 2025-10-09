@@ -1099,57 +1099,55 @@ const SetupComplete = () => {
 };
 import axios from "axios";
 const MainDashboard = () => {
+  // Hardcoded values for dashboard summary
+  const hardcodedAssets = 1000000;
+  const hardcodedLiabilities = 200000;
+  const hardcodedNetWorth = hardcodedAssets + hardcodedLiabilities; // as per user request
+  const hardcodedMonthlyIncome = 120000; // sum of family incomes
+  const hardcodedMonthlySavings = 30000;
+  const hardcodedMonthlyCashflow = 90000;
   const [summary, setSummary] = useState([
-    { label: "Total Net Worth", value: "-" },
-    { label: "Total Assets", value: "-" },
-    { label: "Total Liabilities", value: "-" },
-    { label: "Monthly Cashflow", value: "-" },
+    { label: "Total Net Worth", value: `₹${hardcodedNetWorth}` },
+    { label: "Total Assets", value: `₹${hardcodedAssets}` },
+    { label: "Total Liabilities", value: `₹${hardcodedLiabilities}` },
+    { label: "Monthly Income", value: `₹${hardcodedMonthlyIncome}` },
+    { label: "Monthly Savings", value: `₹${hardcodedMonthlySavings}` },
+    { label: "Monthly Cashflow", value: `₹${hardcodedMonthlyCashflow}` },
   ]);
-  const [familyMembers, setFamilyMembers] = useState([]);
-  const [assets, setAssets] = useState([]);
-  const [liabilities, setLiabilities] = useState([]);
-  const [cashflows, setCashflows] = useState([]);
-  const [netWorthTrend, setNetWorthTrend] = useState([]);
-  const [assetAllocation, setAssetAllocation] = useState([]);
+  // Hardcoded family members and asset allocation for now
+  const [familyMembers, setFamilyMembers] = useState([
+    { name: "Amit", age: 45, role: "Primary", assets: "₹7L", income: 70000 },
+    { name: "Priya", age: 42, role: "Spouse", assets: "₹5L", income: 50000 },
+  ]);
+  const [assets, setAssets] = useState([
+    { type: "Bank Account", value: 400000 },
+    { type: "Mutual Funds", value: 300000 },
+    { type: "Stocks", value: 200000 },
+    { type: "Real Estate", value: 100000 },
+  ]);
+  const [liabilities, setLiabilities] = useState([
+    { type: "Home Loan", value: 150000 },
+    { type: "Car Loan", value: 50000 },
+  ]);
+  const [cashflows, setCashflows] = useState([
+    { source: "Salary", value: 70000 },
+    { source: "Business", value: 50000 },
+  ]);
+  const [netWorthTrend, setNetWorthTrend] = useState([
+    { month: "Jan", value: 1000000 },
+    { month: "Feb", value: 1100000 },
+    { month: "Mar", value: 1200000 },
+    { month: "Apr", value: 1300000 },
+    { month: "May", value: 1400000 },
+  ]);
+  const [assetAllocation, setAssetAllocation] = useState([
+    { type: "Bank Account", value: 40 },
+    { type: "Mutual Funds", value: 30 },
+    { type: "Stocks", value: 20 },
+    { type: "Real Estate", value: 10 },
+  ]);
 
-  React.useEffect(() => {
-    // Fetch assets, liabilities, family, etc. from backend
-    async function fetchData() {
-      // Example: fetch assets for household 1 (replace with real household/user id logic)
-      const householdId = 1;
-      try {
-        const assetsRes = await axios.get(
-          `http://localhost:8000/api/v1/assets/?household_id=${householdId}`
-        );
-        setAssets(assetsRes.data.assets || []);
-        // TODO: fetch liabilities, family, cashflows, etc.
-        // Calculate summary
-        let totalAssets = 0;
-        let totalLiabilities = 0;
-        let monthlyCashflow = 0;
-        // Example: sum asset values if present
-        for (const a of assetsRes.data.assets || []) {
-          if (a.details && a.details.value)
-            totalAssets += Number(a.details.value);
-        }
-        // TODO: fetch and sum liabilities
-        // TODO: fetch and sum cashflows
-        setSummary([
-          {
-            label: "Total Net Worth",
-            value: `₹${totalAssets - totalLiabilities}`,
-          },
-          { label: "Total Assets", value: `₹${totalAssets}` },
-          { label: "Total Liabilities", value: `₹${totalLiabilities}` },
-          { label: "Monthly Cashflow", value: `₹${monthlyCashflow}` },
-        ]);
-        // TODO: set family members, net worth trend, asset allocation
-      } catch (e) {
-        // fallback to empty
-      }
-    }
-    fetchData();
-  }, []);
+  // No backend fetch, use hardcoded data
 
   return (
     <Box sx={{ display: "flex", height: "100vh", bgcolor: "#f7f8fa" }}>
