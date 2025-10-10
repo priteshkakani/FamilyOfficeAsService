@@ -1,8 +1,24 @@
 // Minimal LandingPage component (fixes blank page if missing)
 function LandingPage() {
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f7f8fa' }}>
-      <Box sx={{ textAlign: 'center', p: 4, borderRadius: 2, boxShadow: 2, bgcolor: '#fff' }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "#f7f8fa",
+      }}
+    >
+      <Box
+        sx={{
+          textAlign: "center",
+          p: 4,
+          borderRadius: 2,
+          boxShadow: 2,
+          bgcolor: "#fff",
+        }}
+      >
         <Typography variant="h2" fontWeight={700} gutterBottom>
           Welcome to Family Office as a Service
         </Typography>
@@ -20,8 +36,24 @@ function LandingPage() {
 // Minimal ConnectAccounts component (placeholder)
 function ConnectAccounts() {
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f7f8fa' }}>
-      <Box sx={{ textAlign: 'center', p: 4, borderRadius: 2, boxShadow: 2, bgcolor: '#fff' }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "#f7f8fa",
+      }}
+    >
+      <Box
+        sx={{
+          textAlign: "center",
+          p: 4,
+          borderRadius: 2,
+          boxShadow: 2,
+          bgcolor: "#fff",
+        }}
+      >
         <Typography variant="h4" fontWeight={700} gutterBottom>
           Connect Your Accounts
         </Typography>
@@ -246,6 +278,25 @@ function SignupLogin() {
           onClick={() => (window.location.href = "/api/v1/users/google-login")}
         >
           Sign in with Google
+        </Button>
+        <Divider sx={{ my: 2 }}>or</Divider>
+        <Button
+          variant="outlined"
+          color="success"
+          fullWidth
+          sx={{ fontWeight: 700, mb: 1 }}
+          onClick={() => navigate("/dashboard")}
+        >
+          Continue without login (Demo)
+        </Button>
+        <Button
+          variant="outlined"
+          color="info"
+          fullWidth
+          sx={{ fontWeight: 700, mb: 1 }}
+          onClick={() => navigate("/onboarding")}
+        >
+          Try Onboarding Wizard (Demo)
         </Button>
         {message && (
           <Typography color="primary" sx={{ mt: 2 }}>
