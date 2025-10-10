@@ -1026,7 +1026,7 @@ const MainDashboard = () => {
 
 // Simple pages for each tab (move outside MainDashboard)
 // Dashboard Home Page
-import { useState } from "react";
+
 function DashboardHome({
   summary,
   adviceOpen,
