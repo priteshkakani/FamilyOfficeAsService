@@ -1,3 +1,76 @@
+// Investment Advice Details Page
+function InvestmentAdvicePage() {
+  const smallcases = [
+    { name: "Top Tech Innovators", desc: "Diversified tech sector smallcase." },
+    {
+      name: "Green Energy Leaders",
+      desc: "Focus on renewable energy companies.",
+    },
+    { name: "India Rising", desc: "Growth-oriented Indian equities." },
+  ];
+  const mutualFunds = [
+    { name: "HDFC Flexi Cap Fund", desc: "Large & mid cap equity fund." },
+    { name: "Mirae Asset Large Cap", desc: "Consistent large cap performer." },
+    { name: "Parag Parikh Flexi Cap", desc: "Diversified, value-driven fund." },
+  ];
+  const stocks = [
+    { name: "Reliance Industries", desc: "Conglomerate, energy & retail." },
+    { name: "Tata Consultancy Services", desc: "IT services leader." },
+    { name: "HDFC Bank", desc: "Top private sector bank." },
+  ];
+  const realEstate = [
+    { name: "Prestige Shantiniketan", desc: "Bangalore residential project." },
+    { name: "DLF Cyber City", desc: "Commercial real estate, Gurgaon." },
+    { name: "Godrej Garden City", desc: "Ahmedabad township." },
+  ];
+  return (
+    <Box sx={{ p: 4, maxWidth: 700, mx: "auto" }}>
+      <Typography variant="h4" gutterBottom>
+        Investment Advice
+      </Typography>
+      <Typography variant="h6" sx={{ mt: 3 }}>
+        Smallcases
+      </Typography>
+      <ul>
+        {smallcases.map((s) => (
+          <li key={s.name}>
+            <b>{s.name}</b>: {s.desc}
+          </li>
+        ))}
+      </ul>
+      <Typography variant="h6" sx={{ mt: 3 }}>
+        Mutual Funds
+      </Typography>
+      <ul>
+        {mutualFunds.map((m) => (
+          <li key={m.name}>
+            <b>{m.name}</b>: {m.desc}
+          </li>
+        ))}
+      </ul>
+      <Typography variant="h6" sx={{ mt: 3 }}>
+        Stocks
+      </Typography>
+      <ul>
+        {stocks.map((s) => (
+          <li key={s.name}>
+            <b>{s.name}</b>: {s.desc}
+          </li>
+        ))}
+      </ul>
+      <Typography variant="h6" sx={{ mt: 3 }}>
+        Real Estate
+      </Typography>
+      <ul>
+        {realEstate.map((r) => (
+          <li key={r.name}>
+            <b>{r.name}</b>: {r.desc}
+          </li>
+        ))}
+      </ul>
+    </Box>
+  );
+}
 // Minimal LandingPage component (fixes blank page if missing)
 function LandingPage() {
   return (
@@ -1045,14 +1118,24 @@ const MainDashboard = () => {
           ["🧾", "Cashflow & Expenses", "cashflow"],
           ["📁", "Documents", "documents"],
           ["󰰁", "Family Members", "family"],
+          // Insert visually distinct Investment Advice column
+          ["💡", "Investment Advice", "investment-advice", true],
           ["📅", "Insights & Alerts", "insights"],
           ["󰞴", "Advisor / Chat", "advisor"],
           ["⚙️", "Settings / Billing", "settings"],
-        ].map(([icon, label, subpath]) => (
+        ].map(([icon, label, subpath, highlight]) => (
           <Button
             key={label}
             fullWidth
-            sx={{ justifyContent: "flex-start", mb: 1 }}
+            sx={{
+              justifyContent: "flex-start",
+              mb: 1,
+              bgcolor: highlight ? "#e3f2fd" : undefined,
+              color: highlight ? "#1976d2" : undefined,
+              fontWeight: highlight ? 700 : 400,
+              borderLeft: highlight ? "4px solid #1976d2" : undefined,
+              boxShadow: highlight ? 2 : undefined,
+            }}
             startIcon={<span>{icon}</span>}
             onClick={() => navigate(`/dashboard/${subpath}`)}
           >
@@ -1098,6 +1181,7 @@ const MainDashboard = () => {
             path="family"
             element={<FamilyPage familyMembers={familyMembers} />}
           />
+          <Route path="investment-advice" element={<InvestmentAdvicePage />} />
           <Route path="insights" element={<InsightsPage />} />
           <Route path="advisor" element={<AdvisorPage />} />
           <Route path="settings" element={<SettingsPage />} />
