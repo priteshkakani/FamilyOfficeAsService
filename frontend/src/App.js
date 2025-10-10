@@ -1,3 +1,37 @@
+// Minimal LandingPage component (fixes blank page if missing)
+function LandingPage() {
+  return (
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f7f8fa' }}>
+      <Box sx={{ textAlign: 'center', p: 4, borderRadius: 2, boxShadow: 2, bgcolor: '#fff' }}>
+        <Typography variant="h2" fontWeight={700} gutterBottom>
+          Welcome to Family Office as a Service
+        </Typography>
+        <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
+          Professional family wealth management, simplified.
+        </Typography>
+        <Button variant="contained" color="primary" size="large" href="/login">
+          Get Started
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+// Minimal ConnectAccounts component (placeholder)
+function ConnectAccounts() {
+  return (
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f7f8fa' }}>
+      <Box sx={{ textAlign: 'center', p: 4, borderRadius: 2, boxShadow: 2, bgcolor: '#fff' }}>
+        <Typography variant="h4" fontWeight={700} gutterBottom>
+          Connect Your Accounts
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+          Account connection functionality coming soon.
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
 import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
