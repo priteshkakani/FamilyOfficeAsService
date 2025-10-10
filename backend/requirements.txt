@@ -1,4 +1,5 @@
 fastapi
+supabase
 uvicorn
 sqlalchemy
 pymysql
