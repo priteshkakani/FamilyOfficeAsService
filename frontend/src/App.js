@@ -31,75 +31,78 @@ function InvestmentAdvicePage() {
       <Typography variant="h6" sx={{ mt: 3 }}>
         Smallcases
       </Typography>
-      <ul>
-        {smallcases.map((s) => (
-          <li key={s.name}>
-            <b>{s.name}</b>: {s.desc}
-          </li>
-        ))}
-      </ul>
-      <Typography variant="h6" sx={{ mt: 3 }}>
-        Mutual Funds
-      </Typography>
-      <ul>
-        {mutualFunds.map((m) => (
-          <li key={m.name}>
-            <b>{m.name}</b>: {m.desc}
-          </li>
-        ))}
-      </ul>
-      <Typography variant="h6" sx={{ mt: 3 }}>
-        Stocks
-      </Typography>
-      <ul>
-        {stocks.map((s) => (
-          <li key={s.name}>
-            <b>{s.name}</b>: {s.desc}
-          </li>
-        ))}
-      </ul>
-      <Typography variant="h6" sx={{ mt: 3 }}>
-        Real Estate
-      </Typography>
-      <ul>
-        {realEstate.map((r) => (
-          <li key={r.name}>
-            <b>{r.name}</b>: {r.desc}
-          </li>
-        ))}
-      </ul>
-    </Box>
-  );
-}
-// Minimal LandingPage component (fixes blank page if missing)
-function LandingPage() {
-  return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "#f7f8fa",
-      }}
-    >
-      <Box
-        sx={{
-          textAlign: "center",
-          p: 4,
-          borderRadius: 2,
-          boxShadow: 2,
-          bgcolor: "#fff",
-        }}
-      >
-        <Typography variant="h2" fontWeight={700} gutterBottom>
-          Welcome to Family Office as a Service
-        </Typography>
-        <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
-          Professional family wealth management, simplified.
-        </Typography>
-        <Button variant="contained" color="primary" size="large" href="/login">
-          Get Started
+      return (
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Router>
+            <Routes>
+              {/* Set default route to Sign In window */}
+              <Route path="/" element={<SignupLogin />} />
+              <Route path="/login" element={<SignupLogin />} />
+              <Route path="/onboarding" element={<OnboardingWizard />} />
+              <Route path="/connect-accounts" element={<ConnectAccounts />} />
+              <Route path="/add-mutual-funds" element={<AddMutualFunds />} />
+              <Route path="/add-insurance" element={<AddInsurance />} />
+              <Route path="/add-real-estate" element={<AddRealEstate />} />
+              <Route path="/add-liabilities" element={<AddLiabilities />} />
+              <Route path="/income-expenses" element={<IncomeExpenses />} />
+              <Route path="/setup-complete" element={<SetupComplete />} />
+              <Route path="/dashboard/*" element={<MainDashboard />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+            <NavigationButtons />
+          </Router>
+        </ThemeProvider>
+      );
+          return (
+            <Box sx={{ p: 4, maxWidth: 700, mx: "auto" }}>
+              <Typography variant="h4" gutterBottom>
+                Investment Advice
+              </Typography>
+              <Box>
+                <Typography variant="h6" sx={{ mt: 3 }}>
+                  Smallcases
+                </Typography>
+                <ul>
+                  {smallcases.map((s) => (
+                    <li key={s.name}>
+                      <b>{s.name}</b>: {s.desc}
+                    </li>
+                  ))}
+                </ul>
+                <Typography variant="h6" sx={{ mt: 3 }}>
+                  Mutual Funds
+                </Typography>
+                <ul>
+                  {mutualFunds.map((m) => (
+                    <li key={m.name}>
+                      <b>{m.name}</b>: {m.desc}
+                    </li>
+                  ))}
+                </ul>
+                <Typography variant="h6" sx={{ mt: 3 }}>
+                  Stocks
+                </Typography>
+                <ul>
+                  {stocks.map((s) => (
+                    <li key={s.name}>
+                      <b>{s.name}</b>: {s.desc}
+                    </li>
+                  ))}
+                </ul>
+                <Typography variant="h6" sx={{ mt: 3 }}>
+                  Real Estate
+                </Typography>
+                <ul>
+                  {realEstate.map((r) => (
+                    <li key={r.name}>
+                      <b>{r.name}</b>: {r.desc}
+                    </li>
+                  ))}
+                </ul>
+              </Box>
+            </Box>
+          );
         </Button>
       </Box>
     </Box>
