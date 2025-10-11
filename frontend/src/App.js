@@ -785,7 +785,7 @@ const AddMutualFunds = () => {
 const AddInsurance = () => {
   const [tab, setTab] = useState("Health");
   const [policies, setPolicies] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [insuranceModalOpen, setInsuranceModalOpen] = useState(false);
   const [newPolicy, setNewPolicy] = useState({
     insurer: "",
     type: "Health",
@@ -794,6 +794,7 @@ const AddInsurance = () => {
     start: "",
     end: "",
   });
+  const navigate = useNavigate();
   return (
     <div style={{ maxWidth: 600, margin: "40px auto" }}>
       <Typography variant="h6">
@@ -817,7 +818,7 @@ const AddInsurance = () => {
         ))}
       </div>
       <div style={{ margin: "16px 0" }}>
-        <Button variant="outlined" onClick={() => setModalOpen(true)}>
+        <Button variant="outlined" onClick={() => setInsuranceModalOpen(true)}>
           + Add Policy
         </Button>
         {policies.map((p, idx) => (
@@ -826,10 +827,14 @@ const AddInsurance = () => {
           </div>
         ))}
       </div>
-      <Button variant="contained" color="primary">
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => navigate("/onboarding?step=tax")}
+      >
         Next →
       </Button>
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+      <Modal open={insuranceModalOpen} onClose={() => setInsuranceModalOpen(false)}>
         <Box
           sx={{
             p: 4,
@@ -911,7 +916,7 @@ const AddInsurance = () => {
             color="primary"
             onClick={() => {
               setPolicies([...policies, newPolicy]);
-              setModalOpen(false);
+              setInsuranceModalOpen(false);
               setNewPolicy({
                 insurer: "",
                 type: "Health",
@@ -929,11 +934,7 @@ const AddInsurance = () => {
       </Modal>
     </div>
   );
-};
-
-const AddRealEstate = () => {
-  const [assets, setAssets] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [realEstateModalOpen, setRealEstateModalOpen] = useState(false);
   const [newAsset, setNewAsset] = useState({
     type: "Real Estate",
     purchase: "",
@@ -950,7 +951,7 @@ const AddRealEstate = () => {
         style={{ margin: "16px 0" }}
       />
       <div style={{ margin: "16px 0" }}>
-        <Button variant="outlined" onClick={() => setModalOpen(true)}>
+        <Button variant="outlined" onClick={() => setRealEstateModalOpen(true)}>
           + Add Asset
         </Button>
         {assets.map((a, idx) => (
@@ -962,7 +963,7 @@ const AddRealEstate = () => {
       <Button variant="contained" color="primary">
         Next →
       </Button>
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+      <Modal open={realEstateModalOpen} onClose={() => setRealEstateModalOpen(false)}>
         <Box
           sx={{
             p: 4,
@@ -1020,7 +1021,7 @@ const AddRealEstate = () => {
             color="primary"
             onClick={() => {
               setAssets([...assets, newAsset]);
-              setModalOpen(false);
+              setRealEstateModalOpen(false);
               setNewAsset({
                 type: "Real Estate",
                 purchase: "",
