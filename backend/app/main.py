@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.endpoints import users, households, assets, email_auth
+from app.api.v1.endpoints import users, households, assets, email_auth, tax_itr, epfo
 
 app = FastAPI(title="Family Office as a Service")
 
@@ -18,10 +18,13 @@ app.add_middleware(
 app.mount("/uploads", StaticFiles(directory="/tmp/uploads"), name="uploads")
 
 
+
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(households.router, prefix="/api/v1/households", tags=["households"])
 app.include_router(assets.router, prefix="/api/v1/assets", tags=["assets"])
 app.include_router(email_auth.router, prefix="/api/v1/users", tags=["auth"])
+app.include_router(tax_itr.router, prefix="/api/v1/tax-itr", tags=["tax-itr"])
+app.include_router(epfo.router, prefix="/api/v1/epfo", tags=["epfo"])
 
 # Supabase Google OAuth endpoint
 import os
