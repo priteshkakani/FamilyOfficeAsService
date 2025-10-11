@@ -455,15 +455,231 @@ const OnboardingWizard = () => {
     setModalOpen(false);
   };
 
+  // Add step state
+  const [step, setStep] = useState(1);
+  const [taxITR, setTaxITR] = useState({ pan: "", year: "" });
+  const [epfo, setEPFO] = useState({ uan: "", mobile: "", otp: "" });
+  const [epfoOtpSent, setEpfoOtpSent] = useState(false);
+
+  const nextStep = () => setStep((s) => s + 1);
+  const prevStep = () => setStep((s) => s - 1);
+
   return (
     <div style={{ maxWidth: 600, margin: "40px auto" }}>
-      <Typography variant="h6">Step 1: Family Profile</Typography>
-      <LinearProgress
-        variant="determinate"
-        value={10}
-        style={{ margin: "16px 0" }}
-      />
-      {/* ...rest of OnboardingWizard content... */}
+      {step === 1 && (
+        <>
+          <Typography variant="h6">Step 1: Family Profile</Typography>
+          <LinearProgress
+            variant="determinate"
+            value={10}
+            style={{ margin: "16px 0" }}
+          />
+          <Box sx={{ bgcolor: "#f5f5f5", p: 2, borderRadius: 2, mb: 2 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Add Family Member
+            </Typography>
+            <TextField
+              label="Name"
+              fullWidth
+              margin="normal"
+              value={newMember.name}
+              onChange={(e) =>
+                setNewMember({ ...newMember, name: e.target.value })
+              }
+            />
+            <TextField
+              label="Relation"
+              fullWidth
+              margin="normal"
+              value={newMember.relation}
+              onChange={(e) =>
+                setNewMember({ ...newMember, relation: e.target.value })
+              }
+            />
+            <TextField
+              label="PAN Number"
+              fullWidth
+              margin="normal"
+              value={newMember.pan || ""}
+              onChange={(e) =>
+                setNewMember({ ...newMember, pan: e.target.value })
+              }
+            />
+            <Button
+              variant="outlined"
+              sx={{ mt: 1 }}
+              onClick={addMember}
+              disabled={
+                !newMember.name || !newMember.relation || !newMember.pan
+              }
+            >
+              Add Member
+            </Button>
+          </Box>
+          {members.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2">Family Members:</Typography>
+              <ul>
+                {members.map((m, idx) => (
+                  <li key={idx}>
+                    {m.name} ({m.relation}) - PAN: {m.pan}
+                  </li>
+                ))}
+              </ul>
+            </Box>
+          )}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={nextStep}
+            sx={{ mt: 2 }}
+            disabled={members.length === 0}
+          >
+            Next
+          </Button>
+        </>
+      )}
+      {step === 2 && (
+        <>
+          <Typography variant="h6">
+            Track your insurance and renewal dates easily.
+          </Typography>
+          <LinearProgress
+            variant="determinate"
+            value={30}
+            style={{ margin: "16px 0" }}
+          />
+          {/* ...existing insurance form... */}
+          <Button variant="outlined" onClick={prevStep} sx={{ mt: 2, mr: 2 }}>
+            Back
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={nextStep}
+            sx={{ mt: 2 }}
+          >
+            Next
+          </Button>
+        </>
+      )}
+      {step === 3 && (
+        <>
+          <Typography variant="h6">Add Tax Details</Typography>
+          <LinearProgress
+            variant="determinate"
+            value={50}
+            style={{ margin: "16px 0" }}
+          />
+          <TextField
+            label="PAN"
+            fullWidth
+            margin="normal"
+            value={taxITR.pan}
+            onChange={(e) => setTaxITR({ ...taxITR, pan: e.target.value })}
+          />
+          <TextField
+            label="Assessment Year"
+            fullWidth
+            margin="normal"
+            value={taxITR.year}
+            onChange={(e) => setTaxITR({ ...taxITR, year: e.target.value })}
+          />
+          <Button variant="outlined" onClick={prevStep} sx={{ mt: 2, mr: 2 }}>
+            Back
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={nextStep}
+            sx={{ mt: 2 }}
+          >
+            Next
+          </Button>
+        </>
+      )}
+      {step === 4 && (
+        <>
+          <Typography variant="h6">Add EPFO Details</Typography>
+          <LinearProgress
+            variant="determinate"
+            value={70}
+            style={{ margin: "16px 0" }}
+          />
+          <TextField
+            label="UAN"
+            fullWidth
+            margin="normal"
+            value={epfo.uan}
+            onChange={(e) => setEPFO({ ...epfo, uan: e.target.value })}
+          />
+          <TextField
+            label="Mobile Number"
+            fullWidth
+            margin="normal"
+            value={epfo.mobile}
+            onChange={(e) => setEPFO({ ...epfo, mobile: e.target.value })}
+          />
+          {!epfoOtpSent ? (
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ mt: 2 }}
+              onClick={() => setEpfoOtpSent(true)}
+            >
+              Send OTP
+            </Button>
+          ) : (
+            <>
+              <TextField
+                label="Enter OTP"
+                fullWidth
+                margin="normal"
+                value={epfo.otp}
+                onChange={(e) => setEPFO({ ...epfo, otp: e.target.value })}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ mt: 2 }}
+                onClick={nextStep}
+              >
+                Next
+              </Button>
+            </>
+          )}
+          <Button variant="outlined" onClick={prevStep} sx={{ mt: 2, ml: 2 }}>
+            Back
+          </Button>
+        </>
+      )}
+      {step === 5 && (
+        <>
+          <Typography variant="h6">Record your physical assets</Typography>
+          <LinearProgress
+            variant="determinate"
+            value={90}
+            style={{ margin: "16px 0" }}
+          />
+          {/* ...physical assets form... */}
+          <Button variant="outlined" onClick={prevStep} sx={{ mt: 2, mr: 2 }}>
+            Back
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            onClick={nextStep}
+          >
+            Next
+          </Button>
+        </>
+      )}
+      {step > 5 && (
+        <Typography variant="h5" sx={{ mt: 4 }}>
+          Onboarding Complete!
+        </Typography>
+      )}
     </div>
   );
 };
@@ -1117,8 +1333,9 @@ const MainDashboard = () => {
           ["📊", "Net Worth", "net-worth"],
           ["🧾", "Cashflow & Expenses", "cashflow"],
           ["📁", "Documents", "documents"],
+          ["📄", "Tax-ITR", "tax-itr"],
+          ["💼", "EPFO", "epfo"],
           ["󰰁", "Family Members", "family"],
-          // Insert visually distinct Investment Advice column
           ["💡", "Investment Advice", "investment-advice", true],
           ["📅", "Insights & Alerts", "insights"],
           ["󰞴", "Advisor / Chat", "advisor"],
@@ -1177,6 +1394,8 @@ const MainDashboard = () => {
             element={<CashflowPage cashflows={cashflows} expenses={expenses} />}
           />
           <Route path="documents" element={<DocumentsPage />} />
+          <Route path="tax-itr" element={<TaxITRPage />} />
+          <Route path="epfo" element={<EPFOPage />} />
           <Route
             path="family"
             element={<FamilyPage familyMembers={familyMembers} />}
@@ -1192,6 +1411,28 @@ const MainDashboard = () => {
     </Box>
   );
 };
+
+// Placeholder Tax-ITR and EPFO dashboard pages
+function TaxITRPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">Tax-ITR Documents</Typography>
+      <Typography color="text.secondary">
+        Uploaded and fetched ITR documents will appear here.
+      </Typography>
+    </Box>
+  );
+}
+function EPFOPage() {
+  return (
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5">EPFO Documents</Typography>
+      <Typography color="text.secondary">
+        Uploaded and fetched EPFO documents will appear here.
+      </Typography>
+    </Box>
+  );
+}
 
 // Simple pages for each tab (move outside MainDashboard)
 // Dashboard Home Page
