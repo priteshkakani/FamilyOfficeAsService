@@ -461,8 +461,13 @@ const OnboardingWizard = () => {
   const [epfo, setEPFO] = useState({ uan: "", mobile: "", otp: "" });
   const [epfoOtpSent, setEpfoOtpSent] = useState(false);
 
-  const nextStep = () => setStep((s) => s + 1);
-  const prevStep = () => setStep((s) => s - 1);
+  // Ensure correct step order: 1=Family, 2=Insurance, 3=Tax, 4=EPFO, 5=Physical Assets
+  const nextStep = () => {
+    // Reset EPFO OTP state when entering EPFO step
+    if (step === 3) setEpfoOtpSent(false);
+    setStep((s) => s + 1);
+  };
+  const prevStep = () => setStep((s) => (s > 1 ? s - 1 : 1));
 
   return (
     <div style={{ maxWidth: 600, margin: "40px auto" }}>
@@ -564,7 +569,7 @@ const OnboardingWizard = () => {
             value={30}
             style={{ margin: "16px 0" }}
           />
-          {/* ...existing insurance form... */}
+          {/* Insurance form placeholder */}
           <Button variant="outlined" onClick={prevStep} sx={{ mt: 2, mr: 2 }}>
             Back
           </Button>
@@ -676,7 +681,7 @@ const OnboardingWizard = () => {
             value={90}
             style={{ margin: "16px 0" }}
           />
-          {/* ...physical assets form... */}
+          {/* Physical assets form placeholder */}
           <Button variant="outlined" onClick={prevStep} sx={{ mt: 2, mr: 2 }}>
             Back
           </Button>
