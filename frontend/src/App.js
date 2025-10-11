@@ -489,13 +489,28 @@ const OnboardingWizard = () => {
             />
             <TextField
               label="Relation"
+              select
               fullWidth
               margin="normal"
               value={newMember.relation}
               onChange={(e) =>
                 setNewMember({ ...newMember, relation: e.target.value })
               }
-            />
+            >
+              {[
+                "Self",
+                "Spouse",
+                "Mother",
+                "Father",
+                "Kid 1",
+                "Kid 2",
+                "Additional",
+              ].map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  {opt}
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               label="PAN Number"
               fullWidth
