@@ -1767,7 +1767,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        {/* Set default route to Sign In page */}
+        <Route path="/" element={<SignupLogin />} />
         <Route path="/login" element={<SignupLogin />} />
         <Route path="/onboarding" element={<OnboardingWizard />} />
         <Route path="/connect-accounts" element={<ConnectAccounts />} />
