@@ -1,45 +1,75 @@
-import React, { useState } from "react";
-import { Button, TextField } from "@mui/material";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import axios from "axios";
 
-export default function Step1Signup({ onNext }) {
-  const [mobile, setMobile] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
+const schema = z.object({
+  mobile: z.string().min(10, "Mobile is required"),
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Invalid email"),
+});
 
-  const handleSendOtp = async () => {
-    await axios
-      .post("http://localhost:8000/api/v1/users/signup", {
-        mobile,
-        name,
-        email,
-      })
-      .then((res) => {
-        setOtpSent(true);
-        onNext(res.data.user_id);
-      });
+export default function Step1Signup({ onNext }) {
+  const [otpSent, setOtpSent] = React.useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = async (data) => {
+    const res = await axios.post(
+      "http://localhost:8000/api/v1/users/signup",
+      data
+    );
+    setOtpSent(true);
+    onNext(res.data.user_id);
   };
 
   return (
-    <div>
-      <TextField
-        label="Mobile Number"
-        value={mobile}
-        onChange={(e) => setMobile(e.target.value)}
-      />
-      <TextField
-        label="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <TextField
-        label="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <Button onClick={handleSendOtp}>Send OTP</Button>
-      {otpSent && <div>OTP sent! (Simulated)</div>}
-    </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium">Mobile Number</label>
+        <input
+          {...register("mobile")}
+          className="input input-bordered w-full"
+          placeholder="Mobile Number"
+        />
+        {errors.mobile && (
+          <span className="text-red-500 text-xs">{errors.mobile.message}</span>
+        )}
+      </div>
+      <div>
+        <label className="block text-sm font-medium">Name</label>
+        <input
+          {...register("name")}
+          className="input input-bordered w-full"
+          placeholder="Name"
+        />
+        {errors.name && (
+          <span className="text-red-500 text-xs">{errors.name.message}</span>
+        )}
+      </div>
+      <div>
+        <label className="block text-sm font-medium">Email</label>
+        <input
+          {...register("email")}
+          className="input input-bordered w-full"
+          placeholder="Email"
+        />
+        {errors.email && (
+          <span className="text-red-500 text-xs">{errors.email.message}</span>
+        )}
+      </div>
+      <button type="submit" className="btn btn-primary w-full">
+        Send OTP
+      </button>
+      {otpSent && (
+        <div className="text-green-600 mt-2">OTP sent! (Simulated)</div>
+      )}
+    </form>
   );
 }

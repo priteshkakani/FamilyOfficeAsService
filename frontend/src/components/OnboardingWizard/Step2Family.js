@@ -1,68 +1,113 @@
-import React, { useState } from "react";
-import { Button, TextField } from "@mui/material";
+import React from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import axios from "axios";
 
+const memberSchema = z.object({
+  name: z.string().min(2, "Name required"),
+  dob: z.string().min(1, "DOB required"),
+  relationship: z.string().min(1, "Relationship required"),
+  role: z.string().min(1, "Role required"),
+});
+const schema = z.object({
+  name: z.string().min(2, "Household name required"),
+  members: z.array(memberSchema).min(1, "At least one member required"),
+});
+
 export default function Step2Family({ userId, onNext }) {
-  const [name, setName] = useState("");
-  const [members, setMembers] = useState([
-    { name: "", dob: "", relationship: "", role: "" },
-  ]);
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      members: [{ name: "", dob: "", relationship: "", role: "" }],
+    },
+  });
+  const { fields, append } = useFieldArray({ control, name: "members" });
 
-  const handleChange = (idx, field, value) => {
-    const updated = [...members];
-    updated[idx][field] = value;
-    setMembers(updated);
-  };
-
-  const addMember = () =>
-    setMembers([...members, { name: "", dob: "", relationship: "", role: "" }]);
-
-  const handleNext = async () => {
-    await axios
-      .post(`http://localhost:8000/api/v1/households/?owner_id=${userId}`, {
-        name,
-        members,
-      })
-      .then((res) => {
-        onNext(res.data.household_id);
-      });
+  const onSubmit = async (data) => {
+    const res = await axios.post(
+      `http://localhost:8000/api/v1/households/?owner_id=${userId}`,
+      data
+    );
+    onNext(res.data.household_id);
   };
 
   return (
-    <div>
-      <TextField
-        label="Household Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      {members.map((m, idx) => (
-        <div key={idx}>
-          <TextField
-            label="Name"
-            value={m.name}
-            onChange={(e) => handleChange(idx, "name", e.target.value)}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium">Household Name</label>
+        <input
+          {...register("name")}
+          className="input input-bordered w-full"
+          placeholder="Household Name"
+        />
+        {errors.name && (
+          <span className="text-red-500 text-xs">{errors.name.message}</span>
+        )}
+      </div>
+      {fields.map((field, idx) => (
+        <div key={field.id} className="border p-3 rounded mb-2">
+          <input
+            {...register(`members.${idx}.name`)}
+            className="input input-bordered w-full mb-1"
+            placeholder="Name"
           />
-          <TextField
-            label="DOB"
+          {errors.members?.[idx]?.name && (
+            <span className="text-red-500 text-xs">
+              {errors.members[idx].name.message}
+            </span>
+          )}
+          <input
+            {...register(`members.${idx}.dob`)}
             type="date"
-            value={m.dob}
-            onChange={(e) => handleChange(idx, "dob", e.target.value)}
-            InputLabelProps={{ shrink: true }}
+            className="input input-bordered w-full mb-1"
+            placeholder="DOB"
           />
-          <TextField
-            label="Relationship"
-            value={m.relationship}
-            onChange={(e) => handleChange(idx, "relationship", e.target.value)}
+          {errors.members?.[idx]?.dob && (
+            <span className="text-red-500 text-xs">
+              {errors.members[idx].dob.message}
+            </span>
+          )}
+          <input
+            {...register(`members.${idx}.relationship`)}
+            className="input input-bordered w-full mb-1"
+            placeholder="Relationship"
           />
-          <TextField
-            label="Role"
-            value={m.role}
-            onChange={(e) => handleChange(idx, "role", e.target.value)}
+          {errors.members?.[idx]?.relationship && (
+            <span className="text-red-500 text-xs">
+              {errors.members[idx].relationship.message}
+            </span>
+          )}
+          <input
+            {...register(`members.${idx}.role`)}
+            className="input input-bordered w-full mb-1"
+            placeholder="Role"
           />
+          {errors.members?.[idx]?.role && (
+            <span className="text-red-500 text-xs">
+              {errors.members[idx].role.message}
+            </span>
+          )}
         </div>
       ))}
-      <Button onClick={addMember}>Add Member</Button>
-      <Button onClick={handleNext}>Next</Button>
-    </div>
+      <button
+        type="button"
+        className="btn btn-outline w-full"
+        onClick={() =>
+          append({ name: "", dob: "", relationship: "", role: "" })
+        }
+      >
+        Add Member
+      </button>
+      <button type="submit" className="btn btn-primary w-full">
+        Next
+      </button>
+    </form>
   );
 }
