@@ -834,7 +834,10 @@ const AddInsurance = () => {
       >
         Next →
       </Button>
-      <Modal open={insuranceModalOpen} onClose={() => setInsuranceModalOpen(false)}>
+      <Modal
+        open={insuranceModalOpen}
+        onClose={() => setInsuranceModalOpen(false)}
+      >
         <Box
           sx={{
             p: 4,
@@ -963,7 +966,10 @@ const AddInsurance = () => {
       <Button variant="contained" color="primary">
         Next →
       </Button>
-      <Modal open={realEstateModalOpen} onClose={() => setRealEstateModalOpen(false)}>
+      <Modal
+        open={realEstateModalOpen}
+        onClose={() => setRealEstateModalOpen(false)}
+      >
         <Box
           sx={{
             p: 4,
