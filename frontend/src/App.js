@@ -28,82 +28,47 @@ function InvestmentAdvicePage() {
       <Typography variant="h4" gutterBottom>
         Investment Advice
       </Typography>
-      <Typography variant="h6" sx={{ mt: 3 }}>
-        Smallcases
-      </Typography>
-      return (
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Router>
-            <Routes>
-              {/* Set default route to Sign In window */}
-              <Route path="/" element={<SignupLogin />} />
-              <Route path="/login" element={<SignupLogin />} />
-              <Route path="/onboarding" element={<OnboardingWizard />} />
-              <Route path="/connect-accounts" element={<ConnectAccounts />} />
-              <Route path="/add-mutual-funds" element={<AddMutualFunds />} />
-              <Route path="/add-insurance" element={<AddInsurance />} />
-              <Route path="/add-real-estate" element={<AddRealEstate />} />
-              <Route path="/add-liabilities" element={<AddLiabilities />} />
-              <Route path="/income-expenses" element={<IncomeExpenses />} />
-              <Route path="/setup-complete" element={<SetupComplete />} />
-              <Route path="/dashboard/*" element={<MainDashboard />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-            <NavigationButtons />
-          </Router>
-        </ThemeProvider>
-      );
-          return (
-            <Box sx={{ p: 4, maxWidth: 700, mx: "auto" }}>
-              <Typography variant="h4" gutterBottom>
-                Investment Advice
-              </Typography>
-              <Box>
-                <Typography variant="h6" sx={{ mt: 3 }}>
-                  Smallcases
-                </Typography>
-                <ul>
-                  {smallcases.map((s) => (
-                    <li key={s.name}>
-                      <b>{s.name}</b>: {s.desc}
-                    </li>
-                  ))}
-                </ul>
-                <Typography variant="h6" sx={{ mt: 3 }}>
-                  Mutual Funds
-                </Typography>
-                <ul>
-                  {mutualFunds.map((m) => (
-                    <li key={m.name}>
-                      <b>{m.name}</b>: {m.desc}
-                    </li>
-                  ))}
-                </ul>
-                <Typography variant="h6" sx={{ mt: 3 }}>
-                  Stocks
-                </Typography>
-                <ul>
-                  {stocks.map((s) => (
-                    <li key={s.name}>
-                      <b>{s.name}</b>: {s.desc}
-                    </li>
-                  ))}
-                </ul>
-                <Typography variant="h6" sx={{ mt: 3 }}>
-                  Real Estate
-                </Typography>
-                <ul>
-                  {realEstate.map((r) => (
-                    <li key={r.name}>
-                      <b>{r.name}</b>: {r.desc}
-                    </li>
-                  ))}
-                </ul>
-              </Box>
-            </Box>
-          );
-        </Button>
+      <Box>
+        <Typography variant="h6" sx={{ mt: 3 }}>
+          Smallcases
+        </Typography>
+        <ul>
+          {smallcases.map((s) => (
+            <li key={s.name}>
+              <b>{s.name}</b>: {s.desc}
+            </li>
+          ))}
+        </ul>
+        <Typography variant="h6" sx={{ mt: 3 }}>
+          Mutual Funds
+        </Typography>
+        <ul>
+          {mutualFunds.map((m) => (
+            <li key={m.name}>
+              <b>{m.name}</b>: {m.desc}
+            </li>
+          ))}
+        </ul>
+        <Typography variant="h6" sx={{ mt: 3 }}>
+          Stocks
+        </Typography>
+        <ul>
+          {stocks.map((s) => (
+            <li key={s.name}>
+              <b>{s.name}</b>: {s.desc}
+            </li>
+          ))}
+        </ul>
+        <Typography variant="h6" sx={{ mt: 3 }}>
+          Real Estate
+        </Typography>
+        <ul>
+          {realEstate.map((r) => (
+            <li key={r.name}>
+              <b>{r.name}</b>: {r.desc}
+            </li>
+          ))}
+        </ul>
       </Box>
     </Box>
   );
