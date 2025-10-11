@@ -52,9 +52,9 @@ This project provides a working onboarding flow for a family office platform.
    ```
 2. Access:
    - Frontend: http://localhost:3000
-   - Backend: http://localhost:8000
+   - Backend: http://localhost:  8000
    - MySQL: localhost:3306 (user: familyuser, password: familypassword)
-
+1  `1 
 ## Kubernetes (Production/Cloud)
 
 1. Build and push images (replace `priteshkakani` with your Docker Hub username if needed):

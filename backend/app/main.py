@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.endpoints import users, households, assets, email_auth, tax_itr, epfo
+from app.api.v1.endpoints import users, households, assets, email_auth, tax_itr, epfo, profile, family, liabilities, insurance, reports, dashboard
 
 app = FastAPI(title="Family Office as a Service")
 
@@ -19,9 +19,16 @@ app.mount("/uploads", StaticFiles(directory="/tmp/uploads"), name="uploads")
 
 
 
+
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+app.include_router(profile.router, prefix="/api/v1/users", tags=["profile"])
 app.include_router(households.router, prefix="/api/v1/households", tags=["households"])
+app.include_router(family.router, prefix="/api/v1/family", tags=["family"])
 app.include_router(assets.router, prefix="/api/v1/assets", tags=["assets"])
+app.include_router(liabilities.router, prefix="/api/v1/liabilities", tags=["liabilities"])
+app.include_router(insurance.router, prefix="/api/v1/insurance", tags=["insurance"])
+app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
+app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboard"])
 app.include_router(email_auth.router, prefix="/api/v1/users", tags=["auth"])
 app.include_router(tax_itr.router, prefix="/api/v1/tax-itr", tags=["tax-itr"])
 app.include_router(epfo.router, prefix="/api/v1/epfo", tags=["epfo"])
