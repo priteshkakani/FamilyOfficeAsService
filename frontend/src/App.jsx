@@ -1,9 +1,28 @@
 // --- MAIN APP ENTRY ---
 // --- MAIN APP ENTRY ---
+import { supabase } from "./supabaseClient";
+
 function App() {
   // Simulate onboarding complete
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [activeTab, setActiveTab] = useState(0); // 0 = Home
+  const [supabaseStatus, setSupabaseStatus] = useState("pending");
+  const [supabaseError, setSupabaseError] = useState(null);
+
+  // Test Supabase connection on mount
+  useEffect(() => {
+    async function testSupabase() {
+      try {
+        const { data, error } = await supabase.from("test_table").select().limit(1);
+        if (error) throw error;
+        setSupabaseStatus("ok");
+      } catch (err) {
+        setSupabaseStatus("error");
+        setSupabaseError(err.message || String(err));
+      }
+    }
+    testSupabase();
+  }, []);
 
   // Mock user and summary data
   const user = { name: "Pritesh" };
@@ -93,8 +112,24 @@ function App() {
     },
   ];
 
+
+  if (supabaseStatus === "pending") {
+    return <div style={{ padding: 32, textAlign: "center" }}>Loading...</div>;
+  }
+  if (supabaseStatus === "error") {
+    return (
+      <div style={{ padding: 32, textAlign: "center", color: "#b91c1c" }}>
+        <b>Supabase connection failed:</b>
+        <br />
+        <pre style={{ color: "#991b1b" }}>{supabaseError}</pre>
+        <div style={{ marginTop: 16 }}>
+          Check your environment variables and Supabase project setup.
+        </div>
+      </div>
+    );
+  }
+
   if (!isOnboarded) {
-    // ...existing onboarding or login logic...
     return <OnboardingWizard />;
   }
 
@@ -485,7 +520,8 @@ const OnboardingWizard = () => {
   const nextStep = () => setStep((s) => Math.min(s + 1, 6));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
-  return null;
+  // Always render something, never return null
+  return <div style={{ padding: 32, textAlign: "center" }}>Unknown state. Please refresh.</div>;
 };
 
 // Placeholder Tax-ITR and EPFO dashboard pages
