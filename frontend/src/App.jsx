@@ -1,6 +1,7 @@
 // --- MAIN APP ENTRY ---
 // --- MAIN APP ENTRY ---
 import { supabase } from "./supabaseClient";
+// (Button already imported above)
 
 function App() {
   // Simulate onboarding complete
@@ -174,6 +175,7 @@ function DashboardLayout({
     { icon: <CreditCard className="w-5 h-5" />, label: "Liabilities" },
     { icon: <Receipt className="w-5 h-5" />, label: "Income & Expenses" },
     { icon: <Shield className="w-5 h-5" />, label: "Insurance" },
+// LandingPage component with Next button
     { icon: <Coins className="w-5 h-5" />, label: "ESOPs / RSUs" },
     { icon: <Banknote className="w-5 h-5" />, label: "EPFO / ITR / AIS" },
     { icon: <FileBarChart2 className="w-5 h-5" />, label: "Reports" },
