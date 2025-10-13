@@ -1,16 +1,17 @@
+console.log("Vercel env check:", import.meta.env.VITE_SUPABASE_URL);
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
-import { BrowserRouter as Router } from "react-router-dom";
+import { HashRouter as Router } from "react-router-dom";
 import ErrorBoundary from "./ErrorBoundary";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <Router>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <Router>
         <App />
-      </ErrorBoundary>
-    </Router>
+      </Router>
+    </ErrorBoundary>
   </React.StrictMode>
 );

@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import axios from "axios";
+import { supabase } from "../../supabaseClient";
 
 const schema = z.object({
   mobile: z.string().min(10, "Mobile is required"),
@@ -21,9 +22,15 @@ export default function Step1Signup({ onNext }) {
   });
 
   const onSubmit = async (data) => {
+    const session =
+      supabase.auth.getSession &&
+      (await supabase.auth.getSession()).data.session;
     const res = await axios.post(
       "http://localhost:8000/api/v1/users/signup",
-      data
+      data,
+      session && session.access_token
+        ? { headers: { Authorization: `Bearer ${session.access_token}` } }
+        : undefined
     );
     setOtpSent(true);
     onNext(res.data.user_id);

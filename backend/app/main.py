@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
+from app.auth import verify_jwt_token
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -32,6 +33,10 @@ app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboar
 app.include_router(email_auth.router, prefix="/api/v1/users", tags=["auth"])
 app.include_router(tax_itr.router, prefix="/api/v1/tax-itr", tags=["tax-itr"])
 app.include_router(epfo.router, prefix="/api/v1/epfo", tags=["epfo"])
+
+@app.get("/api/v1/protected-check")
+def protected_check(user=Depends(verify_jwt_token)):
+	return {"message": "You are authenticated!", "user": user}
 
 # Supabase Google OAuth endpoint
 import os

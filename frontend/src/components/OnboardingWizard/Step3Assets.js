@@ -3,6 +3,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import axios from "axios";
+import { supabase } from "../../supabaseClient";
 
 const assetSchema = z.object({
   type: z.string().min(1, "Type required"),
@@ -27,13 +28,19 @@ export default function Step3Assets({ householdId, onNext }) {
   const { fields, append } = useFieldArray({ control, name: "assets" });
 
   const onSubmit = async (data) => {
+    const session =
+      supabase.auth.getSession &&
+      (await supabase.auth.getSession()).data.session;
     for (const asset of data.assets) {
       await axios.post(
         `http://localhost:8000/api/v1/assets/?household_id=${householdId}`,
         {
           type: asset.type,
           details: { info: asset.details },
-        }
+        },
+        session && session.access_token
+          ? { headers: { Authorization: `Bearer ${session.access_token}` } }
+          : undefined
       );
     }
     onNext();

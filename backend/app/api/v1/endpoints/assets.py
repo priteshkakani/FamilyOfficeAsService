@@ -1,17 +1,48 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Request
+from app.auth import verify_jwt_token
 from ... import schemas
 from ...supabase_client import supabase
 import uuid
 
 router = APIRouter()
 
-# Fetch all assets for a household from Supabase
-@router.get("/supabase/assets")
-def get_assets_supabase(household_id: int):
-    result = supabase.table("assets").select("*").eq("household_id", household_id).execute()
+
+# --- CRUD endpoints for assets with Supabase JWT auth ---
+
+@router.get("/", summary="Get all assets for user")
+def get_assets(user=Depends(verify_jwt_token)):
+    user_id = user["sub"] if isinstance(user, dict) and "sub" in user else user.get("user_id")
+    result = supabase.table("assets").select("*").eq("user_id", user_id).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
-    return {"assets": result["data"]}
+    return result["data"]
+
+@router.post("/", summary="Create new asset")
+def create_asset(asset: schemas.AssetCreate, user=Depends(verify_jwt_token)):
+    user_id = user["sub"] if isinstance(user, dict) and "sub" in user else user.get("user_id")
+    data = asset.dict()
+    data["user_id"] = user_id
+    result = supabase.table("assets").insert(data).execute()
+    if result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"]["message"])
+    return result["data"][0] if result["data"] else {}
+
+@router.put("/{id}", summary="Update asset by id")
+def update_asset(id: int, asset: schemas.AssetCreate, user=Depends(verify_jwt_token)):
+    user_id = user["sub"] if isinstance(user, dict) and "sub" in user else user.get("user_id")
+    data = asset.dict()
+    result = supabase.table("assets").update(data).eq("id", id).eq("user_id", user_id).execute()
+    if result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"]["message"])
+    return result["data"][0] if result["data"] else {}
+
+@router.delete("/{id}", summary="Delete asset by id")
+def delete_asset(id: int, user=Depends(verify_jwt_token)):
+    user_id = user["sub"] if isinstance(user, dict) and "sub" in user else user.get("user_id")
+    result = supabase.table("assets").delete().eq("id", id).eq("user_id", user_id).execute()
+    if result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"]["message"])
+    return {"message": "Asset deleted"}
 
 # Fetch all liabilities for a household from Supabase
 @router.get("/supabase/liabilities")
