@@ -175,7 +175,7 @@ function DashboardLayout({
     { icon: <CreditCard className="w-5 h-5" />, label: "Liabilities" },
     { icon: <Receipt className="w-5 h-5" />, label: "Income & Expenses" },
     { icon: <Shield className="w-5 h-5" />, label: "Insurance" },
-// LandingPage component with Next button
+    // LandingPage component with Next button
     { icon: <Coins className="w-5 h-5" />, label: "ESOPs / RSUs" },
     { icon: <Banknote className="w-5 h-5" />, label: "EPFO / ITR / AIS" },
     { icon: <FileBarChart2 className="w-5 h-5" />, label: "Reports" },
@@ -891,6 +891,42 @@ function NavigationButtons() {
         }
         disabled={idx >= pageOrder.length - 1}
         sx={{ fontWeight: "bold", minWidth: 120, marginLeft: 2 }}
+      >
+        Next
+      </Button>
+    </div>
+  );
+}
+
+function LandingPage() {
+  const navigate = useNavigate();
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          fontWeight: "bold",
+          fontSize: 32,
+          marginBottom: 24,
+        }}
+      >
+        Welcome to Family Office
+      </div>
+      <p style={{ fontSize: 18, marginBottom: 32 }}>
+        Your personal finance dashboard
+      </p>
+      <Button
+        variant="contained"
+        color="primary"
+        size="large"
+        onClick={() => navigate("/login")}
       >
         Next
       </Button>
