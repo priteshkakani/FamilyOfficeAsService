@@ -1,312 +1,727 @@
-// --- MAIN APP ENTRY ---
-// --- MAIN APP ENTRY ---
-import { supabase } from "./supabaseClient";
-// (Button already imported above)
+import AuthForm from "./AuthForm";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import React, { Suspense } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
+import Skeleton from "@mui/material/Skeleton";
 
-function App() {
-  // Simulate onboarding complete
-  const [isOnboarded, setIsOnboarded] = useState(false);
-  const [activeTab, setActiveTab] = useState(0); // 0 = Home
-  const [supabaseStatus, setSupabaseStatus] = useState("pending");
-  const [supabaseError, setSupabaseError] = useState(null);
+// Global Error Boundary
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    // Log error if needed
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 32, textAlign: "center", color: "#b71c1c" }}>
+          <h2>Something went wrong.</h2>
+          <pre style={{ color: "#b71c1c" }}>
+            {this.state.error?.message || String(this.state.error)}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
-  // Test Supabase connection on mount
+// Dashboard skeleton loader
+function DashboardSkeleton() {
+  return (
+    <div style={{ maxWidth: 900, margin: "40px auto", padding: 24 }}>
+      <Skeleton variant="rectangular" width="100%" height={60} sx={{ mb: 2 }} />
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height={300}
+        sx={{ mb: 2 }}
+      />
+      <Skeleton variant="rectangular" width="100%" height={200} />
+    </div>
+  );
+}
+import { useEffect, useState } from "react";
+
+// Wrapper to ensure user is onboarded
+function RequireOnboarded({ children }) {
+  const [loading, setLoading] = useState(true);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+  const navigate = useNavigate();
   useEffect(() => {
-    async function testSupabase() {
-      try {
-        const { data, error } = await supabase
-          .from("test_table")
-          .select()
-          .limit(1);
-        if (error) throw error;
-        setSupabaseStatus("ok");
-      } catch (err) {
-        setSupabaseStatus("error");
-        setSupabaseError(err.message || String(err));
+    let isMounted = true;
+    async function checkOnboarded() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_onboarded")
+        .eq("id", session.user.id)
+        .single();
+      if (error || !data) {
+        setLoading(false);
+        return;
+      }
+      if (!data.is_onboarded) {
+        if (isMounted) {
+          setShouldRedirect(true);
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
       }
     }
-    testSupabase();
-  }, []);
-
-  // Mock user and summary data
-  const user = { name: "Pritesh" };
-  const familySummary = { members: 4, assets: 7, liabilities: 2 };
-  const summaryCards = [
-    { label: "Net Worth", value: "₹2.43 Cr" },
-    { label: "Assets", value: "₹3.10 Cr" },
-    { label: "Liabilities", value: "₹0.67 Cr" },
-    { label: "Insurance", value: "₹1.2 Cr" },
-  ];
-  const mainCards = [
-    {
-      label: "Net Worth",
-      icon: <BarChart2 className="w-6 h-6 text-blue-600" />,
-      content: <div className="text-3xl font-bold">₹2.43 Cr</div>,
-      footer: "All assets – liabilities",
-    },
-    {
-      label: "Assets Breakdown",
-      icon: <PieChart className="w-6 h-6 text-green-600" />,
-      content: (
-        <ResponsiveContainer width="100%" height={120}>
-          <RePieChart>
-            <Pie
-              dataKey="value"
-              data={[
-                { name: "Equity", value: 40 },
-                { name: "MF", value: 30 },
-                { name: "RE", value: 20 },
-                { name: "Gold", value: 10 },
-              ]}
-              cx="50%"
-              cy="50%"
-              outerRadius={40}
-              fill="#8884d8"
-              label
-            >
-              <Cell fill="#8884d8" />
-              <Cell fill="#82ca9d" />
-              <Cell fill="#ffc658" />
-              <Cell fill="#ff8042" />
-            </Pie>
-            <Legend />
-          </RePieChart>
-        </ResponsiveContainer>
-      ),
-      footer: "Equity, MF, RE, Gold, Others",
-    },
-    {
-      label: "Income vs Expense",
-      icon: <TrendingUp className="w-6 h-6 text-purple-600" />,
-      content: (
-        <ResponsiveContainer width="100%" height={120}>
-          <BarChart
-            data={[
-              { name: "Jan", income: 100, expense: 80 },
-              { name: "Feb", income: 120, expense: 90 },
-            ]}
-          >
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="income" fill="#8884d8" />
-            <Bar dataKey="expense" fill="#ff8042" />
-          </BarChart>
-        </ResponsiveContainer>
-      ),
-      footer: "Income + Expense",
-    },
-    {
-      label: "Insurance Coverage",
-      icon: <Shield className="w-6 h-6 text-cyan-600" />,
-      content: <div className="text-lg">Total: ₹1.2 Cr</div>,
-      footer: "Sum Assured vs Required",
-    },
-    {
-      label: "Retirement Goal Progress",
-      icon: <User className="w-6 h-6 text-orange-600" />,
-      content: <div className="text-lg">Progress: 62%</div>,
-      footer: "% to goal",
-    },
-    {
-      label: "Latest Updates",
-      icon: <FileBarChart2 className="w-6 h-6 text-gray-600" />,
-      content: <div className="text-gray-500">New ITR data available</div>,
-      footer: "SurePass/AIS",
-    },
-  ];
-
-  if (supabaseStatus === "pending") {
-    return <div style={{ padding: 32, textAlign: "center" }}>Loading...</div>;
-  }
-  if (supabaseStatus === "error") {
+    checkOnboarded();
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate]);
+  useEffect(() => {
+    if (shouldRedirect) navigate("/onboarding", { replace: true });
+  }, [shouldRedirect, navigate]);
+  if (loading)
     return (
-      <div style={{ padding: 32, textAlign: "center", color: "#b91c1c" }}>
-        <b>Supabase connection failed:</b>
-        <br />
-        <pre style={{ color: "#991b1b" }}>{supabaseError}</pre>
-        <div style={{ marginTop: 16 }}>
-          Check your environment variables and Supabase project setup.
+      <div className="text-center py-12">Checking onboarding status...</div>
+    );
+  if (shouldRedirect) return null;
+  return children;
+}
+// --- EPFO Data Table Component ---
+import axios from "axios";
+
+function EPFODataTable() {
+  const userId = useUserId();
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["epfo_data", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from("epfo_data")
+        .select("*")
+        .eq("user_id", userId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+  const refreshMutation = useMutation({
+    mutationFn: async () => {
+      await axios.post("/api/v1/epfo/refetch", { user_id: userId });
+    },
+    onSuccess: () => refetch(),
+  });
+  return (
+    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6 mt-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">EPFO Passbook Entries</h2>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => refreshMutation.mutate()}
+          disabled={refreshMutation.isLoading}
+        >
+          {refreshMutation.isLoading ? "Refreshing..." : "Refresh"}
+        </Button>
+      </div>
+      {isLoading ? (
+        <div className="text-center py-8">Loading EPFO data...</div>
+      ) : isError ? (
+        <div className="text-center py-8 text-red-500">
+          Error loading EPFO data.
         </div>
+      ) : !data?.length ? (
+        <div className="text-center py-8 text-gray-500">
+          No EPFO data found.
+        </div>
+      ) : (
+        <table className="min-w-full text-left border">
+          <thead>
+            <tr>
+              <th className="border-b p-2">Establishment</th>
+              <th className="border-b p-2">Employee Contribution</th>
+              <th className="border-b p-2">Employer Contribution</th>
+              <th className="border-b p-2">Total Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.id} className="border-b">
+                <td className="p-2">
+                  {row.establishment || row.establishment_name}
+                </td>
+                <td className="p-2">₹{row.employee_contribution || 0}</td>
+                <td className="p-2">₹{row.employer_contribution || 0}</td>
+                <td className="p-2 font-bold">
+                  ₹{row.balance || row.total_balance || 0}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+  // End of EPFODataTable usage
+
+  // --- Reusable Supabase hooks with react-query ---
+
+  function useUserId() {
+    const [userId, setUserId] = React.useState(null);
+    React.useEffect(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        setUserId(data.session?.user?.id || null);
+      });
+      const { data: listener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setUserId(session?.user?.id || null);
+        }
+      );
+      return () => listener?.unsubscribe?.();
+    }, []);
+    return userId;
+  }
+
+  function useAssets() {
+    const userId = useUserId();
+    const query = useQuery({
+      queryKey: ["assets", userId],
+      queryFn: async () => {
+        if (!userId) return [];
+        const { data, error } = await supabase
+          .from("assets")
+          .select("*")
+          .eq("user_id", userId);
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!userId,
+    });
+    const queryClient = useQueryClient();
+    const insert = useMutation({
+      mutationFn: async (row) => {
+        const { data, error } = await supabase
+          .from("assets")
+          .insert([{ ...row, user_id: userId }]);
+        if (error) throw error;
+        return data;
+      },
+      onSuccess: () => queryClient.invalidateQueries(["assets", userId]),
+    });
+    const update = useMutation({
+      mutationFn: async (row) => {
+        const { data, error } = await supabase
+          .from("assets")
+          .update(row)
+          .eq("id", row.id);
+        if (error) throw error;
+        return data;
+      },
+      onSuccess: () => queryClient.invalidateQueries(["assets", userId]),
+    });
+    const remove = useMutation({
+      mutationFn: async (id) => {
+        const { error } = await supabase.from("assets").delete().eq("id", id);
+        if (error) throw error;
+        return id;
+      },
+      onSuccess: () => queryClient.invalidateQueries(["assets", userId]),
+    });
+    return { ...query, insert, update, remove };
+  }
+
+  function useLiabilities() {
+    const userId = useUserId();
+    const query = useQuery({
+      queryKey: ["liabilities", userId],
+      queryFn: async () => {
+        if (!userId) return [];
+        const { data, error } = await supabase
+          .from("liabilities")
+          .select("*")
+          .eq("user_id", userId);
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!userId,
+    });
+    const queryClient = useQueryClient();
+    const insert = useMutation({
+      mutationFn: async (row) => {
+        const { data, error } = await supabase
+          .from("liabilities")
+          .insert([{ ...row, user_id: userId }]);
+        if (error) throw error;
+        return data;
+      },
+      onSuccess: () => queryClient.invalidateQueries(["liabilities", userId]),
+    });
+    const update = useMutation({
+      mutationFn: async (row) => {
+        const { data, error } = await supabase
+          .from("liabilities")
+          .update(row)
+          .eq("id", row.id);
+        if (error) throw error;
+        return data;
+      },
+      onSuccess: () => queryClient.invalidateQueries(["liabilities", userId]),
+    });
+    const remove = useMutation({
+      mutationFn: async (id) => {
+        const { error } = await supabase
+          .from("liabilities")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+        return id;
+      },
+      onSuccess: () => queryClient.invalidateQueries(["liabilities", userId]),
+    });
+    return { ...query, insert, update, remove };
+  }
+
+  function useInsurance() {
+    const userId = useUserId();
+    const query = useQuery({
+      queryKey: ["insurance", userId],
+      queryFn: async () => {
+        if (!userId) return [];
+        const { data, error } = await supabase
+          .from("insurance")
+          .select("*")
+          .eq("user_id", userId);
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!userId,
+    });
+    const queryClient = useQueryClient();
+    const insert = useMutation({
+      mutationFn: async (row) => {
+        const { data, error } = await supabase
+          .from("insurance")
+          .insert([{ ...row, user_id: userId }]);
+        if (error) throw error;
+        return data;
+      },
+      onSuccess: () => queryClient.invalidateQueries(["insurance", userId]),
+    });
+    const update = useMutation({
+      mutationFn: async (row) => {
+        const { data, error } = await supabase
+          .from("insurance")
+          .update(row)
+          .eq("id", row.id);
+        if (error) throw error;
+        return data;
+      },
+      onSuccess: () => queryClient.invalidateQueries(["insurance", userId]),
+    });
+    const remove = useMutation({
+      mutationFn: async (id) => {
+        const { error } = await supabase
+          .from("insurance")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+        return id;
+      },
+      onSuccess: () => queryClient.invalidateQueries(["insurance", userId]),
+    });
+    return { ...query, insert, update, remove };
+  }
+
+  function useEPFO() {
+    const userId = useUserId();
+    const query = useQuery({
+      queryKey: ["epfo_data", userId],
+      queryFn: async () => {
+        if (!userId) return [];
+        const { data, error } = await supabase
+          .from("epfo_data")
+          .select("*")
+          .eq("user_id", userId);
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!userId,
+    });
+    return query;
+  }
+
+  function useDashboardSummary() {
+    const assets = useAssets();
+    const liabilities = useLiabilities();
+    const insurance = useInsurance();
+    const epfo = useEPFO();
+    return { assets, liabilities, insurance, epfo };
+  }
+  function ProtectedRoute({ children }) {
+    const [session, setSession] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
+    React.useEffect(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        setSession(data.session);
+        setLoading(false);
+      });
+      const { data: listener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+        }
+      );
+      return () => {
+        listener?.unsubscribe?.();
+      };
+    }, []);
+    if (loading)
+      return (
+        <div className="text-center py-12">Checking authentication...</div>
+      );
+    if (!session || !session.user) {
+      return <Navigate to="/login" replace />;
+    }
+    return children;
+  }
+
+  // Generic Table Page
+  function TablePage({ table, title, columns }) {
+    const { data, isLoading, isError } = useQuery({
+      queryKey: [table],
+      queryFn: async () => (await supabase.from(table).select("*")).data || [],
+    });
+    if (isLoading)
+      return <div className="text-center py-12">Loading {title}...</div>;
+    if (isError)
+      return (
+        <div className="text-center py-12 text-red-500">
+          Error loading {title}.
+        </div>
+      );
+    if (!data?.length)
+      return (
+        <div className="text-center py-12 text-gray-500">
+          No {title} data found.
+        </div>
+      );
+    // Calculate summary
+    const total = data.reduce((sum, row) => sum + (row.value || 0), 0);
+    return (
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6 mt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">{title}</h2>
+          <div className="font-semibold">Total: ₹{total.toLocaleString()}</div>
+        </div>
+        <table className="min-w-full text-left border">
+          <thead>
+            <tr>
+              {columns.map((col) => (
+                <th key={col} className="border-b p-2">
+                  {col}
+                </th>
+              ))}
+              <th className="border-b p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.id} className="border-b">
+                {columns.map((col) => (
+                  <td key={col} className="p-2">
+                    {row[col]}
+                  </td>
+                ))}
+                <td className="p-2">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                    style={{ marginRight: 8 }}
+                  >
+                    Edit
+                  </Button>
+                  <Button size="small" variant="outlined" color="error">
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }
 
-  if (!isOnboarded) {
-    return <OnboardingWizard />;
+  // Section Pages (moved above App for scope)
+  const AssetsPage = () => (
+    <TablePage table="assets" title="Assets" columns={["type", "value"]} />
+  );
+  const LiabilitiesPage = () => (
+    <TablePage
+      table="liabilities"
+      title="Liabilities"
+      columns={["type", "value"]}
+    />
+  );
+  const InsurancePage = () => (
+    <TablePage
+      table="insurance"
+      title="Insurance"
+      columns={["policy_name", "sum_assured"]}
+    />
+  );
+  const EPFOPage = () => (
+    <TablePage table="epfo_data" title="EPFO" columns={["uan", "balance"]} />
+  );
+  const ReportsPage = () => (
+    <TablePage
+      table="reports"
+      title="Reports"
+      columns={["report_type", "created_at"]}
+    />
+  );
+  // --- DASHBOARD LAYOUT ---
+  function DashboardLayout({
+    user = { name: "Pritesh" },
+    familySummary,
+    summaryCards,
+    mainCards,
+    children,
+    activeTab,
+    setActiveTab,
+  }) {
+    const tabs = [
+      { icon: <LayoutDashboard className="w-5 h-5" />, label: "Home" },
+      { icon: <Users className="w-5 h-5" />, label: "Family" },
+      { icon: <BarChart2 className="w-5 h-5" />, label: "Assets" },
+      { icon: <CreditCard className="w-5 h-5" />, label: "Liabilities" },
+      { icon: <Receipt className="w-5 h-5" />, label: "Income & Expenses" },
+      { icon: <Shield className="w-5 h-5" />, label: "Insurance" },
+      // LandingPage component with Next button
+      { icon: <Coins className="w-5 h-5" />, label: "ESOPs / RSUs" },
+      { icon: <Banknote className="w-5 h-5" />, label: "EPFO / ITR / AIS" },
+      { icon: <FileBarChart2 className="w-5 h-5" />, label: "Reports" },
+      { icon: <Settings className="w-5 h-5" />, label: "Settings" },
+    ];
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        {/* Sidebar */}
+        <aside className="w-56 bg-white shadow flex flex-col gap-2 p-4">
+          <div className="text-xl font-bold text-blue-700 mb-4">
+            Family Office
+          </div>
+          {tabs.map((tab, idx) => (
+            <Button
+              key={tab.label}
+              variant={activeTab === idx ? "default" : "ghost"}
+              className={`justify-start font-semibold rounded-lg mb-1 w-full ${
+                activeTab === idx ? "bg-blue-50 text-blue-700" : "text-gray-700"
+              }`}
+              onClick={() => setActiveTab(idx)}
+              startIcon={tab.icon}
+            >
+              {tab.label}
+            </Button>
+          ))}
+        </aside>
+        {/* Main Content */}
+        <main className="flex-1 p-6 flex flex-col">{children}</main>
+      </div>
+    );
   }
 
-  // Dashboard UI
-  return (
-    <DashboardLayout
-      user={user}
-      familySummary={familySummary}
-      summaryCards={summaryCards}
-      mainCards={mainCards}
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-    >
-      {activeTab === 0 && (
-        <DashboardHomeTab
-          user={user}
-          familySummary={familySummary}
-          summaryCards={summaryCards}
-          mainCards={mainCards}
-        />
-      )}
-      {/* TODO: Render other tabs based on activeTab */}
-    </DashboardLayout>
-  );
-}
-// --- DASHBOARD LAYOUT ---
-function DashboardLayout({
-  user = { name: "Pritesh" },
-  familySummary,
-  summaryCards,
-  mainCards,
-  children,
-  activeTab,
-  setActiveTab,
-}) {
-  const tabs = [
-    { icon: <LayoutDashboard className="w-5 h-5" />, label: "Home" },
-    { icon: <Users className="w-5 h-5" />, label: "Family" },
-    { icon: <BarChart2 className="w-5 h-5" />, label: "Assets" },
-    { icon: <CreditCard className="w-5 h-5" />, label: "Liabilities" },
-    { icon: <Receipt className="w-5 h-5" />, label: "Income & Expenses" },
-    { icon: <Shield className="w-5 h-5" />, label: "Insurance" },
-    // LandingPage component with Next button
-    { icon: <Coins className="w-5 h-5" />, label: "ESOPs / RSUs" },
-    { icon: <Banknote className="w-5 h-5" />, label: "EPFO / ITR / AIS" },
-    { icon: <FileBarChart2 className="w-5 h-5" />, label: "Reports" },
-    { icon: <Settings className="w-5 h-5" />, label: "Settings" },
-  ];
-  return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-56 bg-white shadow flex flex-col gap-2 p-4">
-        <div className="text-xl font-bold text-blue-700 mb-4">
-          Family Office
-        </div>
-        {tabs.map((tab, idx) => (
-          <Button
-            key={tab.label}
-            variant={activeTab === idx ? "default" : "ghost"}
-            className={`justify-start font-semibold rounded-lg mb-1 w-full ${
-              activeTab === idx ? "bg-blue-50 text-blue-700" : "text-gray-700"
-            }`}
-            onClick={() => setActiveTab(idx)}
-            startIcon={tab.icon}
-          >
-            {tab.label}
-          </Button>
-        ))}
-      </aside>
-      {/* Main Content */}
-      <main className="flex-1 p-6 flex flex-col">{children}</main>
-    </div>
-  );
-}
+  // --- DASHBOARD HOME TAB ---
+  function DashboardHomeTab() {
+    // TanStack Query fetches
+    const assetsQ = useQuery({
+      queryKey: ["assets"],
+      queryFn: async () =>
+        (await supabase.from("assets").select("*")).data || [],
+    });
+    const liabilitiesQ = useQuery({
+      queryKey: ["liabilities"],
+      queryFn: async () =>
+        (await supabase.from("liabilities").select("*")).data || [],
+    });
+    const insuranceQ = useQuery({
+      queryKey: ["insurance"],
+      queryFn: async () =>
+        (await supabase.from("insurance").select("*")).data || [],
+    });
+    const epfoQ = useQuery({
+      queryKey: ["epfo_data"],
+      queryFn: async () =>
+        (await supabase.from("epfo_data").select("*")).data || [],
+    });
 
-// --- DASHBOARD HOME TAB ---
-function DashboardHomeTab({ user, familySummary, summaryCards, mainCards }) {
-  return (
-    <div className="max-w-6xl mx-auto w-full">
-      {/* Top Section */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-        <div>
-          <div className="text-2xl font-bold mb-1 flex items-center">
-            <User className="w-6 h-6 mr-2 text-blue-600" />
-            Welcome, {user.name}
-          </div>
-          <div className="text-gray-500">
-            Family Summary: {familySummary.members} Members,{" "}
-            {familySummary.assets} Assets, {familySummary.liabilities}{" "}
-            Liabilities
-          </div>
+    const isLoading =
+      assetsQ.isLoading ||
+      liabilitiesQ.isLoading ||
+      insuranceQ.isLoading ||
+      epfoQ.isLoading;
+    const isError =
+      assetsQ.isError ||
+      liabilitiesQ.isError ||
+      insuranceQ.isError ||
+      epfoQ.isError;
+
+    // Calculate summary
+    const totalAssets =
+      assetsQ.data?.reduce((sum, a) => sum + (a.value || 0), 0) || 0;
+    const totalLiabilities =
+      liabilitiesQ.data?.reduce((sum, l) => sum + (l.value || 0), 0) || 0;
+    const netWorth = totalAssets - totalLiabilities;
+    const totalIncome =
+      assetsQ.data?.reduce((sum, a) => sum + (a.income || 0), 0) || 0;
+    const totalExpense =
+      liabilitiesQ.data?.reduce((sum, l) => sum + (l.expense || 0), 0) || 0;
+    const epfoSummary = epfoQ.data?.length ? epfoQ.data[0] : null;
+
+    if (isLoading)
+      return <div className="text-center py-12">Loading dashboard...</div>;
+    if (isError)
+      return (
+        <div className="text-center py-12 text-red-500">
+          Error loading dashboard data.
         </div>
-        {/* Placeholder for notifications or quick actions */}
-        <Button variant="outline">Notifications</Button>
-      </div>
-      {/* Summary Cards */}
-      <div className="flex gap-4 mb-6 flex-wrap">
-        {summaryCards.map((card) => (
-          <Card
-            key={card.label}
-            className="w-48 p-4 flex flex-col items-center justify-center shadow"
-          >
-            <div className="text-lg font-semibold mb-1">{card.label}</div>
-            <div className="text-2xl font-bold mb-1">{card.value}</div>
-          </Card>
-        ))}
-      </div>
-      {/* Main Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {mainCards.map((card) => (
-          <Card key={card.label} className="p-4 flex flex-col shadow">
-            <div className="flex items-center mb-2">
-              <span className="mr-2">{card.icon}</span>
-              <span className="font-semibold text-lg">{card.label}</span>
+      );
+    if (!assetsQ.data?.length && !liabilitiesQ.data?.length)
+      return (
+        <div className="text-center py-12 text-gray-500">
+          No financial data found. Start by adding assets and liabilities.
+        </div>
+      );
+
+    // Cards data
+    const summaryCards = [
+      { label: "Total Assets", value: `₹${totalAssets.toLocaleString()}` },
+      {
+        label: "Total Liabilities",
+        value: `₹${totalLiabilities.toLocaleString()}`,
+      },
+      { label: "Net Worth", value: `₹${netWorth.toLocaleString()}` },
+      {
+        label: "Income vs Expense",
+        value: `₹${totalIncome.toLocaleString()} / ₹${totalExpense.toLocaleString()}`,
+      },
+      {
+        label: "EPFO Summary",
+        value: epfoSummary
+          ? `Balance: ₹${epfoSummary.balance}`
+          : "No EPFO data",
+      },
+    ];
+
+    // Pie chart for asset allocation
+    const assetPieData =
+      assetsQ.data?.map((a) => ({ name: a.type || a.name, value: a.value })) ||
+      [];
+    // Bar chart for income vs expense
+    const incomeExpenseData = [
+      { name: "This Month", income: totalIncome, expense: totalExpense },
+    ];
+
+    return (
+      <div className="max-w-6xl mx-auto w-full">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+          <div>
+            <div className="text-2xl font-bold mb-1 flex items-center">
+              Dashboard
             </div>
-            <div className="flex-1 mb-2">{card.content}</div>
-            <div className="text-xs text-gray-500 mt-auto">{card.footer}</div>
-          </Card>
-        ))}
+          </div>
+        </div>
+        <div className="flex gap-4 mb-6 flex-wrap">
+          {summaryCards.map((card) => (
+            <div
+              key={card.label}
+              className="bg-white rounded-lg shadow p-4 min-w-[180px] flex flex-col items-center"
+            >
+              <div className="text-lg font-semibold mb-1">{card.label}</div>
+              <div className="text-2xl font-bold mb-1">{card.value}</div>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="font-semibold mb-2">Asset Allocation</div>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={assetPieData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={60}
+                  label
+                >
+                  {assetPieData.map((entry, idx) => (
+                    <Cell
+                      key={`cell-${idx}`}
+                      fill={
+                        ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#00C49F"][
+                          idx % 5
+                        ]
+                      }
+                    />
+                  ))}
+                </Pie>
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="font-semibold mb-2">Income vs Expense</div>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={incomeExpenseData}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="income" fill="#8884d8" />
+                <Bar dataKey="expense" fill="#ff8042" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="mt-8 bg-white rounded-lg shadow p-4">
+          <div className="font-semibold mb-2">EPFO Details</div>
+          {epfoSummary ? (
+            <div>
+              <div>Balance: ₹{epfoSummary.balance}</div>
+              <div>UAN: {epfoSummary.uan}</div>
+              {/* Add more EPFO fields as needed */}
+            </div>
+          ) : (
+            <div className="text-gray-500">No EPFO data available.</div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 }
-import React, { useState, useEffect, useRef } from "react";
-import {
-  BarChart2,
-  PieChart,
-  User,
-  FileBarChart2,
-  Shield,
-  TrendingUp,
-  LayoutDashboard,
-  Users,
-  CreditCard,
-  Receipt,
-  Coins,
-  Banknote,
-  Settings,
-} from "lucide-react";
-
-import {
-  ResponsiveContainer,
-  PieChart as RePieChart,
-  Pie,
-  BarChart,
-  Tooltip,
-  Legend,
-  Cell,
-  XAxis,
-  YAxis,
-  Bar,
-} from "recharts";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Button,
-  Divider,
-  LinearProgress,
-  Modal,
-  TextField,
-  MenuItem,
-} from "@mui/material";
-
 // Investment Advice Details Page
 function InvestmentAdvicePage() {
   const smallcases = [
-    { name: "Top Tech Innovators", desc: "Diversified tech sector smallcase." },
+    {
+      name: "Top Tech Innovators",
+      desc: "Diversified tech sector smallcase.",
+    },
     {
       name: "Green Energy Leaders",
       desc: "Focus on renewable energy companies.",
@@ -315,8 +730,14 @@ function InvestmentAdvicePage() {
   ];
   const mutualFunds = [
     { name: "HDFC Flexi Cap Fund", desc: "Large & mid cap equity fund." },
-    { name: "Mirae Asset Large Cap", desc: "Consistent large cap performer." },
-    { name: "Parag Parikh Flexi Cap", desc: "Diversified, value-driven fund." },
+    {
+      name: "Mirae Asset Large Cap",
+      desc: "Consistent large cap performer.",
+    },
+    {
+      name: "Parag Parikh Flexi Cap",
+      desc: "Diversified, value-driven fund.",
+    },
   ];
   const stocks = [
     { name: "Reliance Industries", desc: "Conglomerate, energy & retail." },
@@ -324,7 +745,10 @@ function InvestmentAdvicePage() {
     { name: "HDFC Bank", desc: "Top private sector bank." },
   ];
   const realEstate = [
-    { name: "Prestige Shantiniketan", desc: "Bangalore residential project." },
+    {
+      name: "Prestige Shantiniketan",
+      desc: "Bangalore residential project.",
+    },
     { name: "DLF Cyber City", desc: "Commercial real estate, Gurgaon." },
     { name: "Godrej Garden City", desc: "Ahmedabad township." },
   ];
@@ -478,57 +902,122 @@ const investmentAdvice = [
 ];
 
 const OnboardingWizard = () => {
-  // --- NEW 6-STEP ONBOARDING WIZARD ---
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-
-  // Step 1: Welcome / Profile Setup
-  const [profile, setProfile] = useState({
-    fullName: "",
-    email: "",
-    mobile: "",
-    city: "",
-    country: "",
-    dob: "",
-    occupation: "",
-    incomeRange: "",
+  const [step, setStep] = React.useState(1);
+  const methods = useForm({
+    defaultValues: {
+      profile: {
+        fullName: "",
+        email: "",
+        mobile: "",
+        city: "",
+        country: "",
+        dob: "",
+        occupation: "",
+        incomeRange: "",
+      },
+      familyMembers: [],
+      assets: [],
+      liabilities: [],
+      preferences: {
+        risk: "",
+        horizon: 5,
+        frequency: "Monthly",
+      },
+    },
   });
 
-  // Step 2: Family Setup
-  const [familyMembers, setFamilyMembers] = useState([]);
+  // TanStack Query mutation for onboarding submit
+  const mutation = useMutation({
+    mutationFn: async (data) => {
+      // Insert profile
+      const { profile, familyMembers, assets, liabilities, preferences } = data;
+      const user = supabase.auth.user();
+      if (!user) throw new Error("Not authenticated");
+      // Insert/update profile
+      await supabase.from("profiles").upsert({
+        ...profile,
+        id: user.id,
+        is_onboarded: true,
+      });
+      // Insert family members
+      if (familyMembers.length)
+        await supabase
+          .from("family_members")
+          .upsert(familyMembers.map((m) => ({ ...m, user_id: user.id })));
+      // Insert assets
+      if (assets.length)
+        await supabase
+          .from("assets")
+          .upsert(assets.map((a) => ({ ...a, user_id: user.id })));
+      // Insert liabilities
+      if (liabilities.length)
+        await supabase
+          .from("liabilities")
+          .upsert(liabilities.map((l) => ({ ...l, user_id: user.id })));
+      // Insert preferences
+      await supabase
+        .from("preferences")
+        .upsert({ ...preferences, user_id: user.id });
+    },
+    onSuccess: () => {
+      navigate("/dashboard");
+    },
+  });
 
-  // Step 3: Financial Data Sources
-  const [dataSources, setDataSources] = useState({
-    pan: false,
-    epfo: false,
-    stocks: false,
-    mutualFunds: false,
-    esops: false,
-    realEstate: false,
-    insurance: false,
-  });
-  const [panInput, setPanInput] = useState("");
-  const [epfoInput, setEpfoInput] = useState({ uan: "", mobile: "", otp: "" });
-  const [incomeExpense, setIncomeExpense] = useState({
-    income: "",
-    expense: "",
-    loans: [],
-    savingsRate: "",
-  });
-  const [goals, setGoals] = useState([]);
-  const [preferences, setPreferences] = useState({
-    risk: "",
-    horizon: 5,
-    frequency: "Monthly",
-  });
-  const nextStep = () => setStep((s) => Math.min(s + 1, 6));
-  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+  const onSubmit = (values) => {
+    mutation.mutate(values);
+  };
 
-  // Always render something, never return null
+  // Example: simple stepper UI (replace with real forms per step)
   return (
-    <div style={{ padding: 32, textAlign: "center" }}>
-      Unknown state. Please refresh.
-    </div>
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(onSubmit)}>
+        <div style={{ padding: 32, textAlign: "center" }}>
+          <h2
+            style={{
+              color: "#2563eb",
+              fontWeight: 700,
+              fontSize: 24,
+              marginBottom: 16,
+            }}
+          >
+            Onboarding Step {step}
+          </h2>
+          {/* Render step-specific fields here using useFormContext() */}
+          {/* ...existing code for stepper and fields... */}
+          <div style={{ marginTop: 24 }}>
+            {step > 1 && (
+              <Button
+                onClick={() => setStep(step - 1)}
+                variant="outlined"
+                style={{ marginRight: 8 }}
+              >
+                Back
+              </Button>
+            )}
+            {step < 6 ? (
+              <Button onClick={() => setStep(step + 1)} variant="contained">
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={mutation.isLoading}
+              >
+                {mutation.isLoading ? "Submitting..." : "Finish"}
+              </Button>
+            )}
+          </div>
+          {mutation.isError && (
+            <Typography color="error" sx={{ mt: 2 }}>
+              {mutation.error.message}
+            </Typography>
+          )}
+        </div>
+      </form>
+    </FormProvider>
   );
 };
 
@@ -931,6 +1420,115 @@ function LandingPage() {
         Next
       </Button>
     </div>
+  );
+}
+
+// --- ProtectedRoute moved above App for scope ---
+function ProtectedRoute({ children }) {
+  const [session, setSession] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+      }
+    );
+    return () => {
+      listener?.unsubscribe?.();
+    };
+  }, []);
+  if (loading)
+    return <div className="text-center py-12">Checking authentication...</div>;
+  if (!session || !session.user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
+// Main App component (restored)
+function App() {
+  return (
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<AuthForm />} />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingWizard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/*"
+            element={
+              <ProtectedRoute>
+                <RequireOnboarded>
+                  <Suspense
+                    fallback={
+                      <div style={{ textAlign: "center", marginTop: 64 }}>
+                        <CircularProgress />
+                        <div>Loading dashboard...</div>
+                      </div>
+                    }
+                  >
+                    <Routes>
+                      <Route
+                        path="assets"
+                        element={
+                          <React.Suspense fallback={<DashboardSkeleton />}>
+                            <AssetsPage />
+                          </React.Suspense>
+                        }
+                      />
+                      <Route
+                        path="liabilities"
+                        element={
+                          <React.Suspense fallback={<DashboardSkeleton />}>
+                            <LiabilitiesPage />
+                          </React.Suspense>
+                        }
+                      />
+                      <Route
+                        path="insurance"
+                        element={
+                          <React.Suspense fallback={<DashboardSkeleton />}>
+                            <InsurancePage />
+                          </React.Suspense>
+                        }
+                      />
+                      <Route
+                        path="epfo"
+                        element={
+                          <React.Suspense fallback={<DashboardSkeleton />}>
+                            <EPFOPage />
+                          </React.Suspense>
+                        }
+                      />
+                      <Route
+                        path="reports"
+                        element={
+                          <React.Suspense fallback={<DashboardSkeleton />}>
+                            <ReportsPage />
+                          </React.Suspense>
+                        }
+                      />
+                      {/* Add more dashboard routes as needed */}
+                    </Routes>
+                  </Suspense>
+                </RequireOnboarded>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
