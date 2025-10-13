@@ -13,7 +13,10 @@ function App() {
   useEffect(() => {
     async function testSupabase() {
       try {
-        const { data, error } = await supabase.from("test_table").select().limit(1);
+        const { data, error } = await supabase
+          .from("test_table")
+          .select()
+          .limit(1);
         if (error) throw error;
         setSupabaseStatus("ok");
       } catch (err) {
@@ -111,7 +114,6 @@ function App() {
       footer: "SurePass/AIS",
     },
   ];
-
 
   if (supabaseStatus === "pending") {
     return <div style={{ padding: 32, textAlign: "center" }}>Loading...</div>;
@@ -521,7 +523,11 @@ const OnboardingWizard = () => {
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   // Always render something, never return null
-  return <div style={{ padding: 32, textAlign: "center" }}>Unknown state. Please refresh.</div>;
+  return (
+    <div style={{ padding: 32, textAlign: "center" }}>
+      Unknown state. Please refresh.
+    </div>
+  );
 };
 
 // Placeholder Tax-ITR and EPFO dashboard pages
