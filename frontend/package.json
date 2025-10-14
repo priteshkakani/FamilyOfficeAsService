@@ -36,7 +36,13 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@vitejs/plugin-react": "^5.0.4",
-    "vite": "^7.1.9"
+    "cypress": "^15.4.0",
+    "jsdom": "^27.0.0",
+    "msw": "^2.11.5",
+    "vite": "^7.1.9",
+    "vitest": "^3.2.4"
   }
 }

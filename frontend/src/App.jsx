@@ -1,4 +1,33 @@
+// Section Pages (ensure all are defined above App)
+const AssetsPage = () => (
+  <TablePage table="assets" title="Assets" columns={["type", "value"]} />
+);
+const LiabilitiesPage = () => (
+  <TablePage
+    table="liabilities"
+    title="Liabilities"
+    columns={["type", "value"]}
+  />
+);
+const InsurancePage = () => (
+  <TablePage
+    table="insurance"
+    title="Insurance"
+    columns={["policy_name", "sum_assured"]}
+  />
+);
+const EPFOPage = () => (
+  <TablePage table="epfo_data" title="EPFO" columns={["uan", "balance"]} />
+);
+const ReportsPage = () => (
+  <TablePage
+    table="reports"
+    title="Reports"
+    columns={["report_type", "created_at"]}
+  />
+);
 import AuthForm from "./AuthForm";
+import { supabase } from "./supabaseClient";
 import {
   BrowserRouter,
   Routes,
@@ -10,6 +39,8 @@ import {
 import React, { Suspense } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import Skeleton from "@mui/material/Skeleton";
+import Button from "@mui/material/Button";
+import OnboardingWizard from "./components/OnboardingWizard/OnboardingWizard.jsx"; // Updated import
 
 // Global Error Boundary
 class ErrorBoundary extends React.Component {
@@ -901,126 +932,6 @@ const investmentAdvice = [
   { type: "Real Estate", advice: "Consider REITs for liquidity." },
 ];
 
-const OnboardingWizard = () => {
-  const navigate = useNavigate();
-  const [step, setStep] = React.useState(1);
-  const methods = useForm({
-    defaultValues: {
-      profile: {
-        fullName: "",
-        email: "",
-        mobile: "",
-        city: "",
-        country: "",
-        dob: "",
-        occupation: "",
-        incomeRange: "",
-      },
-      familyMembers: [],
-      assets: [],
-      liabilities: [],
-      preferences: {
-        risk: "",
-        horizon: 5,
-        frequency: "Monthly",
-      },
-    },
-  });
-
-  // TanStack Query mutation for onboarding submit
-  const mutation = useMutation({
-    mutationFn: async (data) => {
-      // Insert profile
-      const { profile, familyMembers, assets, liabilities, preferences } = data;
-      const user = supabase.auth.user();
-      if (!user) throw new Error("Not authenticated");
-      // Insert/update profile
-      await supabase.from("profiles").upsert({
-        ...profile,
-        id: user.id,
-        is_onboarded: true,
-      });
-      // Insert family members
-      if (familyMembers.length)
-        await supabase
-          .from("family_members")
-          .upsert(familyMembers.map((m) => ({ ...m, user_id: user.id })));
-      // Insert assets
-      if (assets.length)
-        await supabase
-          .from("assets")
-          .upsert(assets.map((a) => ({ ...a, user_id: user.id })));
-      // Insert liabilities
-      if (liabilities.length)
-        await supabase
-          .from("liabilities")
-          .upsert(liabilities.map((l) => ({ ...l, user_id: user.id })));
-      // Insert preferences
-      await supabase
-        .from("preferences")
-        .upsert({ ...preferences, user_id: user.id });
-    },
-    onSuccess: () => {
-      navigate("/dashboard");
-    },
-  });
-
-  const onSubmit = (values) => {
-    mutation.mutate(values);
-  };
-
-  // Example: simple stepper UI (replace with real forms per step)
-  return (
-    <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)}>
-        <div style={{ padding: 32, textAlign: "center" }}>
-          <h2
-            style={{
-              color: "#2563eb",
-              fontWeight: 700,
-              fontSize: 24,
-              marginBottom: 16,
-            }}
-          >
-            Onboarding Step {step}
-          </h2>
-          {/* Render step-specific fields here using useFormContext() */}
-          {/* ...existing code for stepper and fields... */}
-          <div style={{ marginTop: 24 }}>
-            {step > 1 && (
-              <Button
-                onClick={() => setStep(step - 1)}
-                variant="outlined"
-                style={{ marginRight: 8 }}
-              >
-                Back
-              </Button>
-            )}
-            {step < 6 ? (
-              <Button onClick={() => setStep(step + 1)} variant="contained">
-                Next
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={mutation.isLoading}
-              >
-                {mutation.isLoading ? "Submitting..." : "Finish"}
-              </Button>
-            )}
-          </div>
-          {mutation.isError && (
-            <Typography color="error" sx={{ mt: 2 }}>
-              {mutation.error.message}
-            </Typography>
-          )}
-        </div>
-      </form>
-    </FormProvider>
-  );
-};
-
 // Placeholder Tax-ITR and EPFO dashboard pages
 function TaxITRPage() {
   return (
@@ -1028,16 +939,6 @@ function TaxITRPage() {
       <Typography variant="h5">Tax-ITR Documents</Typography>
       <Typography color="text.secondary">
         Uploaded and fetched ITR documents will appear here.
-      </Typography>
-    </Box>
-  );
-}
-function EPFOPage() {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">EPFO Documents</Typography>
-      <Typography color="text.secondary">
-        Uploaded and fetched EPFO documents will appear here.
       </Typography>
     </Box>
   );
@@ -1175,34 +1076,6 @@ function DashboardHome({
 }
 
 // Simple pages for each tab
-function AssetsPage({ assets = [] }) {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Assets</Typography>
-      <ul>
-        {assets.map((a, i) => (
-          <li key={i}>
-            {a.type}: ₹{a.value}
-          </li>
-        ))}
-      </ul>
-    </Box>
-  );
-}
-function LiabilitiesPage({ liabilities = [] }) {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Liabilities</Typography>
-      <ul>
-        {liabilities.map((l, i) => (
-          <li key={i}>
-            {l.type}: ₹{l.value}
-          </li>
-        ))}
-      </ul>
-    </Box>
-  );
-}
 function NetWorthPage({ assets = [], liabilities = [] }) {
   const totalAssets = assets.reduce((sum, a) => sum + (a.value || 0), 0);
   const totalLiabilities = liabilities.reduce(
@@ -1450,85 +1323,82 @@ function ProtectedRoute({ children }) {
 }
 
 // Main App component (restored)
+
 function App() {
   return (
-    <ErrorBoundary>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<AuthForm />} />
-          <Route
-            path="/onboarding"
-            element={
-              <ProtectedRoute>
-                <OnboardingWizard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/*"
-            element={
-              <ProtectedRoute>
-                <RequireOnboarded>
-                  <Suspense
-                    fallback={
-                      <div style={{ textAlign: "center", marginTop: 64 }}>
-                        <CircularProgress />
-                        <div>Loading dashboard...</div>
-                      </div>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<AuthForm />} />
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <OnboardingWizard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/*"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarded>
+              <Suspense
+                fallback={
+                  <div style={{ textAlign: "center", marginTop: 64 }}>
+                    <CircularProgress />
+                    <div>Loading dashboard...</div>
+                  </div>
+                }
+              >
+                <Routes>
+                  <Route
+                    path="assets"
+                    element={
+                      <React.Suspense fallback={<DashboardSkeleton />}>
+                        <AssetsPage />
+                      </React.Suspense>
                     }
-                  >
-                    <Routes>
-                      <Route
-                        path="assets"
-                        element={
-                          <React.Suspense fallback={<DashboardSkeleton />}>
-                            <AssetsPage />
-                          </React.Suspense>
-                        }
-                      />
-                      <Route
-                        path="liabilities"
-                        element={
-                          <React.Suspense fallback={<DashboardSkeleton />}>
-                            <LiabilitiesPage />
-                          </React.Suspense>
-                        }
-                      />
-                      <Route
-                        path="insurance"
-                        element={
-                          <React.Suspense fallback={<DashboardSkeleton />}>
-                            <InsurancePage />
-                          </React.Suspense>
-                        }
-                      />
-                      <Route
-                        path="epfo"
-                        element={
-                          <React.Suspense fallback={<DashboardSkeleton />}>
-                            <EPFOPage />
-                          </React.Suspense>
-                        }
-                      />
-                      <Route
-                        path="reports"
-                        element={
-                          <React.Suspense fallback={<DashboardSkeleton />}>
-                            <ReportsPage />
-                          </React.Suspense>
-                        }
-                      />
-                      {/* Add more dashboard routes as needed */}
-                    </Routes>
-                  </Suspense>
-                </RequireOnboarded>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </ErrorBoundary>
+                  />
+                  <Route
+                    path="liabilities"
+                    element={
+                      <React.Suspense fallback={<DashboardSkeleton />}>
+                        <LiabilitiesPage />
+                      </React.Suspense>
+                    }
+                  />
+                  <Route
+                    path="insurance"
+                    element={
+                      <React.Suspense fallback={<DashboardSkeleton />}>
+                        <InsurancePage />
+                      </React.Suspense>
+                    }
+                  />
+                  <Route
+                    path="epfo"
+                    element={
+                      <React.Suspense fallback={<DashboardSkeleton />}>
+                        <EPFOPage />
+                      </React.Suspense>
+                    }
+                  />
+                  <Route
+                    path="reports"
+                    element={
+                      <React.Suspense fallback={<DashboardSkeleton />}>
+                        <ReportsPage />
+                      </React.Suspense>
+                    }
+                  />
+                  {/* Add more dashboard routes as needed */}
+                </Routes>
+              </Suspense>
+            </RequireOnboarded>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 

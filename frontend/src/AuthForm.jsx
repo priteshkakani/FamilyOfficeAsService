@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 
 export default function AuthForm({ onAuth }) {
@@ -7,14 +8,43 @@ export default function AuthForm({ onAuth }) {
   const [mode, setMode] = useState("login");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [info, setInfo] = useState(null);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [alreadySignedIn, setAlreadySignedIn] = useState(false);
+  const navigate = useNavigate();
+
+  // Check for existing session on mount
+  useEffect(() => {
+    let isMounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (isMounted) {
+        if (data.session && data.session.user) {
+          setAlreadySignedIn(true);
+          setTimeout(() => navigate("/dashboard"), 1500);
+        }
+        setSessionChecked(true);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setInfo(null);
     let result;
+    if (forgotMode) {
+      // Forgot password flow
+      result = await supabase.auth.resetPasswordForEmail(email);
+      if (result.error) setError(result.error.message);
+      else setInfo("Password reset email sent. Please check your inbox.");
+      setLoading(false);
+      return;
+    }
     if (mode === "login") {
       result = await supabase.auth.signInWithPassword({ email, password });
     } else {
@@ -26,10 +56,27 @@ export default function AuthForm({ onAuth }) {
       }
     }
     if (result.error) setError(result.error.message);
-    else if (result.data?.session) onAuth && onAuth(result.data.session);
+    else if (result.data?.session) {
+      onAuth && onAuth(result.data.session);
+      navigate("/dashboard");
+    }
     setLoading(false);
   }
 
+  if (!sessionChecked) {
+    return (
+      <div style={{ textAlign: "center", marginTop: 64 }}>
+        Checking authentication...
+      </div>
+    );
+  }
+  if (alreadySignedIn) {
+    return (
+      <div style={{ textAlign: "center", marginTop: 64, color: "#2563eb" }}>
+        You are already signed in. Redirecting to dashboard...
+      </div>
+    );
+  }
   return (
     <form
       onSubmit={handleSubmit}
@@ -42,7 +89,11 @@ export default function AuthForm({ onAuth }) {
       }}
     >
       <h2 style={{ textAlign: "center", marginBottom: 16 }}>
-        {mode === "login" ? "Login" : "Sign Up"}
+        {forgotMode
+          ? "Forgot Password"
+          : mode === "login"
+          ? "Login"
+          : "Sign Up"}
       </h2>
       <input
         type="email"
@@ -51,15 +102,19 @@ export default function AuthForm({ onAuth }) {
         onChange={(e) => setEmail(e.target.value)}
         required
         style={{ width: "100%", marginBottom: 12, padding: 8 }}
+        disabled={loading}
       />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        style={{ width: "100%", marginBottom: 12, padding: 8 }}
-      />
+      {!forgotMode && (
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          style={{ width: "100%", marginBottom: 12, padding: 8 }}
+          disabled={loading}
+        />
+      )}
       {error && (
         <div style={{ color: "#b91c1c", marginBottom: 8 }}>{error}</div>
       )}
@@ -77,22 +132,55 @@ export default function AuthForm({ onAuth }) {
           fontWeight: 600,
         }}
       >
-        {loading ? "Loading..." : mode === "login" ? "Login" : "Sign Up"}
+        {loading
+          ? "Loading..."
+          : forgotMode
+          ? "Send Reset Email"
+          : mode === "login"
+          ? "Login"
+          : "Sign Up"}
       </button>
       <div style={{ textAlign: "center", marginTop: 12 }}>
-        {mode === "login" ? (
-          <span>
-            Don't have an account?{" "}
+        {forgotMode ? (
+          <>
             <a
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                setMode("signup");
+                setForgotMode(false);
               }}
             >
-              Sign Up
+              Back to Login
             </a>
-          </span>
+          </>
+        ) : mode === "login" ? (
+          <>
+            <span>
+              Don't have an account?{" "}
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMode("signup");
+                }}
+              >
+                Sign Up
+              </a>
+            </span>
+            <br />
+            <a
+              href="#"
+              style={{ fontSize: 13, color: "#2563eb" }}
+              onClick={(e) => {
+                e.preventDefault();
+                setForgotMode(true);
+                setError(null);
+                setInfo(null);
+              }}
+            >
+              Forgot password?
+            </a>
+          </>
         ) : (
           <span>
             Already have an account?{" "}
