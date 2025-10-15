@@ -10,7 +10,7 @@ const InsurancePage = () => (
 const EPFOPage = () => <Box sx={{ p: 4 }}>EPFO Page (placeholder)</Box>;
 const ReportsPage = () => <Box sx={{ p: 4 }}>Reports Page (placeholder)</Box>;
 // --- RequireOnboarded: Checks if user is onboarded, redirects if not ---
-import { useEffect, useState, Suspense } from "react";
+import { Suspense } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
@@ -26,51 +26,31 @@ const DashboardSkeleton = () => (
   </Box>
 );
 import { useNavigate } from "react-router-dom";
-import * as supabaseAuth from "./supabaseAuth";
-import { supabase } from "./supabaseClient";
+import { useAuthState } from "./useAuthState";
 
 function RequireOnboarded({ children }) {
-  const [loading, setLoading] = useState(true);
-  const [isOnboarded, setIsOnboarded] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    let mounted = true;
-    async function checkOnboarded() {
-      const { data } = await supabaseAuth.getSession();
-      const user = data?.session?.user;
-      if (!user) {
+  const { loading, session, profile } = useAuthState();
+  React.useEffect(() => {
+    if (!loading) {
+      if (!session) {
         navigate("/login", { replace: true });
-        return;
-      }
-      // Fetch profile to check onboarding status
-      if (supabaseAuth.fetchProfile) {
-        const profile = await supabaseAuth.fetchProfile(user.id);
-        if (mounted) {
-          setIsOnboarded(profile?.is_onboarded);
-          setLoading(false);
-          if (!profile?.is_onboarded) {
-            navigate("/onboarding", { replace: true });
-          }
-        }
-      } else {
-        setLoading(false);
-        setIsOnboarded(true); // fallback: allow access
+      } else if (profile && !profile.is_onboarded) {
+        navigate("/onboarding", { replace: true });
       }
     }
-    checkOnboarded();
-    return () => {
-      mounted = false;
-    };
-  }, [navigate]);
-
+  }, [loading, session, profile, navigate]);
   if (loading) {
     return (
-      <div className="text-center py-12">Checking onboarding status...</div>
+      <div className="text-center py-12" data-testid="loading">
+        Loading...
+      </div>
     );
   }
-  if (!isOnboarded) {
-    return null; // navigation will redirect
+  // Only render children if session exists and user is onboarded
+  if (!session || (profile && !profile.is_onboarded)) {
+    // After loading, if not authenticated or not onboarded, let redirect happen, but keep loading marker until redirect
+    return <div data-testid="loading">Loading...</div>;
   }
   return children;
 }
@@ -1191,11 +1171,26 @@ function ProtectedRoute({ children }) {
 
 // Main App component (restored)
 
-function App() {
+// Extracted AppRoutes for testability
+export function AppRoutes() {
+  // Lazy load DashboardHomeTab for test mocking
+  const DashboardHomeTab = React.lazy(() =>
+    import("./components/DashboardHomeTab")
+  );
+  const ForgotPassword = React.lazy(() => import("./ForgotPassword"));
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<AuthForm />} />
+      <Route path="/login" element={<AuthForm mode="login" />} />
+      <Route path="/signup" element={<AuthForm mode="signup" />} />
+      <Route
+        path="/forgot-password"
+        element={
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <ForgotPassword />
+          </React.Suspense>
+        }
+      />
       <Route
         path="/onboarding"
         element={
@@ -1205,67 +1200,88 @@ function App() {
         }
       />
       <Route
-        path="/dashboard/*"
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <RequireOnboarded>
-              <Suspense
-                fallback={
-                  <div style={{ textAlign: "center", marginTop: 64 }}>
-                    <CircularProgress />
-                    <div>Loading dashboard...</div>
-                  </div>
-                }
-              >
-                <Routes>
-                  <Route
-                    path="assets"
-                    element={
-                      <React.Suspense fallback={<DashboardSkeleton />}>
-                        <AssetsPage />
-                      </React.Suspense>
-                    }
-                  />
-                  <Route
-                    path="liabilities"
-                    element={
-                      <React.Suspense fallback={<DashboardSkeleton />}>
-                        <LiabilitiesPage />
-                      </React.Suspense>
-                    }
-                  />
-                  <Route
-                    path="insurance"
-                    element={
-                      <React.Suspense fallback={<DashboardSkeleton />}>
-                        <InsurancePage />
-                      </React.Suspense>
-                    }
-                  />
-                  <Route
-                    path="epfo"
-                    element={
-                      <React.Suspense fallback={<DashboardSkeleton />}>
-                        <EPFOPage />
-                      </React.Suspense>
-                    }
-                  />
-                  <Route
-                    path="reports"
-                    element={
-                      <React.Suspense fallback={<DashboardSkeleton />}>
-                        <ReportsPage />
-                      </React.Suspense>
-                    }
-                  />
-                  {/* Add more dashboard routes as needed */}
-                </Routes>
-              </Suspense>
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <DashboardHomeTab />
+              </React.Suspense>
             </RequireOnboarded>
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/dashboard/assets"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarded>
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <AssetsPage />
+              </React.Suspense>
+            </RequireOnboarded>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/liabilities"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarded>
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <LiabilitiesPage />
+              </React.Suspense>
+            </RequireOnboarded>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/insurance"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarded>
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <InsurancePage />
+              </React.Suspense>
+            </RequireOnboarded>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/epfo"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarded>
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <EPFOPage />
+              </React.Suspense>
+            </RequireOnboarded>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/reports"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarded>
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <ReportsPage />
+              </React.Suspense>
+            </RequireOnboarded>
+          </ProtectedRoute>
+        }
+      />
+      {/* Add more dashboard routes as needed */}
     </Routes>
+  );
+}
+
+// App now just provides BrowserRouter and AppRoutes
+function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   );
 }
 

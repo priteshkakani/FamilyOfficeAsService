@@ -26,8 +26,27 @@ const steps = [
 ];
 
 export default function OnboardingWizard() {
+  // Handler to mark onboarding as complete and redirect
+  const navigate =
+    typeof window !== "undefined"
+      ? require("react-router-dom").useNavigate()
+      : () => {};
+  const handleComplete = async () => {
+    // Mark user as onboarded in Supabase
+    const session =
+      supabase.auth.getSession &&
+      (await supabase.auth.getSession()).data.session;
+    if (session?.user?.id) {
+      await supabase
+        .from("profiles")
+        .update({ is_onboarded: true })
+        .eq("id", session.user.id);
+    }
+    navigate && navigate("/dashboard");
+  };
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-4">Profile</h2>
       <div className="flex justify-between mb-8">
         {steps.map((step, idx) => (
           <div
@@ -46,6 +65,17 @@ export default function OnboardingWizard() {
         <Step4IncomeExpense />
         <Step5Goals />
         <Step6Summary /> */}
+        {/* Add a final step with a Complete button */}
+        <div>
+          <button
+            type="button"
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            data-testid="finish-onboarding"
+            onClick={handleComplete}
+          >
+            Complete Onboarding
+          </button>
+        </div>
       </StepWizard>
     </div>
   );

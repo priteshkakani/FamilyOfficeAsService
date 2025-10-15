@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { resetPassword } from "./supabaseAuth";
+import React, { useState } from "react";
+import { resetPassword } from "../supabaseAuth";
 import { useNavigate } from "react-router-dom";
 
 export default function ForgotPassword() {

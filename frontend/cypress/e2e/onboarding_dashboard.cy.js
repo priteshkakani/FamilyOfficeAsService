@@ -1,17 +1,34 @@
 /// <reference types="cypress" />
 
 describe("Supabase App Onboarding and Dashboard", () => {
+  beforeEach(() => {
+    cy.intercept("POST", "**/auth/v1/token?grant_type=password").as(
+      "supabaseLogin"
+    );
+    cy.intercept("POST", "**/auth/v1/token?grant_type=refresh_token").as(
+      "supabaseRefresh"
+    );
+    cy.intercept("POST", "**/auth/v1/signup").as("supabaseSignup");
+    cy.intercept("POST", "**/auth/v1/recover").as("supabaseForgot");
+    cy.intercept("PATCH", "**/rest/v1/profiles*").as("patchProfile");
+    cy.intercept("GET", "**/rest/v1/profiles*").as("getProfile");
+    cy.intercept("GET", "**/rest/v1/assets*").as("getAssets");
+    cy.intercept("GET", "**/rest/v1/liabilities*").as("getLiabilities");
+  });
   const email = "priteshgkakani@gmail.com";
   const password = "pune1234";
 
   it("logs in, completes onboarding, and sees Net Worth card", () => {
     // Visit login page
     cy.visit("/login");
+    cy.get('[data-testid="loading"]').should("not.exist");
 
     // Login
     cy.get("input[type=email]").type(email);
     cy.get("input[type=password]").type(password);
     cy.get('button[type=submit],button:contains("Sign In")').click();
+    cy.wait(["@supabaseLogin", "@getProfile"]);
+    cy.get('[data-testid="loading"]', { timeout: 10000 }).should("not.exist");
 
     // Wait for onboarding wizard
     cy.url().should("include", "/onboarding");
@@ -55,6 +72,7 @@ describe("Supabase App Onboarding and Dashboard", () => {
       .click();
 
     // Should be redirected to dashboard
+    cy.get('[data-testid="loading"]', { timeout: 10000 }).should("not.exist");
     cy.url().should("include", "/dashboard");
     cy.contains(/dashboard/i, { matchCase: false }).should("exist");
 

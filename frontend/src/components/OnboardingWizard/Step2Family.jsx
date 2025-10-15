@@ -48,8 +48,11 @@ export default function Step2Family({ userId, onNext }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium">Household Name</label>
+        <label htmlFor="household-name" className="block text-sm font-medium">
+          Household Name
+        </label>
         <input
+          id="household-name"
           {...register("name")}
           className="input input-bordered w-full"
           placeholder="Household Name"

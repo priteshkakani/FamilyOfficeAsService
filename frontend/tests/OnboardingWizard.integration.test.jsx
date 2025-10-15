@@ -9,8 +9,9 @@ describe("OnboardingWizard", () => {
     render(<OnboardingWizard />);
 
     // Step 1: Profile
-    expect(screen.getByText(/profile/i)).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/name/i), {
+    expect(screen.getByText(/profile/i)).to.exist;
+    const nameInputs = screen.getAllByLabelText(/name/i);
+    fireEvent.change(nameInputs[0], {
       target: { value: "Test User" },
     });
     fireEvent.change(screen.getByLabelText(/mobile/i), {
@@ -20,10 +21,10 @@ describe("OnboardingWizard", () => {
       target: { value: "test@example.com" },
     });
     fireEvent.click(
-      screen.getByRole("button", { name: /next|submit|continue/i })
+      screen.getByRole("button", { name: /next|submit|continue|sign up/i })
     );
 
     // Step 2: Family
-    expect(await screen.findByText(/family/i)).toBeInTheDocument();
+    expect(await screen.findByText(/family/i)).to.exist;
   });
 });

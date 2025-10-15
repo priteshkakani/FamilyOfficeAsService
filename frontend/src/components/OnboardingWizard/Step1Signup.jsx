@@ -39,8 +39,11 @@ export default function Step1Signup({ onNext }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium">Mobile Number</label>
+        <label htmlFor="mobile" className="block text-sm font-medium">
+          Mobile Number
+        </label>
         <input
+          id="mobile"
           {...register("mobile")}
           className="input input-bordered w-full"
           placeholder="Mobile Number"
@@ -50,8 +53,11 @@ export default function Step1Signup({ onNext }) {
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium">Name</label>
+        <label htmlFor="name" className="block text-sm font-medium">
+          Name
+        </label>
         <input
+          id="name"
           {...register("name")}
           className="input input-bordered w-full"
           placeholder="Name"
@@ -61,8 +67,11 @@ export default function Step1Signup({ onNext }) {
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium">Email</label>
+        <label htmlFor="email" className="block text-sm font-medium">
+          Email
+        </label>
         <input
+          id="email"
           {...register("email")}
           className="input input-bordered w-full"
           placeholder="Email"

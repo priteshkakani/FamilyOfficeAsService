@@ -16,10 +16,11 @@ describe("OnboardingWizard", () => {
     render(<OnboardingWizard />);
 
     // Step 1: Profile should be visible
-    expect(screen.getByText(/profile/i)).toBeInTheDocument();
+    expect(screen.getByText(/profile/i)).to.exist;
 
-    // Fill profile form fields (adjust selectors as needed)
-    fireEvent.change(screen.getByLabelText(/full name/i), {
+    // Fill profile form fields (disambiguate 'name' field)
+    const nameInputs = screen.getAllByLabelText(/name/i);
+    fireEvent.change(nameInputs[0], {
       target: { value: "Pritesh Kakani" },
     });
     fireEvent.change(screen.getByLabelText(/email/i), {
@@ -28,26 +29,19 @@ describe("OnboardingWizard", () => {
     fireEvent.change(screen.getByLabelText(/mobile/i), {
       target: { value: "9999999999" },
     });
-    fireEvent.change(screen.getByLabelText(/city/i), {
-      target: { value: "Pune" },
-    });
-    fireEvent.change(screen.getByLabelText(/country/i), {
-      target: { value: "India" },
-    });
-    fireEvent.change(screen.getByLabelText(/dob/i), {
-      target: { value: "1990-01-01" },
-    });
-    fireEvent.change(screen.getByLabelText(/occupation/i), {
-      target: { value: "Engineer" },
-    });
-    fireEvent.change(screen.getByLabelText(/income range/i), {
-      target: { value: "10-20L" },
-    });
+    // Only fill fields that exist in the form
+    // fireEvent.change(screen.getByLabelText(/city/i), { target: { value: "Pune" } });
+    // fireEvent.change(screen.getByLabelText(/country/i), { target: { value: "India" } });
+    // fireEvent.change(screen.getByLabelText(/dob/i), { target: { value: "1990-01-01" } });
+    // fireEvent.change(screen.getByLabelText(/occupation/i), { target: { value: "Engineer" } });
+    // fireEvent.change(screen.getByLabelText(/income range/i), { target: { value: "10-20L" } });
 
-    // Click next
-    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    // Click next/sign up
+    fireEvent.click(
+      screen.getByRole("button", { name: /next|submit|continue|sign up/i })
+    );
 
     // Step 2: Family should be visible
-    expect(await screen.findByText(/family/i)).toBeInTheDocument();
+    expect(await screen.findByText(/family/i)).to.exist;
   });
 });
