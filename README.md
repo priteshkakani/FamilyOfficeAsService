@@ -1,84 +1,168 @@
-# FamilyOfficeAsService
-
 # Family Office as a Service
 
-## Backend Setup
+[![Build Status](https://github.com/priteshkakani/FamilyOfficeAsService/actions/workflows/ci.yml/badge.svg)](https://github.com/priteshkakani/FamilyOfficeAsService/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Deploy: Vercel](https://vercelbadge.vercel.app/api/priteshkakani/FamilyOfficeAsService)](https://familyofficeaservice.vercel.app)
 
-1. Create a MySQL database named `family_office` and run `backend/schema.sql` to create tables.
-2. Update `backend/app/database.py` with your MySQL username and password.
-3. Install backend dependencies:
-   ```sh
-   cd backend
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-4. Start the backend server:
-   ```sh
-   uvicorn app.main:app --reload
-   ```
+## 🏗️ Architecture Diagram
 
-## Frontend Setup
+```
+[User] ⇄ [Frontend: React (Vite, Tailwind, shadcn/ui)] ⇄ [Backend: FastAPI] ⇄ [Supabase Postgres]
+         │                                 │
+         └─────────────[SurePass API]───────┘
 
-1. Install frontend dependencies:
-   ```sh
-   cd frontend
-   npm install
-   ```
-2. Start the frontend:
-   ```sh
-   npm start
-   ```
-
-## Project Structure
-
-- `backend/`: FastAPI backend
-- `frontend/`: React frontend
-- `backend/schema.sql`: MySQL schema
+[CI/CD: GitHub Actions] → [Vercel (frontend)]
+                        → [Render/Fly.io (backend)]
+```
 
 ---
 
-This project provides a working onboarding flow for a family office platform.
+## 🚀 Quick Start Guide
 
-(Initial working onboarding scaffold: backend (FastAPI), frontend (React), MySQL schema)
+```bash
+# 1. Clone the repository
+git clone https://github.com/priteshkakani/FamilyOfficeAsService.git
+cd FamilyOfficeAsService
 
-# Docker & Kubernetes Deployment
+# 2. Set up environment variables (see below)
+cp .env.example .env
 
-## Docker Compose (Local Dev)
+# 3. Install dependencies
+cd frontend && npm install
+cd ../backend && pip install -r requirements.txt
 
-1. Build and start all services:
-   ```sh
-   docker-compose up --build
-   ```
-2. Access:
-   - Frontend: http://localhost:3000
-   - Backend: http://localhost:  8000
-   - MySQL: localhost:3306 (user: familyuser, password: familypassword)
-1  `1 
-## Kubernetes (Production/Cloud)
-
-1. Build and push images (replace `priteshkakani` with your Docker Hub username if needed):
-   ```sh
-   # Backend
-   docker build -t priteshkakani/familyoffice-backend:latest ./backend
-   docker push priteshkakani/familyoffice-backend:latest
-   # Frontend
-   docker build -t priteshkakani/familyoffice-frontend:latest ./frontend
-   docker push priteshkakani/familyoffice-frontend:latest
-   ```
-2. Deploy to Kubernetes:
-   ```sh
-   kubectl apply -f k8s/mysql-deployment.yaml
-   kubectl apply -f k8s/backend-deployment.yaml
-   kubectl apply -f k8s/frontend-deployment.yaml
-   ```
-3. Access:
-   - Frontend: LoadBalancer IP (see `kubectl get svc frontend`)
-   - Backend: ClusterIP or NodePort (see `kubectl get svc backend`)
-   - MySQL: ClusterIP (internal to cluster)
+# 4. Run local dev servers
+cd frontend && npm run dev
+cd ../backend && uvicorn app.main:app --reload
+```
 
 ---
 
-- All configs are in the `k8s/` directory.
-- For production, use Kubernetes secrets for DB passwords and configure persistent storage for MySQL.
-- Scale pods by editing the `replicas` field in the deployment YAMLs.
+## ⚙️ Environment Variables
+
+| Key                    | Description                          |
+| ---------------------- | ------------------------------------ |
+| VITE_SUPABASE_URL      | Supabase project URL (frontend)      |
+| VITE_SUPABASE_ANON_KEY | Supabase anon public key (frontend)  |
+| VITE_API_BASE_URL      | Backend API base URL (frontend)      |
+| DATABASE_URL           | Postgres connection string (backend) |
+| SUREPASS_CLIENT_ID     | SurePass API client ID (backend)     |
+| SUREPASS_CLIENT_SECRET | SurePass API client secret (backend) |
+
+---
+
+## 🧑‍💻 Development Workflow
+
+- Use **GitHub Copilot** for code generation and suggestions.
+- Manage database schema with **Supabase CLI**:
+  ```bash
+  supabase db dump
+  supabase db push
+  ```
+- Run tests:
+  ```bash
+  cd backend && pytest
+  cd ../frontend && npx vitest
+  cd ../frontend && npx playwright test
+  ```
+
+---
+
+## 🧠 Testing
+
+- **Backend:** `pytest-asyncio` for async API and logic tests.
+- **Frontend:** `Vitest` for unit/integration, `Cypress` for E2E.
+- **E2E:** Playwright and Cypress scripts for onboarding, auth, and dashboard flows.
+
+---
+
+## 🧩 Project Structure
+
+```
+FamilyOfficeAsService/
+├── frontend/   # React app (Vite, Tailwind, shadcn/ui)
+├── backend/    # FastAPI app, tests, conftest.py
+├── supabase/   # DB migrations, schema, CLI config
+├── tests/      # Shared and E2E tests
+```
+
+---
+
+## 🔐 Authentication Flow
+
+- **Sign Up/Sign In:** Email, OTP, Google via Supabase Auth.
+- **Forgot Password:** Secure reset via Supabase.
+- **Onboarding Check:** `profiles.is_onboarded` flag enforced on protected routes.
+
+---
+
+## 📊 Dashboard Features
+
+- **Assets:** Track stocks, mutual funds, real estate, ESOPs.
+- **Liabilities:** Loans, credit cards, and obligations.
+- **Insurance:** Policies, coverage, and claims.
+- **EPFO:** Passbook and balance integration.
+- **Reports:** Consolidated financial summaries and insights.
+
+---
+
+## 🧰 Tech Stack
+
+| Layer      | Technology                                    |
+| ---------- | --------------------------------------------- |
+| Frontend   | React, Vite, Tailwind, shadcn/ui, React Query |
+| Backend    | FastAPI, Python, Uvicorn                      |
+| Database   | Supabase Postgres                             |
+| Auth       | Supabase Auth                                 |
+| CI/CD      | GitHub Actions                                |
+| E2E        | Cypress, Playwright                           |
+| Hosting    | Vercel (frontend), Render/Fly.io (backend)    |
+| Monitoring | Sentry                                        |
+
+---
+
+## 🌍 Deployment Guide
+
+- **Frontend:** Deploy to Vercel (output dir: `dist`).
+- **Backend:** Deploy to Render or Fly.io (Uvicorn server).
+- **Database:** Hosted on Supabase.
+- **CI/CD:** Automated via GitHub Actions (build, test, deploy).
+
+---
+
+## 🧾 API Endpoints Summary
+
+- `POST /v1/users` — User registration & onboarding
+- `POST /v1/assets` — Add asset
+- `POST /v1/liabilities` — Add liability
+- `GET  /v1/dashboard/summary` — Portfolio summary
+- `GET  /v1/epfo` — EPFO data fetch
+
+---
+
+## 🔍 Debugging Tips
+
+- **Blank Page:** Check environment variables and build output directory (`dist`).
+- **CORS Issues:** Ensure backend CORS settings allow frontend origin.
+- **Auth Errors:** Confirm Supabase keys and URLs are correct.
+- **API 404:** Verify VITE_API_BASE_URL and backend server are running.
+
+---
+
+## ❤️ Contributing
+
+- Fork the repo, create a feature branch, and submit a PR.
+- Follow code style (Prettier, Black, isort).
+- All code must pass CI and tests before merge.
+
+---
+
+## 🛡️ License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## 🌟 Vision
+
+Empowering every investor to run their own family office digitally by 2028.
