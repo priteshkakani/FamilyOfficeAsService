@@ -1,14 +1,12 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
-from supabase import create_client, Client
-import os
+
 import asyncio
+from app.supabase_client import get_supabase_client
 
 router = APIRouter()
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 @router.post("/users/send-magic-link")
 async def send_magic_link(request: Request):
@@ -17,6 +15,7 @@ async def send_magic_link(request: Request):
     if not email:
         raise HTTPException(status_code=400, detail="Email required")
     try:
+        supabase = get_supabase_client()
         # supabase-py is sync, so run in thread
         loop = asyncio.get_event_loop()
         res = await loop.run_in_executor(None, lambda: supabase.auth.sign_in_with_otp(email=email))

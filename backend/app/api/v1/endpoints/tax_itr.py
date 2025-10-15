@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
-from ...supabase_client import supabase
+from app.supabase_client import get_supabase_client
 import requests
 import os
 
@@ -10,6 +10,7 @@ SUREPASS_BASE_URL = "https://api.surepass.io/v1"
 
 # Collect Tax-ITR data, call Surepass, store in Supabase
 def store_itr_in_supabase(user_id, data):
+    supabase = get_supabase_client()
     result = supabase.table("tax_itr").insert({"user_id": user_id, **data}).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
@@ -42,6 +43,7 @@ async def collect_itr(request: Request):
 
 @router.get("/user/{user_id}")
 def get_itr_for_user(user_id: int):
+    supabase = get_supabase_client()
     result = supabase.table("tax_itr").select("*").eq("user_id", user_id).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])

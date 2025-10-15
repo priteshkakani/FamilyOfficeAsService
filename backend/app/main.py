@@ -41,13 +41,11 @@ def protected_check(user=Depends(verify_jwt_token)):
 # Supabase Google OAuth endpoint
 import os
 from fastapi.responses import RedirectResponse
-from app.supabase_client import supabase
+
 
 @app.get("/api/v1/users/google-login")
 async def google_login(request: Request):
-	# Use Supabase RESTful API for OAuth
 	supabase_url = os.environ.get("SUPABASE_URL", "https://fomyxahwvnfivxvrjtpf.supabase.co")
 	redirect_to = request.query_params.get("redirect_to") or "https://your-frontend-domain.com/login"  # Set to your frontend URL
-	# Supabase OAuth URL
 	oauth_url = f"{supabase_url}/auth/v1/authorize?provider=google&redirect_to={redirect_to}"
 	return RedirectResponse(oauth_url)

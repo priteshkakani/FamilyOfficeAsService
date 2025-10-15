@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Request
 from app.auth import verify_jwt_token
-from ... import schemas
-from ...supabase_client import supabase
+from app import schemas
+from app.supabase_client import get_supabase_client
 import uuid
 
 router = APIRouter()
@@ -12,6 +12,7 @@ router = APIRouter()
 @router.get("/", summary="Get all assets for user")
 def get_assets(user=Depends(verify_jwt_token)):
     user_id = user["sub"] if isinstance(user, dict) and "sub" in user else user.get("user_id")
+    supabase = get_supabase_client()
     result = supabase.table("assets").select("*").eq("user_id", user_id).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
@@ -22,6 +23,7 @@ def create_asset(asset: schemas.AssetCreate, user=Depends(verify_jwt_token)):
     user_id = user["sub"] if isinstance(user, dict) and "sub" in user else user.get("user_id")
     data = asset.dict()
     data["user_id"] = user_id
+    supabase = get_supabase_client()
     result = supabase.table("assets").insert(data).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
@@ -31,6 +33,7 @@ def create_asset(asset: schemas.AssetCreate, user=Depends(verify_jwt_token)):
 def update_asset(id: int, asset: schemas.AssetCreate, user=Depends(verify_jwt_token)):
     user_id = user["sub"] if isinstance(user, dict) and "sub" in user else user.get("user_id")
     data = asset.dict()
+    supabase = get_supabase_client()
     result = supabase.table("assets").update(data).eq("id", id).eq("user_id", user_id).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
@@ -39,6 +42,7 @@ def update_asset(id: int, asset: schemas.AssetCreate, user=Depends(verify_jwt_to
 @router.delete("/{id}", summary="Delete asset by id")
 def delete_asset(id: int, user=Depends(verify_jwt_token)):
     user_id = user["sub"] if isinstance(user, dict) and "sub" in user else user.get("user_id")
+    supabase = get_supabase_client()
     result = supabase.table("assets").delete().eq("id", id).eq("user_id", user_id).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
@@ -47,6 +51,7 @@ def delete_asset(id: int, user=Depends(verify_jwt_token)):
 # Fetch all liabilities for a household from Supabase
 @router.get("/supabase/liabilities")
 def get_liabilities_supabase(household_id: int):
+    supabase = get_supabase_client()
     result = supabase.table("liabilities").select("*").eq("household_id", household_id).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
@@ -55,6 +60,7 @@ def get_liabilities_supabase(household_id: int):
 # Fetch all cashflows for a household from Supabase
 @router.get("/supabase/cashflows")
 def get_cashflows_supabase(household_id: int):
+    supabase = get_supabase_client()
     result = supabase.table("cashflows").select("*").eq("household_id", household_id).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
@@ -63,6 +69,7 @@ def get_cashflows_supabase(household_id: int):
 # Fetch all expenses for a household from Supabase
 @router.get("/supabase/expenses")
 def get_expenses_supabase(household_id: int):
+    supabase = get_supabase_client()
     result = supabase.table("expenses").select("*").eq("household_id", household_id).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
@@ -71,6 +78,7 @@ def get_expenses_supabase(household_id: int):
 # Fetch all family members for a household from Supabase
 @router.get("/supabase/family")
 def get_family_supabase(household_id: int):
+    supabase = get_supabase_client()
     result = supabase.table("family_members").select("*").eq("household_id", household_id).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
@@ -79,6 +87,7 @@ def get_family_supabase(household_id: int):
 # Supabase: Store asset in Postgres table
 @router.post("/supabase")
 def create_asset_supabase(asset: schemas.AssetCreate, household_id: int):
+    supabase = get_supabase_client()
     # Insert asset into Supabase 'assets' table
     data = {
         "household_id": household_id,
@@ -93,6 +102,7 @@ def create_asset_supabase(asset: schemas.AssetCreate, household_id: int):
 # Supabase: Upload PDF/document to storage bucket
 @router.post("/upload-supabase")
 async def upload_file_supabase(file: UploadFile = File(...)):
+    supabase = get_supabase_client()
     bucket = "documents"
     filename = f"{uuid.uuid4()}_{file.filename}"
     file_bytes = await file.read()

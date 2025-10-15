@@ -14,22 +14,10 @@ export default function AuthForm({ onAuth }) {
   const [alreadySignedIn, setAlreadySignedIn] = useState(false);
   const navigate = useNavigate();
 
-  // Check for existing session on mount
+  // No auto-redirect: always require user to sign in/up
   useEffect(() => {
-    let isMounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (isMounted) {
-        if (data.session && data.session.user) {
-          setAlreadySignedIn(true);
-          setTimeout(() => navigate("/dashboard"), 1500);
-        }
-        setSessionChecked(true);
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, [navigate]);
+    setSessionChecked(true);
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -67,13 +55,6 @@ export default function AuthForm({ onAuth }) {
     return (
       <div style={{ textAlign: "center", marginTop: 64 }}>
         Checking authentication...
-      </div>
-    );
-  }
-  if (alreadySignedIn) {
-    return (
-      <div style={{ textAlign: "center", marginTop: 64, color: "#2563eb" }}>
-        You are already signed in. Redirecting to dashboard...
       </div>
     );
   }
