@@ -1,3 +1,88 @@
+import React from "react";
+// Fallbacks for missing dashboard pages
+const AssetsPage = () => <Box sx={{ p: 4 }}>Assets Page (placeholder)</Box>;
+const LiabilitiesPage = () => (
+  <Box sx={{ p: 4 }}>Liabilities Page (placeholder)</Box>
+);
+const InsurancePage = () => (
+  <Box sx={{ p: 4 }}>Insurance Page (placeholder)</Box>
+);
+const EPFOPage = () => <Box sx={{ p: 4 }}>EPFO Page (placeholder)</Box>;
+const ReportsPage = () => <Box sx={{ p: 4 }}>Reports Page (placeholder)</Box>;
+// --- RequireOnboarded: Checks if user is onboarded, redirects if not ---
+import { useEffect, useState, Suspense } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+
+// Fallback DashboardSkeleton if not defined elsewhere
+const DashboardSkeleton = () => (
+  <Box sx={{ p: 4, textAlign: "center" }}>
+    <CircularProgress />
+    <Typography variant="body1" sx={{ mt: 2 }}>
+      Loading...
+    </Typography>
+  </Box>
+);
+import { useNavigate } from "react-router-dom";
+import * as supabaseAuth from "./supabaseAuth";
+import { supabase } from "./supabaseClient";
+
+function RequireOnboarded({ children }) {
+  const [loading, setLoading] = useState(true);
+  const [isOnboarded, setIsOnboarded] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let mounted = true;
+    async function checkOnboarded() {
+      const { data } = await supabaseAuth.getSession();
+      const user = data?.session?.user;
+      if (!user) {
+        navigate("/login", { replace: true });
+        return;
+      }
+      // Fetch profile to check onboarding status
+      if (supabaseAuth.fetchProfile) {
+        const profile = await supabaseAuth.fetchProfile(user.id);
+        if (mounted) {
+          setIsOnboarded(profile?.is_onboarded);
+          setLoading(false);
+          if (!profile?.is_onboarded) {
+            navigate("/onboarding", { replace: true });
+          }
+        }
+      } else {
+        setLoading(false);
+        setIsOnboarded(true); // fallback: allow access
+      }
+    }
+    checkOnboarded();
+    return () => {
+      mounted = false;
+    };
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">Checking onboarding status...</div>
+    );
+  }
+  if (!isOnboarded) {
+    return null; // navigation will redirect
+  }
+  return children;
+}
+import OnboardingWizard from "./components/OnboardingWizard/OnboardingWizard.jsx";
+import AuthForm from "./AuthForm";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 // EPFO Data Table Component
 function EPFODataTable({ userId }) {
   const { data, isLoading, isError, refetch } = useQuery({
