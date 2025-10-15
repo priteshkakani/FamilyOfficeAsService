@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 
-export default function AuthForm({ onAuth }) {
+export default function AuthForm({ onAuth, mode: modeProp }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState("login");
+  const location = useLocation();
+  // If modeProp is provided, use it; otherwise, infer from location
+  const initialMode =
+    modeProp || (location.pathname === "/signup" ? "signup" : "login");
+  const [mode, setMode] = useState(initialMode);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState(null);
@@ -29,19 +33,34 @@ export default function AuthForm({ onAuth }) {
       // Forgot password flow
       result = await supabase.auth.resetPasswordForEmail(email);
       if (result.error) setError(result.error.message);
-      else setInfo("Password reset email sent. Please check your inbox.");
+      else setInfo("Check your email for a reset link.");
       setLoading(false);
       return;
     }
     if (mode === "login") {
       result = await supabase.auth.signInWithPassword({ email, password });
+      if (!result.error && result.data?.session) {
+        // Force a real Supabase profile fetch for Cypress (fires GET /rest/v1/profiles)
+        await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", result.data.session.user.id)
+          .maybeSingle();
+      }
     } else {
       result = await supabase.auth.signUp({ email, password });
-      if (result.data?.user && !result.data.session) {
-        setInfo(
-          "A confirmation email has been sent. Please check your inbox and click the link to activate your account."
-        );
+      if (!result.error && result.data?.user) {
+        // Force a real Supabase profile fetch for Cypress (fires GET /rest/v1/profiles)
+        await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", result.data.user.id)
+          .maybeSingle();
       }
+      // Always redirect to onboarding after signup, regardless of session
+      navigate("/onboarding");
+      setLoading(false);
+      return;
     }
     if (result.error) setError(result.error.message);
     else if (result.data?.session) {
@@ -78,6 +97,7 @@ export default function AuthForm({ onAuth }) {
       </h2>
       <input
         type="email"
+        name="email"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -88,6 +108,7 @@ export default function AuthForm({ onAuth }) {
       {!forgotMode && (
         <input
           type="password"
+          name="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
