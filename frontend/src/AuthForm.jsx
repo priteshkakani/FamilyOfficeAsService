@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "./supabaseClient";
+import { notifySuccess, notifyError } from "./utils/toast";
 
 export default function AuthForm({ onAuth, mode: modeProp }) {
   const [email, setEmail] = useState("");
@@ -38,46 +39,56 @@ export default function AuthForm({ onAuth, mode: modeProp }) {
       return;
     }
     if (mode === "login") {
-      result = await supabase.auth.signInWithPassword({ email, password });
-      if (!result.error && result.data?.session) {
-        // Deterministic loading marker and profile fetch for Cypress/real users
-        setLoading(true);
-        const { data: session } = await supabase.auth.getSession();
-        if (session?.session) {
-          await supabase
+      try {
+        result = await supabase.auth.signInWithPassword({ email, password });
+        if (result.error) {
+          console.error("[Login error]", result.error.message);
+          notifyError(`Login failed: ${result.error.message}`);
+        } else if (result.data?.user) {
+          notifySuccess("✅ Logged in successfully!");
+          // Check onboarding status
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
-            .select("*")
-            .eq("id", session.session.user.id)
+            .select("is_onboarded")
+            .eq("id", result.data.user.id)
             .maybeSingle();
+          if (profileError) {
+            console.error("[Profile fetch error]", profileError.message);
+            notifyError("Failed to fetch profile info.");
+            setLoading(false);
+            return;
+          }
+          if (profile?.is_onboarded) navigate("/dashboard");
+          else navigate("/onboarding");
         }
+      } catch (err) {
+        console.error("[Unexpected login error]", err);
+        notifyError("Unexpected error occurred during login.");
+      } finally {
         setLoading(false);
-        navigate("/dashboard");
-        return;
       }
+      return;
     } else {
-      result = await supabase.auth.signUp({ email, password });
-      if (!result.error && result.data?.user) {
-        // Deterministic loading marker and profile fetch for Cypress/real users
-        setLoading(true);
-        const { data: session } = await supabase.auth.getSession();
-        if (session?.session) {
-          await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.session.user.id)
-            .maybeSingle();
+      try {
+        result = await supabase.auth.signUp({ email, password });
+        if (result.error) {
+          console.error("[Signup error]", result.error.message);
+          notifyError(`Signup failed: ${result.error.message}`);
+        } else {
+          console.log("[Signup success]", result.data);
+          notifySuccess(
+            "✅ Signed up successfully! Please log in to continue."
+          );
+          navigate("/login");
         }
+      } catch (err) {
+        console.error("[Unexpected signup error]", err);
+        notifyError("Unexpected error occurred during signup.");
+      } finally {
         setLoading(false);
-        navigate("/onboarding");
-        return;
       }
-      // Always redirect to onboarding after signup, regardless of session
-      navigate("/onboarding");
-      setLoading(false);
       return;
     }
-    if (result.error) setError(result.error.message);
-    setLoading(false);
   }
 
   if (!sessionChecked || loading) {

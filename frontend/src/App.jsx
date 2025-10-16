@@ -11,15 +11,16 @@ const InsurancePage = () => (
 const EPFOPage = () => <Box sx={{ p: 4 }}>EPFO Page (placeholder)</Box>;
 const ReportsPage = () => <Box sx={{ p: 4 }}>Reports Page (placeholder)</Box>;
 // --- RequireOnboarded: Checks if user is onboarded, redirects if not ---
+
 import { Suspense } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { supabase } from "./supabaseClient";
+import { useNavigate } from "react-router-dom";
 
-// Fallback DashboardSkeleton if not defined elsewhere
+// DashboardSkeleton fallback for lazy dashboard loading
 const DashboardSkeleton = () => (
   <Box sx={{ p: 4, textAlign: "center" }}>
     <CircularProgress />
@@ -28,8 +29,6 @@ const DashboardSkeleton = () => (
     </Typography>
   </Box>
 );
-import { useNavigate } from "react-router-dom";
-import { useAuthState } from "./useAuthState";
 
 function RequireOnboarded({ children }) {
   const navigate = useNavigate();
@@ -57,7 +56,22 @@ function RequireOnboarded({ children }) {
   }
   return children;
 }
-import OnboardingFlow from "./pages/OnboardingFlow.jsx";
+
+import OnboardingStepper from "./components/Onboarding/OnboardingStepper.jsx";
+import { useAuthState } from "./useAuthState";
+
+function OnboardingStepperGuard() {
+  const { loading, profile } = useAuthState();
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (!loading && profile?.is_onboarded) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [loading, profile, navigate]);
+  if (loading) return <div className="text-center py-12">Loading...</div>;
+  if (profile?.is_onboarded) return null;
+  return <OnboardingStepper />;
+}
 import AuthForm from "./AuthForm";
 import {
   BrowserRouter,
@@ -381,7 +395,6 @@ function TablePage({ table, title, columns }) {
   );
 }
 
-// ...existing code...
 // --- DASHBOARD LAYOUT ---
 function DashboardLayout({
   user = { name: "Pritesh" },
@@ -1175,6 +1188,7 @@ function ProtectedRoute({ children }) {
 
 // Main App component (restored)
 import { Toaster } from "react-hot-toast";
+import { supabase } from "./supabaseClient";
 
 // Extracted AppRoutes for testability
 export function AppRoutes() {
@@ -1196,11 +1210,12 @@ export function AppRoutes() {
           </React.Suspense>
         }
       />
+
       <Route
         path="/onboarding"
         element={
           <ProtectedRoute>
-            <OnboardingFlow />
+            <OnboardingStepperGuard />
           </ProtectedRoute>
         }
       />

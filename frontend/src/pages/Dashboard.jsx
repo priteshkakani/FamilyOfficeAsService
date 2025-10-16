@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Loader2, PiggyBank, TrendingUp, Wallet, Trophy } from "lucide-react";
+import {
+  Loader2,
+  PiggyBank,
+  TrendingUp,
+  Wallet,
+  Trophy,
+  LogOut,
+  Settings,
+} from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Card from "../components/Card";
+import Topbar from "../components/Topbar";
+import SettingsModal from "../components/SettingsModal";
+import UpcomingGoals from "../components/UpcomingGoals";
+import AssetAllocationTrend from "../components/AssetAllocationTrend";
 import IncomeExpenseChart from "../components/IncomeExpenseChart";
-import AssetAllocationChart from "../components/AssetAllocationChart";
 import { notifyError, notifySuccess } from "../utils/toast";
+import { supabase } from "../supabaseClient";
 
 export default function Dashboard() {
-  // Safely initialized summary state
   const [summary, setSummary] = useState({
     netWorth: 0,
     monthlyIncome: 0,
@@ -20,8 +32,13 @@ export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [assets, setAssets] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [upcomingGoals, setUpcomingGoals] = useState([]);
+  const [liabilities, setLiabilities] = useState([]);
+  const [allocationTrend, setAllocationTrend] = useState([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -29,27 +46,32 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
       try {
-        const [profRes, incRes, expRes, astRes, goalsRes] = await Promise.all([
-          supabase.from("profiles").select("*").maybeSingle(),
-          supabase.from("income_records").select("*"),
-          supabase.from("expense_records").select("*"),
-          supabase.from("assets").select("*"),
-          supabase.from("goals").select("*"),
-        ]);
+        // Fetch all main data
+        const [profRes, incRes, expRes, astRes, goalsRes, liabRes] =
+          await Promise.all([
+            supabase.from("profiles").select("*").maybeSingle(),
+            supabase.from("income_records").select("*"),
+            supabase.from("expense_records").select("*"),
+            supabase.from("assets").select("*"),
+            supabase.from("goals").select("*"),
+            supabase.from("liabilities").select("*"),
+          ]);
         if (!mounted) return;
         if (
           profRes.error ||
           incRes.error ||
           expRes.error ||
           astRes.error ||
-          goalsRes.error
+          goalsRes.error ||
+          liabRes.error
         ) {
           throw new Error(
             profRes.error?.message ||
               incRes.error?.message ||
               expRes.error?.message ||
               astRes.error?.message ||
-              goalsRes.error?.message
+              goalsRes.error?.message ||
+              liabRes.error?.message
           );
         }
         setProfile(profRes.data);
@@ -57,15 +79,19 @@ export default function Dashboard() {
         setExpenses(expRes.data || []);
         setAssets(astRes.data || []);
         setGoals(goalsRes.data || []);
+        setLiabilities(liabRes.data || []);
 
         // Compute summary values safely
         const num = (n) => (Number.isFinite(n) ? n : 0);
         // Net Worth
         const totalAssets = (astRes.data || []).reduce(
-          (sum, a) => sum + (a.details?.value || 0),
+          (sum, a) => sum + (a.details?.value || a.amount || 0),
           0
         );
-        const totalLiabilities = profRes.data?.liabilities_summary?.total || 0;
+        const totalLiabilities = (liabRes.data || []).reduce(
+          (sum, l) => sum + (l.outstanding_amount || 0),
+          0
+        );
         const netWorth =
           profRes.data?.net_worth ?? totalAssets - totalLiabilities;
         // Monthly Income/Expenses fallback to last 30 days
@@ -97,6 +123,32 @@ export default function Dashboard() {
           goalsCompleted: completedGoals,
           totalGoals,
         });
+
+        // Fetch upcoming goals (target_date > now, is_completed = false)
+        const nowISO = new Date().toISOString();
+        const { data: upGoals, error: upGoalsErr } = await supabase
+          .from("goals")
+          .select("title, target_amount, target_date, priority")
+          .gt("target_date", nowISO)
+          .eq("is_completed", false)
+          .order("target_date", { ascending: true });
+        setUpcomingGoals(upGoals || []);
+
+        // Asset allocation trend (last 6 months)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+        const { data: assetTrend } = await supabase
+          .from("assets")
+          .select("amount, created_at")
+          .gte("created_at", sixMonthsAgo.toISOString());
+        const { data: liabTrend } = await supabase
+          .from("liabilities")
+          .select("outstanding_amount, created_at")
+          .gte("created_at", sixMonthsAgo.toISOString());
+        setAllocationTrend(
+          computeAllocationTrend(assetTrend || [], liabTrend || [])
+        );
+
         notifySuccess("Dashboard data loaded");
       } catch (err) {
         setError(err.message || "Failed to load dashboard data");
@@ -110,6 +162,55 @@ export default function Dashboard() {
       mounted = false;
     };
   }, []);
+
+  // Helper: compute allocation trend for chart
+  function computeAllocationTrend(assets, liabilities) {
+    const byMonth = {};
+    const format = (d) => {
+      const date = new Date(d);
+      return date.toLocaleString("default", {
+        month: "short",
+        year: "2-digit",
+      });
+    };
+    assets.forEach((a) => {
+      const m = format(a.created_at);
+      byMonth[m] = byMonth[m] || { month: m, assets: 0, liabilities: 0 };
+      byMonth[m].assets += a.amount || 0;
+    });
+    liabilities.forEach((l) => {
+      const m = format(l.created_at);
+      byMonth[m] = byMonth[m] || { month: m, assets: 0, liabilities: 0 };
+      byMonth[m].liabilities += l.outstanding_amount || 0;
+    });
+    // Sort by month (oldest to newest)
+    return Object.values(byMonth).sort(
+      (a, b) =>
+        new Date(
+          "20" + a.month.split(" ")[1],
+          new Date(Date.parse(a.month.split(" ")[0] + " 1, 2000")).getMonth()
+        ) -
+        new Date(
+          "20" + b.month.split(" ")[1],
+          new Date(Date.parse(b.month.split(" ")[0] + " 1, 2000")).getMonth()
+        )
+    );
+  }
+
+  // Auth check: redirect to /login if not logged in
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) navigate("/login");
+    });
+  }, [navigate]);
+
+  // User menu actions
+  const openSettings = () => setSettingsOpen(true);
+  const closeSettings = () => setSettingsOpen(false);
+  const logoutUser = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
 
   // Compute stats
   const totalIncome = income.reduce((sum, i) => sum + (i.amount || 0), 0);
@@ -214,30 +315,17 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-2 md:px-4 py-8">
-      {/* Gradient Header */}
-      <motion.div
-        className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-xl shadow mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-2"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div>
-          <div className="text-lg md:text-2xl font-semibold">
-            Welcome back{profile?.full_name ? `, ${profile.full_name}` : ""} 👋
-          </div>
-          <div className="text-sm text-blue-100 mt-1">
-            {new Date().toLocaleDateString("en-IN", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </div>
-        </div>
-        <div className="text-sm text-blue-100 mt-2 md:mt-0">
-          {profile?.email}
-        </div>
-      </motion.div>
+      {/* Topbar with user info, settings, logout */}
+      <Topbar
+        username={profile?.full_name}
+        onSettings={openSettings}
+        onLogout={logoutUser}
+      />
+      <SettingsModal
+        open={settingsOpen}
+        onClose={closeSettings}
+        profile={profile}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -286,84 +374,13 @@ export default function Dashboard() {
       </div>
 
       {/* Main Charts Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <IncomeExpenseChart data={incomeExpenseData} loading={loading} />
-        <AssetAllocationChart data={assetData} loading={loading} />
+        <AssetAllocationTrend data={allocationTrend} loading={loading} />
       </div>
 
-      {/* Optional: Recent Transactions or Upcoming Goals */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Recent Transactions
-          </h2>
-          {loading ? (
-            <div className="h-24 animate-pulse bg-gray-100 rounded" />
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {[...income.slice(0, 3), ...expenses.slice(0, 3)]
-                .sort((a, b) => {
-                  const da = new Date(a.date_received || a.date_incurred);
-                  const db = new Date(b.date_received || b.date_incurred);
-                  return db - da;
-                })
-                .slice(0, 5)
-                .map((tx, idx) => (
-                  <li
-                    key={idx}
-                    className="py-2 flex items-center justify-between"
-                  >
-                    <span className="font-medium text-gray-700">
-                      {tx.source || tx.category || "Transaction"}
-                    </span>
-                    <span
-                      className={
-                        tx.amount >= 0
-                          ? tx.date_received
-                            ? "text-green-600"
-                            : "text-red-600"
-                          : "text-gray-600"
-                      }
-                    >
-                      {tx.date_received ? "+" : "-"}
-                      {formatCurrency(tx.amount)}
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          )}
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Upcoming Goals
-          </h2>
-          {loading ? (
-            <div className="h-24 animate-pulse bg-gray-100 rounded" />
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {goals
-                .filter((g) => !g.completed)
-                .slice(0, 5)
-                .map((g, idx) => (
-                  <li
-                    key={idx}
-                    className="py-2 flex items-center justify-between"
-                  >
-                    <span className="font-medium text-gray-700">
-                      {g.title || "Goal"}
-                    </span>
-                    <span className="text-gray-500 text-xs">
-                      Due:{" "}
-                      {g.due_date
-                        ? new Date(g.due_date).toLocaleDateString()
-                        : "-"}
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          )}
-        </div>
-      </div>
+      {/* Upcoming Goals Section */}
+      <UpcomingGoals goals={upcomingGoals} loading={loading} />
     </div>
   );
 }
