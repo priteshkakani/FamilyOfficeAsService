@@ -1,8 +1,7 @@
 import os
 import requests
 from fastapi import Depends, HTTPException, status, Request
-from jose import jwt
-from jose.exceptions import JWTError
+from jose import jwt, JWTError
 from functools import lru_cache
 
 SUPABASE_PROJECT_ID = os.getenv("SUPABASE_PROJECT_ID") or os.getenv("SUPABASE_URL", "").split(".co")[0].split("//")[-1]
