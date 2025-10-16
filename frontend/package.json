@@ -21,7 +21,8 @@
     "recharts": "^3.2.1",
     "serve": "^14.2.5",
   "zod": "^4.1.12",
-  "react-hot-toast": "^2.4.1"
+  "react-hot-toast": "^2.4.1",
+  "@headlessui/react": "^1.7.18"
   },
   "scripts": {
     "dev": "vite",
