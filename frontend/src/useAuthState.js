@@ -32,7 +32,11 @@ export function useAuthState() {
     });
     return () => {
       mounted = false;
-      listener?.unsubscribe();
+      if (typeof listener === "function") {
+        listener();
+      } else if (listener?.unsubscribe) {
+        listener.unsubscribe();
+      }
     };
   }, []);
   return { loading, session, profile };

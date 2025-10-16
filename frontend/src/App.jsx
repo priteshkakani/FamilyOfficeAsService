@@ -16,6 +16,8 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
+import { supabase } from "./supabaseClient";
+
 // Fallback DashboardSkeleton if not defined elsewhere
 const DashboardSkeleton = () => (
   <Box sx={{ p: 4, textAlign: "center" }}>

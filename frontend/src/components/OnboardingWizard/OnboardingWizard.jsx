@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Step1Signup from "./Step1Signup.jsx";
 import Step2Family from "./Step2Family.jsx";
+import { useNavigate } from "react-router-dom";
 // TODO: Implement these steps with React Hook Form + Zod
 // import Step3DataSources from "./Step3DataSources";
 // import Step4IncomeExpense from "./Step4IncomeExpense";
@@ -27,10 +28,7 @@ const steps = [
 
 export default function OnboardingWizard() {
   // Handler to mark onboarding as complete and redirect
-  const navigate =
-    typeof window !== "undefined"
-      ? require("react-router-dom").useNavigate()
-      : () => {};
+  const navigate = useNavigate();
   const handleComplete = async () => {
     // Mark user as onboarded in Supabase
     const session =

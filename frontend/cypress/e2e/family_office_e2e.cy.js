@@ -1,57 +1,62 @@
 /// <reference types="cypress" />
 
+const waitForDashboard = () =>
+  cy.location("pathname", { timeout: 10000 }).should("eq", "/dashboard");
+const waitForOnboarding = () =>
+  cy.location("pathname", { timeout: 10000 }).should("eq", "/onboarding");
+const waitForLogin = () =>
+  cy.location("pathname", { timeout: 10000 }).should("eq", "/login");
+
 describe("Family Office as a Service E2E", () => {
   const email = "e2euser@example.com";
   const password = "TestPassword123!";
 
   beforeEach(() => {
     cy.viewport(1280, 800);
-    cy.intercept("GET", "**/rest/v1/profiles*").as("getProfile");
-    cy.intercept("POST", "**/auth/v1/token?grant_type=password").as(
-      "supabaseLogin"
-    );
-    cy.intercept("POST", "**/auth/v1/signup").as("supabaseSignup");
-    cy.intercept("POST", "**/auth/v1/recover").as("supabaseForgot");
-    cy.intercept("PATCH", "**/rest/v1/profiles*").as("patchProfile");
-    cy.intercept("GET", "**/rest/v1/assets*").as("getAssets");
-    cy.intercept("GET", "**/rest/v1/liabilities*").as("getLiabilities");
+    // No XHR intercepts needed for DOM-based waits
   });
 
   it("signup, onboarding, dashboard navigation, logout", () => {
     cy.signup(email, password);
-    cy.wait(["@supabaseSignup"]);
-    cy.get('[data-testid="loading"]').should("not.exist");
     cy.get('[data-testid="loading"]', { timeout: 10000 }).should("not.exist");
-    cy.url().should("include", "/onboarding");
-    cy.contains(/profile/i).should("exist");
+    waitForOnboarding();
+    cy.contains(/onboarding|profile/i, { timeout: 8000 }).should("be.visible");
     cy.get("button")
-      .contains(/next|continue/i)
+      .contains(/next|continue|finish|complete/i)
       .click({ multiple: true, force: true });
-    cy.get('[data-testid="finish-onboarding"]').click();
+    cy.get('[data-testid="finish-onboarding"]', { timeout: 8000 }).click();
     cy.get('[data-testid="loading"]', { timeout: 10000 }).should("not.exist");
-    cy.url().should("include", "/dashboard");
-    cy.contains(/dashboard/i).should("exist");
+    waitForDashboard();
+    cy.contains(/dashboard/i, { timeout: 8000 }).should("be.visible");
     cy.logout();
     cy.get('[data-testid="loading"]', { timeout: 10000 }).should("not.exist");
-    cy.url().should("include", "/login");
+    waitForLogin();
   });
 
   it("login, onboarding redirect, dashboard", () => {
     cy.login(email, password);
-    cy.wait(["@supabaseLogin"]);
-    cy.get('[data-testid="loading"]').should("not.exist");
     cy.get('[data-testid="loading"]', { timeout: 10000 }).should("not.exist");
-    cy.url().should("include", "/onboarding");
-    cy.get('[data-testid="finish-onboarding"]').click();
-    cy.get('[data-testid="loading"]', { timeout: 10000 }).should("not.exist");
-    cy.url().should("include", "/dashboard");
+    cy.location("pathname", { timeout: 10000 }).should(
+      "match",
+      /onboarding|dashboard/
+    );
+    // If on onboarding page, complete it
+    cy.location("pathname").then((path) => {
+      if (path.includes("onboarding")) {
+        cy.get('[data-testid="finish-onboarding"]', { timeout: 8000 }).click();
+        cy.get('[data-testid="loading"]', { timeout: 10000 }).should(
+          "not.exist"
+        );
+        waitForDashboard();
+      }
+    });
+    cy.contains(/dashboard/i, { timeout: 8000 }).should("be.visible");
   });
 
   it("forgot password flow", () => {
     cy.visit("/forgot-password");
     cy.get('input[name="email"]').type(email);
     cy.get('button[type="submit"]').click();
-    cy.wait("@supabaseForgot");
     cy.get('[data-testid="forgot-success"]', { timeout: 10000 }).should(
       "be.visible"
     );

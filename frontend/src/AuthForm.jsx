@@ -40,22 +40,36 @@ export default function AuthForm({ onAuth, mode: modeProp }) {
     if (mode === "login") {
       result = await supabase.auth.signInWithPassword({ email, password });
       if (!result.error && result.data?.session) {
-        // Force a real Supabase profile fetch for Cypress (fires GET /rest/v1/profiles)
-        await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", result.data.session.user.id)
-          .maybeSingle();
+        // Deterministic loading marker and profile fetch for Cypress/real users
+        setLoading(true);
+        const { data: session } = await supabase.auth.getSession();
+        if (session?.session) {
+          await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.session.user.id)
+            .maybeSingle();
+        }
+        setLoading(false);
+        navigate("/dashboard");
+        return;
       }
     } else {
       result = await supabase.auth.signUp({ email, password });
       if (!result.error && result.data?.user) {
-        // Force a real Supabase profile fetch for Cypress (fires GET /rest/v1/profiles)
-        await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", result.data.user.id)
-          .maybeSingle();
+        // Deterministic loading marker and profile fetch for Cypress/real users
+        setLoading(true);
+        const { data: session } = await supabase.auth.getSession();
+        if (session?.session) {
+          await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.session.user.id)
+            .maybeSingle();
+        }
+        setLoading(false);
+        navigate("/onboarding");
+        return;
       }
       // Always redirect to onboarding after signup, regardless of session
       navigate("/onboarding");
@@ -63,17 +77,13 @@ export default function AuthForm({ onAuth, mode: modeProp }) {
       return;
     }
     if (result.error) setError(result.error.message);
-    else if (result.data?.session) {
-      onAuth && onAuth(result.data.session);
-      navigate("/dashboard");
-    }
     setLoading(false);
   }
 
-  if (!sessionChecked) {
+  if (!sessionChecked || loading) {
     return (
-      <div style={{ textAlign: "center", marginTop: 64 }}>
-        Checking authentication...
+      <div data-testid="loading" style={{ textAlign: "center", marginTop: 64 }}>
+        Loading...
       </div>
     );
   }
