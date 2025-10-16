@@ -1,4 +1,5 @@
 import React from "react";
+console.log("React version:", React.version);
 // Fallbacks for missing dashboard pages
 const AssetsPage = () => <Box sx={{ p: 4 }}>Assets Page (placeholder)</Box>;
 const LiabilitiesPage = () => (
@@ -56,7 +57,7 @@ function RequireOnboarded({ children }) {
   }
   return children;
 }
-import OnboardingWizard from "./components/OnboardingWizard/OnboardingWizard.jsx";
+import OnboardingFlow from "./pages/OnboardingFlow.jsx";
 import AuthForm from "./AuthForm";
 import {
   BrowserRouter,
@@ -65,6 +66,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import IncomeExpensePage from "./pages/IncomeExpensePage";
 // EPFO Data Table Component
 function EPFODataTable({ userId }) {
   const { data, isLoading, isError, refetch } = useQuery({
@@ -1172,6 +1174,7 @@ function ProtectedRoute({ children }) {
 }
 
 // Main App component (restored)
+import { Toaster } from "react-hot-toast";
 
 // Extracted AppRoutes for testability
 export function AppRoutes() {
@@ -1197,7 +1200,7 @@ export function AppRoutes() {
         path="/onboarding"
         element={
           <ProtectedRoute>
-            <OnboardingWizard />
+            <OnboardingFlow />
           </ProtectedRoute>
         }
       />
@@ -1273,6 +1276,18 @@ export function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/dashboard/income-expense"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarded>
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <IncomeExpensePage />
+              </React.Suspense>
+            </RequireOnboarded>
+          </ProtectedRoute>
+        }
+      />
       {/* Add more dashboard routes as needed */}
     </Routes>
   );
@@ -1281,9 +1296,12 @@ export function AppRoutes() {
 // App now just provides BrowserRouter and AppRoutes
 function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+    </>
   );
 }
 

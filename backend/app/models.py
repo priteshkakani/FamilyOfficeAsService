@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Date, Enum, ForeignKey, JSON, Boolean, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Date, Enum, ForeignKey, JSON, Boolean, TIMESTAMP, Numeric, DateTime
 from sqlalchemy.orm import relationship
 from .database import Base
+import uuid
 
 class User(Base):
     __tablename__ = "users"
@@ -42,3 +43,30 @@ class Consent(Base):
     duration = Column(String(50))
     active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP)
+
+class IncomeRecord(Base):
+    __tablename__ = "income_records"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    source = Column(String(100), nullable=False)
+    category = Column(String(100), nullable=False)
+    amount = Column(Numeric(12, 2), nullable=False)
+    frequency = Column(String(50))
+    date_received = Column(Date, nullable=False)
+    notes = Column(String(255))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+class ExpenseRecord(Base):
+    __tablename__ = "expense_records"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    category = Column(String(100), nullable=False)
+    subcategory = Column(String(100))
+    amount = Column(Numeric(12, 2), nullable=False)
+    payment_mode = Column(String(50))
+    date_incurred = Column(Date, nullable=False)
+    recurring = Column(Boolean, default=False)
+    notes = Column(String(255))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)

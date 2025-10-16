@@ -3,8 +3,10 @@
     "@vitest/coverage-v8": "^3.2.4"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
     "@hookform/resolvers": "^5.2.2",
     "react-hook-form": "^7.65.0",
+    "react-hot-toast": "^2.6.0",
     "supabase": "^2.51.0",
     "zod": "^4.1.12"
   }
