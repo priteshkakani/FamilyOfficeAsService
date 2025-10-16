@@ -1,5 +1,7 @@
 import React from "react";
+import Dashboard from "../pages/Dashboard";
 
 export default function DashboardHomeTab() {
-  return <h1 data-testid="dashboard-title">Dashboard</h1>;
+  // This component simply renders the main dashboard UI
+  return <Dashboard />;
 }
