@@ -80,5 +80,7 @@ describe("FamilyOfficeAsService User Journey", () => {
     cy.contains("Liabilities").should("exist");
     cy.contains("₹100,000").should("exist");
     cy.contains("₹50,000").should("exist");
+      }
+    });
   });
 });

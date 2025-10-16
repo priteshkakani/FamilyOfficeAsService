@@ -92,4 +92,5 @@ describe("Supabase App Onboarding and Dashboard", () => {
       const value = parseInt(match[1].replace(/,/g, ""));
       expect(value).to.be.greaterThan(0);
     });
+  });
 });
