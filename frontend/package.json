@@ -20,7 +20,8 @@
     "react-step-wizard": "^5.3.11",
     "recharts": "^3.2.1",
     "serve": "^14.2.5",
-    "zod": "^4.1.12"
+  "zod": "^4.1.12",
+  "react-hot-toast": "^2.4.1"
   },
   "scripts": {
     "dev": "vite",
