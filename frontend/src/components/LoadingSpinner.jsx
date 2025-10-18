@@ -1,13 +1,15 @@
 import React from "react";
 
-export default function LoadingSpinner({ text = "Loading..." }) {
+export default function LoadingSpinner({ size = 8, text = "Loading..." }) {
+  const s = `h-${size} w-${size}`;
   return (
-    <div className="flex flex-col items-center justify-center py-8">
+    <div className="flex flex-col items-center justify-center py-6 gap-2">
       <svg
-        className="animate-spin h-8 w-8 text-blue-600 mb-2"
+        className={`animate-spin ${s} text-blue-600`}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
+        aria-hidden="true"
       >
         <circle
           className="opacity-25"
@@ -23,9 +25,7 @@ export default function LoadingSpinner({ text = "Loading..." }) {
           d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
         ></path>
       </svg>
-      {text && (
-        <span className="text-gray-600 text-sm font-medium">{text}</span>
-      )}
+      {text && <div className="text-sm text-gray-600">{text}</div>}
     </div>
   );
 }

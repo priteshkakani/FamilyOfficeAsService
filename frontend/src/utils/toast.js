@@ -12,6 +12,7 @@ export function notifySuccess(message) {
       primary: "#2563eb",
       secondary: "#fff",
     },
+    duration: 4000,
   });
 }
 
@@ -27,5 +28,8 @@ export function notifyError(message) {
       primary: "#ef4444",
       secondary: "#fff",
     },
+    duration: 6000,
   });
 }
+
+export default { notifySuccess, notifyError };

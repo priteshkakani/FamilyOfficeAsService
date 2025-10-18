@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import MutualFundDataSourceModal from "../components/Onboarding/MutualFundDataSourceModal";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import MutualFundDataSourceModal from "../components/modals/MutualFundModal";
 import "@testing-library/jest-dom";
 
 describe("MutualFundDataSourceModal", () => {
@@ -11,11 +11,13 @@ describe("MutualFundDataSourceModal", () => {
         onConnect={() => {}}
       />
     );
-    expect(screen.getByText(/Connect Mutual Fund/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Connect Mutual Fund/i })
+    ).toBeInTheDocument();
   });
 
   it("calls onClose when close button clicked", () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <MutualFundDataSourceModal
         open={true}
@@ -27,16 +29,28 @@ describe("MutualFundDataSourceModal", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("calls onConnect when connect button clicked", () => {
-    const onConnect = jest.fn();
+  it("calls onConnect when connect button clicked", async () => {
+    const onClose = vi.fn();
+    // Render modal and fill required fields then submit
     render(
       <MutualFundDataSourceModal
         open={true}
-        onClose={() => {}}
-        onConnect={onConnect}
+        onClose={onClose}
+        userId={"test-user"}
       />
     );
-    fireEvent.click(screen.getByText(/Connect/i));
-    expect(onConnect).toHaveBeenCalled();
+    // Fill PAN input (placeholder is 'PAN')
+    const panInput = screen.getByPlaceholderText(/PAN/i);
+    fireEvent.change(panInput, { target: { value: "ABCDE1234F" } });
+    // check the consent checkbox
+    const checkbox = screen.getByRole("checkbox");
+    fireEvent.click(checkbox);
+    // submit
+    const submit = screen.getByRole("button", { name: /Connect Mutual Fund/i });
+    fireEvent.click(submit);
+    // wait for onClose to be called (component triggers it after async insert)
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+    });
   });
 });

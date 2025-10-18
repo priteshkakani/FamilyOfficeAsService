@@ -1,5 +1,6 @@
 import React from "react";
-import StepWizard from "react-step-wizard";
+// Simplified wizard: use local step state instead of react-step-wizard so tests
+// can deterministically advance steps without relying on an external library.
 import {
   LucideUser,
   LucideUsers,
@@ -27,10 +28,10 @@ const steps = [
 ];
 
 export default function OnboardingWizard() {
-  // Handler to mark onboarding as complete and redirect
   const navigate = useNavigate();
+  const [current, setCurrent] = React.useState(0);
+
   const handleComplete = async () => {
-    // Mark user as onboarded in Supabase
     const session =
       supabase.auth.getSession &&
       (await supabase.auth.getSession()).data.session;
@@ -42,39 +43,48 @@ export default function OnboardingWizard() {
     }
     navigate && navigate("/dashboard");
   };
+
+  const handleNext = (userId) =>
+    setCurrent((c) => Math.min(c + 1, steps.length - 1));
+  const handleBack = () => setCurrent((c) => Math.max(c - 1, 0));
+
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Profile</h2>
+      <h2 className="text-2xl font-bold mb-4">{steps[current].label}</h2>
       <div className="flex justify-between mb-8">
         {steps.map((step, idx) => (
           <div
             key={step.label}
-            className="flex flex-col items-center text-gray-500"
+            className={`flex flex-col items-center ${
+              idx === current ? "text-blue-600" : "text-gray-500"
+            }`}
+            data-testid={`onboarding-wizard-pill-${idx}`}
           >
             <step.icon className="w-6 h-6 mb-1" />
             <span className="text-xs font-medium">{step.label}</span>
           </div>
         ))}
       </div>
-      <StepWizard>
-        <Step1Signup />
-        <Step2Family />
-        {/* <Step3DataSources />
-        <Step4IncomeExpense />
-        <Step5Goals />
-        <Step6Summary /> */}
-        {/* Add a final step with a Complete button */}
-        <div>
-          <button
-            type="button"
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            data-testid="finish-onboarding"
-            onClick={handleComplete}
-          >
-            Complete Onboarding
-          </button>
-        </div>
-      </StepWizard>
+
+      <div>
+        {current === 0 && <Step1Signup onNext={handleNext} />}
+        {current === 1 && (
+          <Step2Family onNext={handleNext} onBack={handleBack} />
+        )}
+        {/* Future steps will be conditionally rendered here */}
+        {current === steps.length - 1 && (
+          <div>
+            <button
+              type="button"
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+              data-testid="finish-onboarding"
+              onClick={handleComplete}
+            >
+              Complete Onboarding
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

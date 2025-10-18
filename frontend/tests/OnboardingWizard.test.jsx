@@ -15,8 +15,8 @@ describe("OnboardingWizard", () => {
   it("renders step 1 (Profile), fills the form, clicks next, and shows step 2 (Family)", async () => {
     render(<OnboardingWizard />);
 
-    // Step 1: Profile should be visible
-    expect(screen.getByText(/profile/i)).to.exist;
+    // Step 1: Profile should be visible (heading)
+    expect(screen.getByRole("heading", { name: /profile/i })).toBeTruthy();
 
     // Fill profile form fields (disambiguate 'name' field)
     const nameInputs = screen.getAllByLabelText(/name/i);
@@ -42,6 +42,8 @@ describe("OnboardingWizard", () => {
     );
 
     // Step 2: Family should be visible
-    expect(await screen.findByText(/family/i)).to.exist;
+    expect(
+      await screen.findByRole("heading", { name: /family/i })
+    ).toBeTruthy();
   });
 });

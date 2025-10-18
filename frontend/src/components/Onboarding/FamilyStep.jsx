@@ -1,107 +1,152 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import OnboardingLayout from "../../layouts/OnboardingLayout";
+import { supabase } from "../../supabaseClient";
+import { notifyError, notifySuccess } from "../../utils/toast";
 
-const RELATIONS = [
-  "Father",
-  "Mother",
-  "Spouse",
-  "Son",
-  "Daughter",
-  "Brother",
-  "Sister",
-];
+export default function FamilyStep({ userId, onChange, data }) {
+  const [members, setMembers] = useState((data && data.family_members) || []);
+  const [form, setForm] = useState({ name: "", relation: "Spouse" });
+  const [saving, setSaving] = useState(false);
 
-export default function FamilyStep({ data, onChange }) {
-  const family = data.family_members || [];
-  const [newMember, setNewMember] = useState({
-    name: "",
-    relation: RELATIONS[0],
-  });
+  useEffect(() => {
+    let mounted = true;
+    if (data && Array.isArray(data.family_members)) {
+      const next = data.family_members || [];
+      if (mounted) {
+        setMembers(next);
+        if (typeof onChange === "function") onChange(next);
+      }
+      return () => {
+        mounted = false;
+      };
+    }
+    if (!userId)
+      return () => {
+        mounted = false;
+      };
+    (async () => {
+      const { data } = await supabase
+        .from("family_members")
+        .select("id,name,relation")
+        .eq("user_id", userId);
+      const next = data || [];
+      if (mounted) {
+        setMembers(next);
+        if (typeof onChange === "function") onChange(next);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [userId]);
 
-  const handleInput = (e) => {
-    setNewMember({ ...newMember, [e.target.name]: e.target.value });
-  };
+  const addMember = async () => {
+    if (!form.name) return notifyError("Member name required");
+    setSaving(true);
+    let mounted = true;
+    try {
+      // Optimistic UI update: add a temporary member immediately so the
+      // click handler results in a synchronous state update (prevents
+      // act(...) warnings in tests). Replace with server data once insert
+      // completes.
+      const temp = {
+        id: `temp-${Date.now()}`,
+        name: form.name,
+        relation: form.relation,
+      };
+      setMembers((cur) => {
+        const next = [...cur, temp];
+        if (typeof onChange === "function") onChange(next);
+        return next;
+      });
+      setForm({ name: "", relation: "Spouse" });
 
-  const addMember = () => {
-    if (!newMember.name.trim()) return;
-    onChange({
-      ...data,
-      family_members: [...family, { ...newMember }],
-    });
-    setNewMember({ name: "", relation: RELATIONS[0] });
-  };
-
-  const removeMember = (idx) => {
-    onChange({ ...data, family_members: family.filter((_, i) => i !== idx) });
+      const { error } = await supabase.from("family_members").insert({
+        user_id: userId,
+        name: temp.name,
+        relation: temp.relation,
+      });
+      if (error) throw error;
+      notifySuccess("Member added");
+      const { data } = await supabase
+        .from("family_members")
+        .select("id,name,relation")
+        .eq("user_id", userId);
+      const next = data || [];
+      if (mounted) {
+        setMembers(next);
+        if (typeof onChange === "function") onChange(next);
+      }
+    } catch (e) {
+      console.error("[FamilyStep][add]", e && e.message ? e.message : e);
+      notifyError("Failed to add member");
+    } finally {
+      if (mounted) setSaving(false);
+    }
+    return () => {
+      mounted = false;
+    };
   };
 
   return (
-    <div>
-      <div className="mb-2 font-medium">Add your family members:</div>
-      <div
-        className="flex gap-2 items-center mb-4"
-        data-testid="family-add-row"
-      >
-        <input
-          type="text"
-          name="name"
-          placeholder="Name"
-          value={newMember.name}
-          onChange={handleInput}
-          className="input input-bordered flex-1"
-          data-testid="family-name-input"
-        />
-        <select
-          name="relation"
-          value={newMember.relation}
-          onChange={handleInput}
-          className="select select-bordered flex-1 rounded-lg focus:ring focus:ring-blue-200 transition"
-          data-testid="family-relation-select"
-        >
-          {RELATIONS.map((rel) => (
-            <option key={rel} value={rel}>
-              {rel}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={addMember}
-          className="btn btn-primary rounded-lg px-6 py-2 font-semibold shadow focus:ring focus:ring-blue-200"
-          data-testid="family-add-btn"
-        >
-          Add
-        </button>
-      </div>
-      <div className="space-y-4">
-        {family.map((member, idx) => (
-          <div
-            key={idx}
-            className="flex flex-col sm:flex-row gap-4 items-center border border-gray-100 bg-gray-50 rounded-lg p-3"
-            data-testid={`family-member-row-${idx}`}
+    <OnboardingLayout title="Family">
+      <div className="space-y-5" data-testid="onboarding-step-family">
+        <div className="flex gap-2">
+          <input
+            data-testid="family-name-input"
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            placeholder="Member name"
+            className="border border-gray-300 rounded-lg p-2.5 w-full"
+          />
+          <select
+            value={form.relation}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, relation: e.target.value }))
+            }
+            className="border border-gray-300 rounded-lg p-2.5"
           >
-            <span
-              className="flex-1 text-gray-700 font-medium"
-              data-testid="family-member-name"
-            >
-              {member.name}
-            </span>
-            <span
-              className="flex-1 text-gray-600"
-              data-testid="family-member-relation"
-            >
-              {member.relation}
-            </span>
-            <button
-              type="button"
-              onClick={() => removeMember(idx)}
-              className="btn btn-error btn-sm rounded-lg focus:ring focus:ring-blue-200"
-              data-testid={`family-remove-btn-${idx}`}
-            >
-              Remove
-            </button>
-          </div>
-        ))}
+            <option>Father</option>
+            <option>Mother</option>
+            <option>Spouse</option>
+            <option>Son</option>
+            <option>Daughter</option>
+            <option>Brother</option>
+            <option>Sister</option>
+          </select>
+          <button
+            data-testid="family-add-btn"
+            onClick={addMember}
+            disabled={saving}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4"
+          >
+            Add
+          </button>
+        </div>
+
+        <div>
+          <h3 className="font-semibold mb-2">Family members</h3>
+          <div className="text-sm text-gray-500">Add your family members</div>
+          {members.length === 0 ? (
+            <div className="text-sm text-gray-500">No members added</div>
+          ) : (
+            <ul className="space-y-2">
+              {members.map((m, idx) => (
+                <li
+                  key={m.id ?? `${m.name ?? "member"}-${idx}`}
+                  data-testid={`family-member-row-${idx}`}
+                  className="border p-2 rounded-md flex justify-between"
+                >
+                  <div>
+                    <div className="font-medium">{m.name}</div>
+                    <div className="text-xs text-gray-500">{m.relation}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
-    </div>
+    </OnboardingLayout>
   );
 }

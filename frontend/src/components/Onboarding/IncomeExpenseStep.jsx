@@ -1,123 +1,168 @@
-import React, { useState, useEffect } from "react";
-import { computeMonthlyTotals } from "../../utils/helpers";
+import React, { useState, useEffect, useMemo } from "react";
+import OnboardingLayout from "../../layouts/OnboardingLayout";
+import { supabase } from "../../supabaseClient";
+import { notifyError, notifySuccess } from "../../utils/toast";
 import LoadingSpinner from "../LoadingSpinner";
 
-const INCOME_CATEGORIES = [
-  { key: "salary", label: "Primary Salary" },
-  { key: "business", label: "Business" },
-  { key: "rent", label: "Rent" },
-  { key: "dividends", label: "Dividends" },
-  { key: "other_income", label: "Other" },
-];
-const EXPENSE_CATEGORIES = [
-  { key: "housing", label: "Housing" },
-  { key: "utilities", label: "Utilities" },
-  { key: "groceries", label: "Groceries" },
-  { key: "transport", label: "Transport" },
-  { key: "insurance", label: "Insurance Premiums" },
-  { key: "education", label: "Education" },
-  { key: "emis", label: "EMIs" },
-  { key: "other_expense", label: "Other" },
+const INCOME_KEYS = ["salary", "business", "rent", "dividends", "other_income"];
+const EXPENSE_KEYS = [
+  "housing",
+  "utilities",
+  "groceries",
+  "transport",
+  "insurance",
+  "education",
+  "emis",
+  "other_expense",
 ];
 
-export default function IncomeExpenseStep({ data, onChange }) {
-  const [income, setIncome] = useState(data.income || {});
-  const [expenses, setExpenses] = useState(data.expenses || {});
-  const [loading, setLoading] = useState(false);
+export default function IncomeExpenseStep({ userId, data, onChange }) {
+  const [income, setIncome] = useState({});
+  const [expenses, setExpenses] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Update parent with totals and granular data
-    onChange({
-      ...data,
-      income,
-      expenses,
-      monthly_income: computeMonthlyTotals(income),
-      monthly_expenses: computeMonthlyTotals(expenses),
-    });
-    // eslint-disable-next-line
-  }, [income, expenses]);
+    // If parent provided a controlled `data` prop (tests do this), use it and skip loading
+    if (data) {
+      setLoading(false);
+      setIncome(data.monthly_income_details || {});
+      setExpenses(data.monthly_expenses_details || {});
+      return;
+    }
+    if (!userId) return;
+    (async () => {
+      const res = await supabase
+        .from("profiles")
+        .select("monthly_income_details,monthly_expenses_details")
+        .eq("id", userId)
+        .maybeSingle();
+      setLoading(false);
+      const d = res?.data;
+      if (d) {
+        setIncome(d.monthly_income_details || {});
+        setExpenses(d.monthly_expenses_details || {});
+      }
+    })();
+  }, [userId, data]);
 
-  const handleIncome = (e) => {
-    setIncome((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-  const handleExpense = (e) => {
-    setExpenses((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  // propagate changes to parent if onChange provided
+  const propagate = (nextIncome, nextExpenses) => {
+    if (typeof onChange === "function") {
+      onChange({
+        monthly_income_details: nextIncome,
+        monthly_expenses_details: nextExpenses,
+      });
+    }
   };
 
-  const totalIncome = computeMonthlyTotals(income);
-  const totalExpenses = computeMonthlyTotals(expenses);
+  const totalIncome = useMemo(
+    () => INCOME_KEYS.reduce((s, k) => s + Number(income[k] || 0), 0),
+    [income]
+  );
+  const totalExpenses = useMemo(
+    () => EXPENSE_KEYS.reduce((s, k) => s + Number(expenses[k] || 0), 0),
+    [expenses]
+  );
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        id: userId,
+        monthly_income: totalIncome,
+        monthly_expenses: totalExpenses,
+        monthly_income_details: income,
+        monthly_expenses_details: expenses,
+      };
+      const { error } = await supabase.from("profiles").upsert(payload);
+      if (error) throw error;
+      notifySuccess("Income & expenses saved");
+    } catch (e) {
+      console.error("[IncomeExpenseStep][save]", e.message);
+      notifyError("Failed to save income/expenses");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading)
+    return (
+      <OnboardingLayout title="Income & Expenses">
+        <LoadingSpinner text="Loading..." />
+      </OnboardingLayout>
+    );
 
   return (
-    <div data-testid="onboarding-step-income-expense">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">
-        Monthly Income & Expenses
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Income Section */}
+    <OnboardingLayout title="Income & Expenses">
+      <div className="space-y-5" data-testid="onboarding-step-income-expense">
         <div>
-          <h3 className="text-lg font-medium text-gray-700 mb-4">
-            Monthly Income
-          </h3>
-          <div className="space-y-3">
-            {INCOME_CATEGORIES.map((cat) => (
-              <div key={cat.key} className="flex items-center gap-2">
-                <label
-                  htmlFor={`income-${cat.key}`}
-                  className="w-40 text-gray-600"
-                >
-                  {cat.label}
+          <h3 className="font-semibold mb-2">Monthly Income</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {INCOME_KEYS.map((k) => (
+              <div key={k}>
+                <label className="block mb-1 capitalize">
+                  {k.replace(/_/g, " ")}
                 </label>
                 <input
-                  id={`income-${cat.key}`}
-                  name={cat.key}
                   type="number"
                   min="0"
-                  value={income[cat.key] || ""}
-                  onChange={handleIncome}
-                  className="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                  placeholder="0"
-                  data-testid={`income-${cat.key}`}
+                  value={income[k] || ""}
+                  onChange={(e) => {
+                    const next = { ...(income || {}), [k]: e.target.value };
+                    setIncome(next);
+                    propagate(next, expenses);
+                  }}
+                  className="border border-gray-300 rounded-lg p-2.5 w-full"
+                  data-testid={`income-${k}`}
                 />
               </div>
             ))}
           </div>
-          <div className="mt-4 text-blue-700 font-semibold">
-            Total Income: ₹{totalIncome.toLocaleString("en-IN")}
+          <div className="mt-2 font-medium">
+            Total Income: \u20b9{totalIncome}
           </div>
         </div>
-        {/* Expenses Section */}
+
         <div>
-          <h3 className="text-lg font-medium text-gray-700 mb-4">
-            Monthly Expenses
-          </h3>
-          <div className="space-y-3">
-            {EXPENSE_CATEGORIES.map((cat) => (
-              <div key={cat.key} className="flex items-center gap-2">
-                <label
-                  htmlFor={`expense-${cat.key}`}
-                  className="w-40 text-gray-600"
-                >
-                  {cat.label}
+          <h3 className="font-semibold mb-2">Monthly Expenses</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {EXPENSE_KEYS.map((k) => (
+              <div key={k}>
+                <label className="block mb-1 capitalize">
+                  {k.replace(/_/g, " ")}
                 </label>
                 <input
-                  id={`expense-${cat.key}`}
-                  name={cat.key}
                   type="number"
                   min="0"
-                  value={expenses[cat.key] || ""}
-                  onChange={handleExpense}
-                  className="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                  placeholder="0"
-                  data-testid={`expense-${cat.key}`}
+                  value={expenses[k] || ""}
+                  onChange={(e) => {
+                    const next = { ...(expenses || {}), [k]: e.target.value };
+                    setExpenses(next);
+                    propagate(income, next);
+                  }}
+                  className="border border-gray-300 rounded-lg p-2.5 w-full"
+                  data-testid={`expense-${k}`}
                 />
               </div>
             ))}
           </div>
-          <div className="mt-4 text-blue-700 font-semibold">
-            Total Expenses: ₹{totalExpenses.toLocaleString("en-IN")}
+          <div className="mt-2 font-medium">
+            Total Expenses: \u20b9{totalExpenses}
           </div>
+        </div>
+
+        <div>
+          <button
+            disabled={saving}
+            onClick={handleSave}
+            data-testid="submit-button"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2.5"
+          >
+            {saving ? "Saving..." : "Save Income & Expenses"}
+          </button>
         </div>
       </div>
-    </div>
+    </OnboardingLayout>
   );
 }

@@ -1,148 +1,126 @@
 import React, { useState, useEffect } from "react";
+import OnboardingLayout from "../../layouts/OnboardingLayout";
 import { supabase } from "../../supabaseClient";
+import { notifyError, notifySuccess } from "../../utils/toast";
 
-export default function ProfileStep({ data, onChange, error, showValidation }) {
-  const [loading, setLoading] = useState(true);
-  const [localData, setLocalData] = useState({
+export default function ProfileStep({
+  userId,
+  onNext,
+  onChange,
+  showValidation,
+}) {
+  const [form, setForm] = useState({
     full_name: "",
     email: "",
     mobile_number: "",
   });
-  const [loadError, setLoadError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-    async function fetchProfile() {
-      setLoading(true);
-      setLoadError("");
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const session = sessionData?.session;
-        if (!session || !session.user?.id) {
-          setLoadError("No user session");
-          setLoading(false);
-          return;
-        }
-        const { data: profile, error: fetchError } = await supabase
-          .from("profiles")
-          .select("full_name,email,mobile_number")
-          .eq("id", session.user.id)
-          .single();
-        if (fetchError) {
-          setLoadError(fetchError.message);
-        } else if (isMounted) {
-          setLocalData({
-            full_name: profile?.full_name || "",
-            email: profile?.email || "",
-            mobile_number: profile?.mobile_number || "",
-          });
-          onChange({
-            ...data,
-            full_name: profile?.full_name || "",
-            email: profile?.email || "",
-            mobile_number: profile?.mobile_number || "",
-          });
-        }
-      } catch (e) {
-        setLoadError(e.message);
-      } finally {
-        setLoading(false);
-      }
+    async function load() {
+      if (!userId) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name,email,mobile_number")
+        .eq("id", userId)
+        .maybeSingle();
+      if (data) setForm((f) => ({ ...f, ...data }));
     }
-    fetchProfile();
-    return () => {
-      isMounted = false;
-    };
-    // eslint-disable-next-line
-  }, []);
+    load();
+  }, [userId]);
 
   const handleInput = (e) => {
-    setLocalData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    onChange({ ...data, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+    if (onChange) onChange({ ...form, [name]: value });
   };
-  const isEmpty = (val) => typeof val !== "string" || val.trim() === "";
 
-  if (loading) {
-    return (
-      <div
-        className="max-w-lg mx-auto bg-white shadow-md rounded-xl p-6 animate-pulse"
-        data-testid="profile-loading"
-      >
-        <div className="h-6 bg-gray-200 rounded w-1/2 mb-6"></div>
-        <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
-        <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
-        <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
-      </div>
-    );
-  }
-  if (loadError) {
-    return (
-      <div className="text-red-500 text-center" data-testid="profile-error">
-        {loadError}
-      </div>
-    );
-  }
+  const [touched, setTouched] = useState({});
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched((t) => ({ ...t, [name]: true }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.full_name || !form.mobile_number) {
+      notifyError("Name and mobile number are required");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        full_name: form.full_name,
+        mobile_number: form.mobile_number,
+        onboarding_step: 2,
+      };
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({ id: userId, ...payload });
+      if (error) throw error;
+      notifySuccess("Profile saved");
+      onNext && onNext();
+    } catch (err) {
+      console.error("[ProfileStep][save]", err.message);
+      notifyError("Failed to save profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <div
-      className="max-w-lg mx-auto bg-white shadow-md rounded-xl p-6"
-      data-testid="profile-form"
-    >
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile</h2>
-      <div className="space-y-5">
+    <OnboardingLayout title="Profile" data-testid="onboarding-step-profile">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-5"
+        data-testid="profile-form"
+      >
         <div>
-          <label className="block mb-2 text-gray-700 font-medium">
-            Full Name *
-          </label>
+          <label className="block mb-2 font-medium">Full name</label>
           <input
-            type="text"
             name="full_name"
-            value={localData.full_name}
+            value={form.full_name}
             onChange={handleInput}
-            className="input input-bordered w-full rounded-lg focus:ring focus:ring-blue-200"
-            required
+            onBlur={handleBlur}
             data-testid="profile-fullname"
+            className="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+            placeholder="Your full name"
           />
-          {showValidation && isEmpty(localData.full_name) && (
-            <div className="text-red-500 text-sm mt-1">Name is required</div>
-          )}
+          {showValidation && touched.full_name && !form.full_name ? (
+            <div className="text-sm text-red-600 mt-1">Name is required</div>
+          ) : null}
         </div>
         <div>
-          <label className="block mb-2 text-gray-700 font-medium">
-            Email *
-          </label>
+          <label className="block mb-2 font-medium">Email</label>
           <input
-            type="email"
             name="email"
-            value={localData.email}
-            onChange={handleInput}
-            className="input input-bordered w-full rounded-lg focus:ring focus:ring-blue-200"
-            required
-            data-testid="profile-email"
+            value={form.email}
+            readOnly
+            className="border border-gray-200 bg-gray-50 rounded-lg p-2.5 w-full"
           />
-          {showValidation && isEmpty(localData.email) && (
-            <div className="text-red-500 text-sm mt-1">Email is required</div>
-          )}
         </div>
         <div>
-          <label className="block mb-2 text-gray-700 font-medium">
-            Mobile Number *
-          </label>
+          <label className="block mb-2 font-medium">Mobile number</label>
           <input
-            type="tel"
             name="mobile_number"
-            value={localData.mobile_number}
+            value={form.mobile_number}
             onChange={handleInput}
-            className="input input-bordered w-full rounded-lg focus:ring focus:ring-blue-200"
-            required
-            data-testid="profile-mobile"
+            className="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+            placeholder="10-digit mobile"
           />
-          {showValidation && isEmpty(localData.mobile_number) && (
-            <div className="text-red-500 text-sm mt-1">
-              Mobile number is required
-            </div>
-          )}
         </div>
-      </div>
-    </div>
+        <div>
+          <button
+            type="submit"
+            disabled={saving}
+            data-testid="submit-button"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2.5 w-full"
+          >
+            {saving ? "Saving..." : "Save & Continue"}
+          </button>
+        </div>
+      </form>
+    </OnboardingLayout>
   );
 }

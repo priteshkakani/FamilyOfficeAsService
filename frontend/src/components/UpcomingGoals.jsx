@@ -13,6 +13,7 @@ export default function UpcomingGoals({ goals, loading }) {
           {goals.map((g) => (
             <li
               key={g.title}
+              data-testid="goal-item"
               className="flex justify-between items-center border-b pb-2"
             >
               <div>

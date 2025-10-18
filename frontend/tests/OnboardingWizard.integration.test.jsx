@@ -8,8 +8,10 @@ describe("OnboardingWizard", () => {
   it("renders step 1 (Profile), submits, and advances to step 2 (Family)", async () => {
     render(<OnboardingWizard />);
 
-    // Step 1: Profile
-    expect(screen.getByText(/profile/i)).to.exist;
+    // Step 1: Profile (check the visible heading)
+    expect(
+      screen.getByRole("heading", { name: /profile/i })
+    ).toBeInTheDocument();
     const nameInputs = screen.getAllByLabelText(/name/i);
     fireEvent.change(nameInputs[0], {
       target: { value: "Test User" },
@@ -24,7 +26,9 @@ describe("OnboardingWizard", () => {
       screen.getByRole("button", { name: /next|submit|continue|sign up/i })
     );
 
-    // Step 2: Family
-    expect(await screen.findByText(/family/i)).to.exist;
+    // Step 2: Family (visible heading)
+    expect(
+      await screen.findByRole("heading", { name: /family/i })
+    ).toBeInTheDocument();
   });
 });

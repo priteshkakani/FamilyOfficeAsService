@@ -12,7 +12,7 @@ import {
 
 export default function AssetAllocationTrend({ data, loading }) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="bg-white rounded-xl shadow-md p-6" data-testid="asset-allocation-chart">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
         Asset Allocation Trend (6 Months)
       </h2>

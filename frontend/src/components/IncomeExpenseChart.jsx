@@ -11,7 +11,7 @@ import {
 
 export default function IncomeExpenseChart({ data, loading }) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="bg-white rounded-xl shadow-md p-6" data-testid="income-chart">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">
         Income vs Expenses (Last 6 Months)
       </h2>

@@ -75,11 +75,16 @@ export default function OnboardingStepper() {
   };
 
   return (
-    <div>
-      <div className="flex justify-center mb-6">
+    <div data-testid="onboarding-stepper-root">
+      <div
+        className="flex justify-center mb-6"
+        data-testid="onboarding-stepper-pills"
+      >
         {STEPS.map((s, i) => (
           <div
             key={s.key}
+            data-testid={`onboarding-step-pill-${s.key}`}
+            aria-current={i === step ? "step" : undefined}
             className={`px-4 py-2 rounded-full mx-1 text-sm font-medium ${
               i === step
                 ? "bg-blue-600 text-white"
@@ -90,7 +95,9 @@ export default function OnboardingStepper() {
           </div>
         ))}
       </div>
-      <CurrentStep data={form} onChange={setForm} />
+      <div data-testid={`onboarding-current-step-${STEPS[step].key}`}>
+        <CurrentStep data={form} onChange={setForm} />
+      </div>
       <div className="flex justify-between mt-8">
         <button
           onClick={handleBack}

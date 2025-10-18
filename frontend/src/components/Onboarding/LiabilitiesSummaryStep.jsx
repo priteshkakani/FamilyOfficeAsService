@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import LoadingSpinner from "../LoadingSpinner";
+import OnboardingLayout from "../../layouts/OnboardingLayout";
+import { supabase } from "../../supabaseClient";
+import { notifyError, notifySuccess } from "../../utils/toast";
 
-const LIABILITY_TYPES = [
+const ROWS = [
   { key: "home_loan", label: "Home Loan" },
   { key: "car_loan", label: "Car Loan" },
   { key: "personal_loan", label: "Personal Loan" },
@@ -9,92 +11,119 @@ const LIABILITY_TYPES = [
   { key: "other", label: "Other" },
 ];
 
-export default function LiabilitiesSummaryStep({ data, onChange }) {
-  const [liabilities, setLiabilities] = useState(data.liabilities || {});
+export default function LiabilitiesSummaryStep({ userId, onChange }) {
+  const [rows, setRows] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    onChange({ ...data, liabilities });
-    // eslint-disable-next-line
-  }, [liabilities]);
+    if (!userId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("liabilities_summary")
+        .eq("id", userId)
+        .maybeSingle();
+      if (data) {
+        const next = data.liabilities_summary || {};
+        setRows(next);
+        if (typeof onChange === "function") onChange(next);
+      }
+    })();
+  }, [userId]);
 
-  const handleChange = (type, field, value) => {
-    setLiabilities((prev) => ({
-      ...prev,
-      [type]: { ...prev[type], [field]: value },
-    }));
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = { liabilities_summary: rows };
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({ id: userId, ...payload });
+      if (error) throw error;
+      // Insert rows into liabilities table
+      const toInsert = Object.keys(rows).map((k) => ({
+        user_id: userId,
+        type: k,
+        ...rows[k],
+      }));
+      if (toInsert.length > 0)
+        await supabase.from("liabilities").insert(toInsert);
+      notifySuccess("Liabilities saved");
+    } catch (e) {
+      console.error("[LiabilitiesSummaryStep][save]", e.message);
+      notifyError("Failed to save liabilities");
+    } finally {
+      setSaving(false);
+    }
   };
 
+  const updateCell = (key, field, value) =>
+    setRows((prev) => {
+      const next = { ...prev, [key]: { ...(prev[key] || {}), [field]: value } };
+      if (typeof onChange === "function") onChange(next);
+      return next;
+    });
+
   return (
-    <div data-testid="onboarding-step-liabilities">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">
-        Liabilities Summary
-      </h2>
-      <div className="space-y-6">
-        {LIABILITY_TYPES.map((liab) => (
-          <div
-            key={liab.key}
-            className="bg-gray-50 rounded-lg p-4 border border-gray-100"
-          >
-            <div className="font-medium text-gray-700 mb-2">{liab.label}</div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <OnboardingLayout title="Liabilities Summary">
+      <div className="space-y-5" data-testid="onboarding-step-liabilities">
+        {ROWS.map((r) => (
+          <div key={r.key} className="border p-3 rounded-md">
+            <div className="font-medium mb-2">{r.label}</div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
               <input
+                data-testid={`liab-${r.key}-amount`}
+                placeholder="Outstanding Amount"
                 type="number"
-                min="0"
-                placeholder="Outstanding Amount (₹)"
-                value={liabilities[liab.key]?.outstanding_amount || ""}
+                value={rows[r.key]?.outstanding_amount || ""}
                 onChange={(e) =>
-                  handleChange(liab.key, "outstanding_amount", e.target.value)
+                  updateCell(r.key, "outstanding_amount", e.target.value)
                 }
-                className="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                data-testid={`liab-${liab.key}-amount`}
+                className="border rounded-lg p-2"
               />
               <input
-                type="number"
-                min="0"
-                step="0.01"
+                data-testid={`liab-${r.key}-rate`}
                 placeholder="Interest Rate (%)"
-                value={liabilities[liab.key]?.interest_rate || ""}
-                onChange={(e) =>
-                  handleChange(liab.key, "interest_rate", e.target.value)
-                }
-                className="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                data-testid={`liab-${liab.key}-rate`}
-              />
-              <input
                 type="number"
-                min="0"
-                placeholder="EMI (₹)"
-                value={liabilities[liab.key]?.emi || ""}
-                onChange={(e) => handleChange(liab.key, "emi", e.target.value)}
-                className="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                data-testid={`liab-${liab.key}-emi`}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-              <input
-                type="date"
-                placeholder="Next Due Date"
-                value={liabilities[liab.key]?.next_due_date || ""}
+                value={rows[r.key]?.interest_rate || ""}
                 onChange={(e) =>
-                  handleChange(liab.key, "next_due_date", e.target.value)
+                  updateCell(r.key, "interest_rate", e.target.value)
                 }
-                className="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                data-testid={`liab-${liab.key}-due`}
+                className="border rounded-lg p-2"
               />
               <input
-                type="text"
-                placeholder="Notes"
-                value={liabilities[liab.key]?.notes || ""}
+                data-testid={`liab-${r.key}-emi`}
+                placeholder="EMI"
+                type="number"
+                value={rows[r.key]?.emi_amount || ""}
                 onChange={(e) =>
-                  handleChange(liab.key, "notes", e.target.value)
+                  updateCell(r.key, "emi_amount", e.target.value)
                 }
-                className="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                data-testid={`liab-${liab.key}-notes`}
+                className="border rounded-lg p-2"
+              />
+              <input
+                data-testid={`liab-${r.key}-due`}
+                placeholder="Next due (YYYY-MM-DD)"
+                value={rows[r.key]?.next_due_date || ""}
+                onChange={(e) =>
+                  updateCell(r.key, "next_due_date", e.target.value)
+                }
+                className="border rounded-lg p-2"
               />
             </div>
           </div>
         ))}
+
+        <div>
+          <button
+            disabled={saving}
+            onClick={handleSave}
+            data-testid="submit-button"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2.5"
+          >
+            {saving ? "Saving..." : "Save Liabilities"}
+          </button>
+        </div>
       </div>
-    </div>
+    </OnboardingLayout>
   );
 }

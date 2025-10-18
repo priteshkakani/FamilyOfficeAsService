@@ -6,4 +6,9 @@ const supabaseAnonKey =
   process.env.VITE_SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvbXl4YWh3dm5maXZ4dnJqdHBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5OTgzMDAsImV4cCI6MjA3NTU3NDMwMH0.WT_DEOJ5otbwbhD_trLNa806d08WYwMfk0QWajsFVdw";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Use the in-memory mock supabase client for tests to avoid network calls.
+// This points tests at src/__mocks__/supabaseClient.js which provides a
+// lightweight, chainable `supabase.from(...).insert/select/update/delete` API.
+const { supabase } = require("../__mocks__/supabaseClient.js");
+
+export { supabase };

@@ -33,15 +33,7 @@ const DashboardSkeleton = () => (
 function RequireOnboarded({ children }) {
   const navigate = useNavigate();
   const { loading, session, profile } = useAuthState();
-  React.useEffect(() => {
-    if (!loading) {
-      if (!session) {
-        navigate("/login", { replace: true });
-      } else if (profile && !profile.is_onboarded) {
-        navigate("/onboarding", { replace: true });
-      }
-    }
-  }, [loading, session, profile, navigate]);
+  // If still loading, show loading placeholder
   if (loading) {
     return (
       <div className="text-center py-12" data-testid="loading">
@@ -49,11 +41,16 @@ function RequireOnboarded({ children }) {
       </div>
     );
   }
-  // Only render children if session exists and user is onboarded
-  if (!session || (profile && !profile.is_onboarded)) {
-    // After loading, if not authenticated or not onboarded, let redirect happen, but keep loading marker until redirect
-    return <div data-testid="loading">Loading...</div>;
+
+  // Declarative redirects: render <Navigate> during render pass so tests see the redirected route immediately
+  if (!session) {
+    return <Navigate to="/login" replace />;
   }
+  if (profile && !profile.is_onboarded) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // Only render children if session exists and user is onboarded
   return children;
 }
 
@@ -1162,27 +1159,11 @@ function LandingPage() {
 
 // --- ProtectedRoute moved above App for scope ---
 function ProtectedRoute({ children }) {
-  const [session, setSession] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  React.useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
-    return () => {
-      listener?.unsubscribe?.();
-    };
-  }, []);
-  if (loading)
-    return <div className="text-center py-12">Checking authentication...</div>;
-  if (!session || !session.user) {
-    return <Navigate to="/login" replace />;
-  }
+  // Use the centralized useAuthState hook so tests can mock supabaseAuth.* calls
+  // and drive auth/profile state deterministically.
+  const { loading, session } = useAuthState();
+  if (loading) return <div data-testid="loading">Loading...</div>;
+  if (!session || !session.user) return <Navigate to="/login" replace />;
   return children;
 }
 

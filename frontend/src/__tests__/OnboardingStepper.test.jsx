@@ -5,16 +5,18 @@ import "@testing-library/jest-dom";
 describe("OnboardingStepper", () => {
   it("renders all steps", () => {
     const steps = [
-      "Profile",
-      "Family",
-      "Data Sources",
-      "Income/Expense",
-      "Liabilities",
-      "Goals",
+      { key: "profile", label: "Profile" },
+      { key: "family", label: "Family" },
+      { key: "sources", label: "Data Sources" },
+      { key: "income_expense", label: "Income & Expenses" },
+      { key: "liabilities", label: "Liabilities" },
+      { key: "goals", label: "Goals" },
     ];
-    render(<OnboardingStepper steps={steps} currentStep={2} />);
+    render(<OnboardingStepper />);
     steps.forEach((step) => {
-      expect(screen.getByText(step)).toBeInTheDocument();
+      const pill = screen.getByTestId(`onboarding-step-pill-${step.key}`);
+      expect(pill).toBeInTheDocument();
+      expect(pill).toHaveTextContent(step.label);
     });
   });
 
@@ -23,12 +25,14 @@ describe("OnboardingStepper", () => {
       "Profile",
       "Family",
       "Data Sources",
-      "Income/Expense",
+      "Income & Expenses",
       "Liabilities",
       "Goals",
     ];
-    render(<OnboardingStepper steps={steps} currentStep={3} />);
-    const current = screen.getByText("Income/Expense");
-    expect(current).toHaveClass("active");
+    render(<OnboardingStepper />);
+    // OnboardingStepper uses internal state and starts at step 0 (Profile)
+    const active = screen.getByTestId("onboarding-step-pill-profile");
+    expect(active).toHaveClass("bg-blue-600");
+    expect(active).toHaveClass("text-white");
   });
 });

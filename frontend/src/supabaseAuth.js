@@ -33,3 +33,13 @@ export async function getSession() {
   if (error) console.error("Supabase getSession error:", error);
   return { data, error };
 }
+
+export async function fetchProfile(userId) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("is_onboarded")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) console.error("Supabase fetchProfile error:", error);
+  return data?.data ?? data ?? null;
+}

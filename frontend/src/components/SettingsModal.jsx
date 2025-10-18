@@ -25,12 +25,29 @@ export default function SettingsModal({ open, onClose, profile }) {
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-96 space-y-4 shadow-lg">
-        <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      role="presentation"
+    >
+      <div
+        className="bg-white rounded-xl p-6 w-96 space-y-4 shadow-lg"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        data-testid="settings-modal"
+      >
+        <h2 id="settings-title" className="text-lg font-semibold text-gray-800">
+          Settings
+        </h2>
         <div>
-          <label className="text-sm text-gray-500">Monthly Income</label>
+          <label
+            htmlFor="settings-monthly-income"
+            className="text-sm text-gray-500"
+          >
+            Monthly Income
+          </label>
           <input
+            id="settings-monthly-income"
             type="number"
             value={income}
             onChange={(e) => setIncome(e.target.value)}
@@ -38,8 +55,14 @@ export default function SettingsModal({ open, onClose, profile }) {
           />
         </div>
         <div>
-          <label className="text-sm text-gray-500">Monthly Expenses</label>
+          <label
+            htmlFor="settings-monthly-expenses"
+            className="text-sm text-gray-500"
+          >
+            Monthly Expenses
+          </label>
           <input
+            id="settings-monthly-expenses"
             type="number"
             value={expenses}
             onChange={(e) => setExpenses(e.target.value)}
@@ -50,6 +73,7 @@ export default function SettingsModal({ open, onClose, profile }) {
           <button
             onClick={onClose}
             className="px-3 py-1.5 text-gray-600 hover:text-gray-900"
+            aria-label="close"
           >
             Cancel
           </button>

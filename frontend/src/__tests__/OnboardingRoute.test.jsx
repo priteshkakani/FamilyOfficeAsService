@@ -30,6 +30,8 @@ describe("OnboardingRoute", () => {
         </Routes>
       </MemoryRouter>
     );
-    expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();
+    return screen.findByText(/Dashboard/i).then((el) => {
+      expect(el).toBeInTheDocument();
+    });
   });
 });
