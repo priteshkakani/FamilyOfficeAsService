@@ -76,12 +76,46 @@ export default function AuthForm({ onAuth, mode: modeProp }) {
           notifyError(`Signup failed: ${result.error.message}`);
         } else {
           console.log("[Signup success]", result.data);
-          notifySuccess(
-            "✅ Signed up successfully! Please log in to continue."
-          );
-          // Redirect user to the sign-in page after successful signup.
-          // Use replace so the browser back button doesn't return to the signup form.
-          navigate("/login", { replace: true });
+          // Try to sign in the user automatically for a smoother UX.
+          // If auto-signin fails (for example when email verification is required),
+          // fall back to redirecting to the login page with a helpful message.
+          try {
+            const signInRes = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+            if (!signInRes.error && signInRes.data?.user) {
+              notifySuccess("✅ Signed up and logged in successfully!");
+              // Fetch profile to decide onboarding/dash
+              const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("is_onboarded")
+                .eq("id", signInRes.data.user.id)
+                .maybeSingle();
+              if (profileError) {
+                console.error("[Profile fetch error]", profileError.message);
+                notifyError("Failed to fetch profile info.");
+                setLoading(false);
+                return;
+              }
+              if (profile?.is_onboarded) navigate("/dashboard");
+              else navigate("/onboarding");
+            } else {
+              // Auto sign-in failed (common when email confirmation is required).
+              if (signInRes.error)
+                console.warn("[Auto sign-in failed]", signInRes.error.message);
+              notifySuccess(
+                "✅ Signed up successfully! Please verify your email (if required) and then sign in."
+              );
+              navigate("/login", { replace: true });
+            }
+          } catch (err) {
+            console.error("[Auto sign-in unexpected error]", err);
+            notifySuccess(
+              "✅ Signed up successfully! Please log in to continue."
+            );
+            navigate("/login", { replace: true });
+          }
         }
       } catch (err) {
         console.error("[Unexpected signup error]", err);
