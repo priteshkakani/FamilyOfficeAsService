@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import axios from "axios";
 import { supabase } from "../../supabaseClient";
+import { notifySuccess, notifyError } from "../../utils/toast";
 
 const schema = z.object({
   mobile: z.string().min(10, "Mobile is required"),
@@ -32,6 +33,35 @@ export default function Step1Signup({ onNext }) {
         ? { headers: { Authorization: `Bearer ${session.access_token}` } }
         : undefined
     );
+
+    // Backend signup succeeded. Some setups create a backend-only user and
+    // don't create a Supabase auth record — which prevents login. To make
+    // local/dev onboarding usable, try to also create a Supabase auth user
+    // with a temporary password. This is a dev-friendly fallback only.
+    try {
+      const tempPassword =
+        (typeof crypto !== "undefined" && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : Math.random().toString(36).slice(2) + Date.now();
+      const { data: signData, error: signError } = await supabase.auth.signUp({
+        email: data.email,
+        password: tempPassword,
+      });
+      if (signError) {
+        // Not fatal — continue onboarding but surface a helpful message.
+        console.warn("Supabase signUp (dev fallback) failed:", signError.message);
+        notifyError(
+          "Note: account created on backend but not in Supabase; please sign up via Sign In page."
+        );
+      } else {
+        notifySuccess(
+          "Account created for login (dev). You can sign in with your email; set a permanent password via Forgot Password if needed."
+        );
+      }
+    } catch (err) {
+      console.error("Error creating supabase fallback user:", err);
+    }
+
     setOtpSent(true);
     onNext(res.data.user_id);
   };
