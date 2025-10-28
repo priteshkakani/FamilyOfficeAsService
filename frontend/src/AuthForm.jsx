@@ -79,7 +79,9 @@ export default function AuthForm({ onAuth, mode: modeProp }) {
           notifySuccess(
             "✅ Signed up successfully! Please log in to continue."
           );
-          navigate("/login");
+          // Redirect user to the sign-in page after successful signup.
+          // Use replace so the browser back button doesn't return to the signup form.
+          navigate("/login", { replace: true });
         }
       } catch (err) {
         console.error("[Unexpected signup error]", err);
