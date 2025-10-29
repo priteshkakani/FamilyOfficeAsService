@@ -5,11 +5,15 @@ import { notifyError, notifySuccess } from "../../utils/toast";
 
 export default function FamilyStep({ userId, onChange, data }) {
   const [members, setMembers] = useState((data && data.family_members) || []);
-  const [form, setForm] = useState({ name: "", relation: "Spouse", dob: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [form, setForm] = useState({ name: "", relation: "Spouse" });
   const [saving, setSaving] = useState(false);
 
   // Refresh family list helper
   const refreshFamilyList = async () => {
+    setLoading(true);
+    setError(null);
     try {
       // Determine owner id: prefer prop, otherwise fall back to authenticated user
       let ownerId = userId;
@@ -22,14 +26,19 @@ export default function FamilyStep({ userId, onChange, data }) {
 
       const { data: list, error } = await supabase
         .from("family_members")
-        .select("id,name,relation,dob,notes")
-        .eq("user_id", ownerId);
+        .select("id,name,relation,created_at")
+        .eq("user_id", ownerId)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       const next = list || [];
       setMembers(next);
       if (typeof onChange === "function") onChange(next);
     } catch (err) {
       console.error("[FamilyStep][refresh]", err);
+      setError(err.message || "Failed to load family members");
+      notifyError(err.message || "Failed to load family members");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,7 +64,7 @@ export default function FamilyStep({ userId, onChange, data }) {
     };
   }, [userId]);
 
-  const addFamilyMember = async ({ name, relation, dob, notes } = {}) => {
+  const addFamilyMember = async ({ name, relation } = {}) => {
     if (!name) return notifyError("Member name required");
     setSaving(true);
     try {
@@ -67,8 +76,6 @@ export default function FamilyStep({ userId, onChange, data }) {
         user_id: user.id,
         name,
         relation,
-        dob: dob || null,
-        notes: notes || null,
       };
 
       const { error } = await supabase.from("family_members").insert(payload);
@@ -87,7 +94,7 @@ export default function FamilyStep({ userId, onChange, data }) {
   return (
     <OnboardingLayout title="Family">
       <div className="space-y-5" data-testid="onboarding-step-family">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
           <div>
             <label className="block text-sm text-gray-600 mb-1">Name</label>
             <input
@@ -119,34 +126,6 @@ export default function FamilyStep({ userId, onChange, data }) {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              DOB (optional)
-            </label>
-            <input
-              type="date"
-              data-testid="family-dob-input"
-              value={form.dob}
-              onChange={(e) => setForm((f) => ({ ...f, dob: e.target.value }))}
-              className="w-full border rounded-lg p-2.5"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Notes (optional)
-            </label>
-            <input
-              data-testid="family-notes-input"
-              value={form.notes || ""}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, notes: e.target.value }))
-              }
-              placeholder="Notes"
-              className="w-full border rounded-lg p-2.5"
-            />
-          </div>
-
           <div className="pt-1">
             <button
               data-testid="family-add-btn"
@@ -154,10 +133,8 @@ export default function FamilyStep({ userId, onChange, data }) {
                 await addFamilyMember({
                   name: form.name,
                   relation: form.relation,
-                  dob: form.dob,
-                  notes: form.notes,
                 });
-                setForm({ name: "", relation: "Spouse", dob: "", notes: "" });
+                setForm({ name: "", relation: "Spouse" });
               }}
               disabled={saving}
               className="bg-blue-600 text-white rounded-lg px-4 py-2.5 hover:bg-blue-700 w-full"
@@ -183,16 +160,7 @@ export default function FamilyStep({ userId, onChange, data }) {
                   <div>
                     <div className="font-medium">{m.name}</div>
                     <div className="text-xs text-gray-500">{m.relation}</div>
-                    {m.dob ? (
-                      <div className="text-xs text-gray-400">
-                        DOB: {new Date(m.dob).toLocaleDateString()}
-                      </div>
-                    ) : null}
-                    {m.notes ? (
-                      <div className="text-xs text-gray-400 mt-1">
-                        {m.notes}
-                      </div>
-                    ) : null}
+                    {/* DOB and notes removed from UI */}
                   </div>
                 </li>
               ))}
