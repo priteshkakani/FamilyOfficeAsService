@@ -23,7 +23,6 @@ class FamilyMember(Base):
     id = Column(Integer, primary_key=True, index=True)
     household_id = Column(Integer, ForeignKey("households.id"))
     name = Column(String(100))
-    dob = Column(Date)
     relationship = Column(String(50))
     role = Column(Enum("decision-maker", "view-only"))
 

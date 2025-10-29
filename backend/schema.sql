@@ -30,8 +30,7 @@ CREATE TABLE users
             AUTO_INCREMENT PRIMARY KEY,
     household_id INT,
     name VARCHAR
-            (100),
-    dob DATE,
+        (100),
     relationship VARCHAR
             (50),
     role ENUM

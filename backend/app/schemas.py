@@ -8,7 +8,6 @@ class UserCreate(BaseModel):
 
 class FamilyMemberCreate(BaseModel):
     name: str
-    dob: str
     relationship: str
     role: str
 

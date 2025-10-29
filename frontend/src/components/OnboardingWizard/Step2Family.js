@@ -7,9 +7,7 @@ import { supabase } from "../../supabaseClient";
 
 const memberSchema = z.object({
   name: z.string().min(2, "Name required"),
-  dob: z.string().min(1, "DOB required"),
   relationship: z.string().min(1, "Relationship required"),
-  role: z.string().min(1, "Role required"),
 });
 const schema = z.object({
   name: z.string().min(2, "Household name required"),
@@ -26,7 +24,7 @@ export default function Step2Family({ userId, onNext }) {
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
-      members: [{ name: "", dob: "", relationship: "", role: "" }],
+      members: [{ name: "", relationship: "" }],
     },
   });
   const { fields, append } = useFieldArray({ control, name: "members" });
@@ -71,17 +69,6 @@ export default function Step2Family({ userId, onNext }) {
             </span>
           )}
           <input
-            {...register(`members.${idx}.dob`)}
-            type="date"
-            className="input input-bordered w-full mb-1"
-            placeholder="DOB"
-          />
-          {errors.members?.[idx]?.dob && (
-            <span className="text-red-500 text-xs">
-              {errors.members[idx].dob.message}
-            </span>
-          )}
-          <input
             {...register(`members.${idx}.relationship`)}
             className="input input-bordered w-full mb-1"
             placeholder="Relationship"
@@ -91,24 +78,12 @@ export default function Step2Family({ userId, onNext }) {
               {errors.members[idx].relationship.message}
             </span>
           )}
-          <input
-            {...register(`members.${idx}.role`)}
-            className="input input-bordered w-full mb-1"
-            placeholder="Role"
-          />
-          {errors.members?.[idx]?.role && (
-            <span className="text-red-500 text-xs">
-              {errors.members[idx].role.message}
-            </span>
-          )}
         </div>
       ))}
       <button
         type="button"
         className="btn btn-outline w-full"
-        onClick={() =>
-          append({ name: "", dob: "", relationship: "", role: "" })
-        }
+        onClick={() => append({ name: "", relationship: "" })}
       >
         Add Member
       </button>
