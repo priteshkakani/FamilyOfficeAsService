@@ -40,7 +40,7 @@ export default function Step1Signup({ onNext }) {
     // with a temporary password. This is a dev-friendly fallback only.
     try {
       const tempPassword =
-        (typeof crypto !== "undefined" && crypto.randomUUID)
+        typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()
           : Math.random().toString(36).slice(2) + Date.now();
       const { data: signData, error: signError } = await supabase.auth.signUp({
@@ -49,7 +49,10 @@ export default function Step1Signup({ onNext }) {
       });
       if (signError) {
         // Not fatal — continue onboarding but surface a helpful message.
-        console.warn("Supabase signUp (dev fallback) failed:", signError.message);
+        console.warn(
+          "Supabase signUp (dev fallback) failed:",
+          signError.message
+        );
         notifyError(
           "Note: account created on backend but not in Supabase; please sign up via Sign In page."
         );

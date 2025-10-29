@@ -1,14 +1,19 @@
 import React from "react";
 
-export default function OnboardingLayout({ stepper, children }) {
+export default function OnboardingLayout({ title, children }) {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6 md:p-8 space-y-6 grid grid-cols-1 md:[grid-template-columns:260px_1fr] gap-6">
-        {/* Left column: stepper (sticky on desktop) */}
-        <div className="hidden md:block md:sticky md:top-6">{stepper}</div>
-
-        {/* Right column: main content */}
-        <div>{children}</div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div
+        className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 space-y-5"
+        role="main"
+        data-testid="onboarding-layout"
+      >
+        {title ? (
+          <h2 className="text-xl font-semibold text-gray-800 text-center">
+            {title}
+          </h2>
+        ) : null}
+        <div className="space-y-4">{children}</div>
       </div>
     </div>
   );

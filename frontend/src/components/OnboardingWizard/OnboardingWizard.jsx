@@ -9,9 +9,12 @@ import {
   LucideTarget,
   LucideCheckCircle,
 } from "lucide-react";
-import Step1Signup from "./Step1Signup.jsx";
 import Step2Family from "./Step2Family.jsx";
+import ProfileStep from "../Onboarding/ProfileStep";
+import OnboardingLayout from "../Onboarding/OnboardingLayout";
+import OnboardingStepper from "../Onboarding/OnboardingStepper";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
 // TODO: Implement these steps with React Hook Form + Zod
 // import Step3DataSources from "./Step3DataSources";
 // import Step4IncomeExpense from "./Step4IncomeExpense";
@@ -30,16 +33,20 @@ const steps = [
 export default function OnboardingWizard() {
   const navigate = useNavigate();
   const [current, setCurrent] = React.useState(0);
+  const [completedSteps, setCompletedSteps] = React.useState([]);
 
   const handleComplete = async () => {
-    const session =
-      supabase.auth.getSession &&
-      (await supabase.auth.getSession()).data.session;
-    if (session?.user?.id) {
-      await supabase
-        .from("profiles")
-        .update({ is_onboarded: true })
-        .eq("id", session.user.id);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user ?? null;
+      if (user?.id) {
+        await supabase
+          .from("profiles")
+          .update({ is_onboarded: true })
+          .eq("id", user.id);
+      }
+    } catch (err) {
+      console.error("[OnboardingWizard][complete]", err);
     }
     navigate && navigate("/dashboard");
   };
@@ -49,42 +56,61 @@ export default function OnboardingWizard() {
   const handleBack = () => setCurrent((c) => Math.max(c - 1, 0));
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">{steps[current].label}</h2>
-      <div className="flex justify-between mb-8">
-        {steps.map((step, idx) => (
-          <div
-            key={step.label}
-            className={`flex flex-col items-center ${
-              idx === current ? "text-blue-600" : "text-gray-500"
-            }`}
-            data-testid={`onboarding-wizard-pill-${idx}`}
-          >
-            <step.icon className="w-6 h-6 mb-1" />
-            <span className="text-xs font-medium">{step.label}</span>
-          </div>
-        ))}
-      </div>
-
+    <OnboardingLayout
+      stepper={
+        <OnboardingStepper
+          steps={steps.map((s) => s.label)}
+          currentStep={current}
+          completedSteps={completedSteps}
+          onStepClick={(i) => {
+            // allow navigation only to visited steps
+            if (i <= current || completedSteps.includes(i)) setCurrent(i);
+          }}
+        />
+      }
+    >
       <div>
-        {current === 0 && <Step1Signup onNext={handleNext} />}
-        {current === 1 && (
-          <Step2Family onNext={handleNext} onBack={handleBack} />
-        )}
-        {/* Future steps will be conditionally rendered here */}
-        {current === steps.length - 1 && (
-          <div>
-            <button
-              type="button"
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-              data-testid="finish-onboarding"
-              onClick={handleComplete}
-            >
-              Complete Onboarding
-            </button>
-          </div>
-        )}
+        <h2 className="text-2xl font-bold mb-4">{steps[current].label}</h2>
+        <div>
+          {current === 0 && (
+            <ProfileStep
+              currentStep={0}
+              setCompleted={setCompletedSteps}
+              onNext={() => {
+                setCompletedSteps((c) =>
+                  Array.from(new Set([...(c || []), 0]))
+                );
+                handleNext();
+              }}
+            />
+          )}
+          {current === 1 && (
+            <Step2Family
+              onNext={() => {
+                setCompletedSteps((c) =>
+                  Array.from(new Set([...(c || []), 1]))
+                );
+                handleNext();
+              }}
+              onBack={handleBack}
+            />
+          )}
+
+          {/* Future steps will be conditionally rendered here */}
+          {current === steps.length - 1 && (
+            <div>
+              <button
+                type="button"
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+                data-testid="finish-onboarding"
+                onClick={handleComplete}
+              >
+                Complete Onboarding
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </OnboardingLayout>
   );
 }

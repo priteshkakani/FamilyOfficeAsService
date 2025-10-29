@@ -55,6 +55,7 @@ function RequireOnboarded({ children }) {
 }
 
 import OnboardingStepper from "./components/Onboarding/OnboardingStepper.jsx";
+import OnboardingFlow from "./pages/OnboardingFlow";
 import { useAuthState } from "./useAuthState";
 
 function OnboardingStepperGuard() {
@@ -1196,7 +1197,7 @@ export function AppRoutes() {
         path="/onboarding"
         element={
           <ProtectedRoute>
-            <OnboardingStepperGuard />
+            <OnboardingFlow />
           </ProtectedRoute>
         }
       />

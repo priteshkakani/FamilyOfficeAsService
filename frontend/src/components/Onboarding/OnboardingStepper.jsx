@@ -25,17 +25,24 @@ const StepItem = ({ idx, label, status, onClick, visited }) => {
   );
 };
 
-export default function OnboardingStepper({ steps, currentStep, onStepClick, completedSteps }) {
+export default function OnboardingStepper({
+  steps,
+  currentStep,
+  onStepClick,
+  completedSteps,
+}) {
   // Defensive defaults
   const safeSteps = Array.isArray(steps) ? steps : [];
   const safeCompleted = Array.isArray(completedSteps) ? completedSteps : [];
-  const safeOnClick = typeof onStepClick === "function" ? onStepClick : () => {};
+  const safeOnClick =
+    typeof onStepClick === "function" ? onStepClick : () => {};
 
   return (
     <nav aria-label="Onboarding steps" className="space-y-3">
       {safeSteps.map((s, idx) => {
         const done = safeCompleted.includes(idx) || false;
-        const status = idx === currentStep ? "active" : done ? "done" : "pending";
+        const status =
+          idx === currentStep ? "active" : done ? "done" : "pending";
         const visited = idx <= currentStep || done;
         return (
           <StepItem
@@ -51,4 +58,3 @@ export default function OnboardingStepper({ steps, currentStep, onStepClick, com
     </nav>
   );
 }
-

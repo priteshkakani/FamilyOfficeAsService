@@ -5,8 +5,33 @@ import { notifyError, notifySuccess } from "../../utils/toast";
 
 export default function FamilyStep({ userId, onChange, data }) {
   const [members, setMembers] = useState((data && data.family_members) || []);
-  const [form, setForm] = useState({ name: "", relation: "Spouse" });
+  const [form, setForm] = useState({ name: "", relation: "Spouse", dob: "" });
   const [saving, setSaving] = useState(false);
+
+  // Refresh family list helper
+  const refreshFamilyList = async () => {
+    try {
+      // Determine owner id: prefer prop, otherwise fall back to authenticated user
+      let ownerId = userId;
+      if (!ownerId) {
+        const { data: userData, error: uErr } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (uErr || !user) throw new Error("Not authenticated");
+        ownerId = user.id;
+      }
+
+      const { data: list, error } = await supabase
+        .from("family_members")
+        .select("id,name,relation,dob,notes")
+        .eq("user_id", ownerId);
+      if (error) throw error;
+      const next = list || [];
+      setMembers(next);
+      if (typeof onChange === "function") onChange(next);
+    } catch (err) {
+      console.error("[FamilyStep][refresh]", err);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -20,108 +45,126 @@ export default function FamilyStep({ userId, onChange, data }) {
         mounted = false;
       };
     }
-    if (!userId)
-      return () => {
-        mounted = false;
-      };
+    // Always attempt to refresh the list; refreshFamilyList will derive the
+    // authenticated user if userId prop is not provided.
     (async () => {
-      const { data } = await supabase
-        .from("family_members")
-        .select("id,name,relation")
-        .eq("user_id", userId);
-      const next = data || [];
-      if (mounted) {
-        setMembers(next);
-        if (typeof onChange === "function") onChange(next);
-      }
+      await refreshFamilyList();
     })();
     return () => {
       mounted = false;
     };
   }, [userId]);
 
-  const addMember = async () => {
-    if (!form.name) return notifyError("Member name required");
+  const addFamilyMember = async ({ name, relation, dob, notes } = {}) => {
+    if (!name) return notifyError("Member name required");
     setSaving(true);
-    let mounted = true;
     try {
-      // Optimistic UI update: add a temporary member immediately so the
-      // click handler results in a synchronous state update (prevents
-      // act(...) warnings in tests). Replace with server data once insert
-      // completes.
-      const temp = {
-        id: `temp-${Date.now()}`,
-        name: form.name,
-        relation: form.relation,
-      };
-      setMembers((cur) => {
-        const next = [...cur, temp];
-        if (typeof onChange === "function") onChange(next);
-        return next;
-      });
-      setForm({ name: "", relation: "Spouse" });
+      const { data: userData, error: uErr } = await supabase.auth.getUser();
+      const user = userData?.user;
+      if (uErr || !user) throw new Error("Not authenticated");
 
-      const { error } = await supabase.from("family_members").insert({
-        user_id: userId,
-        name: temp.name,
-        relation: temp.relation,
-      });
+      const payload = {
+        user_id: user.id,
+        name,
+        relation,
+        dob: dob || null,
+        notes: notes || null,
+      };
+
+      const { error } = await supabase.from("family_members").insert(payload);
       if (error) throw error;
-      notifySuccess("Member added");
-      const { data } = await supabase
-        .from("family_members")
-        .select("id,name,relation")
-        .eq("user_id", userId);
-      const next = data || [];
-      if (mounted) {
-        setMembers(next);
-        if (typeof onChange === "function") onChange(next);
-      }
-    } catch (e) {
-      console.error("[FamilyStep][add]", e && e.message ? e.message : e);
-      notifyError("Failed to add member");
+
+      notifySuccess("Family member added");
+      await refreshFamilyList();
+    } catch (err) {
+      console.error("[FamilyStep][add] RLS/DB error:", err);
+      notifyError(err.message || "Could not add family member");
     } finally {
-      if (mounted) setSaving(false);
+      setSaving(false);
     }
-    return () => {
-      mounted = false;
-    };
   };
 
   return (
     <OnboardingLayout title="Family">
       <div className="space-y-5" data-testid="onboarding-step-family">
-        <div className="flex gap-2">
-          <input
-            data-testid="family-name-input"
-            value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            placeholder="Member name"
-            className="border border-gray-300 rounded-lg p-2.5 w-full"
-          />
-          <select
-            value={form.relation}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, relation: e.target.value }))
-            }
-            className="border border-gray-300 rounded-lg p-2.5"
-          >
-            <option>Father</option>
-            <option>Mother</option>
-            <option>Spouse</option>
-            <option>Son</option>
-            <option>Daughter</option>
-            <option>Brother</option>
-            <option>Sister</option>
-          </select>
-          <button
-            data-testid="family-add-btn"
-            onClick={addMember}
-            disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4"
-          >
-            Add
-          </button>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Name</label>
+            <input
+              data-testid="family-name-input"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Member name"
+              className="w-full border rounded-lg p-2.5"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Relation</label>
+            <select
+              data-testid="family-relation-select"
+              value={form.relation}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, relation: e.target.value }))
+              }
+              className="w-full border rounded-lg p-2.5"
+            >
+              <option>Father</option>
+              <option>Mother</option>
+              <option>Spouse</option>
+              <option>Son</option>
+              <option>Daughter</option>
+              <option>Brother</option>
+              <option>Sister</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">
+              DOB (optional)
+            </label>
+            <input
+              type="date"
+              data-testid="family-dob-input"
+              value={form.dob}
+              onChange={(e) => setForm((f) => ({ ...f, dob: e.target.value }))}
+              className="w-full border rounded-lg p-2.5"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">
+              Notes (optional)
+            </label>
+            <input
+              data-testid="family-notes-input"
+              value={form.notes || ""}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, notes: e.target.value }))
+              }
+              placeholder="Notes"
+              className="w-full border rounded-lg p-2.5"
+            />
+          </div>
+
+          <div className="pt-1">
+            <button
+              data-testid="family-add-btn"
+              onClick={async () => {
+                await addFamilyMember({
+                  name: form.name,
+                  relation: form.relation,
+                  dob: form.dob,
+                  notes: form.notes,
+                });
+                setForm({ name: "", relation: "Spouse", dob: "", notes: "" });
+              }}
+              disabled={saving}
+              className="bg-blue-600 text-white rounded-lg px-4 py-2.5 hover:bg-blue-700 w-full"
+            >
+              {saving ? "Adding..." : "Add"}
+            </button>
+          </div>
         </div>
 
         <div>
@@ -140,6 +183,16 @@ export default function FamilyStep({ userId, onChange, data }) {
                   <div>
                     <div className="font-medium">{m.name}</div>
                     <div className="text-xs text-gray-500">{m.relation}</div>
+                    {m.dob ? (
+                      <div className="text-xs text-gray-400">
+                        DOB: {new Date(m.dob).toLocaleDateString()}
+                      </div>
+                    ) : null}
+                    {m.notes ? (
+                      <div className="text-xs text-gray-400 mt-1">
+                        {m.notes}
+                      </div>
+                    ) : null}
                   </div>
                 </li>
               ))}
