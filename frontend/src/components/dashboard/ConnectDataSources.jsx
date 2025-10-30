@@ -60,6 +60,7 @@ function ConnectDataSources() {
   const [lastSynced, setLastSynced] = useState(null);
   const [actionLoading, setActionLoading] = useState({});
   const [itrForm, setItrForm] = useState({ pan: "", year: "" });
+  // Track ITR form per card (avoid global reset)
   const [showItrForm, setShowItrForm] = useState(false);
   const [itrError, setItrError] = useState("");
 
@@ -109,9 +110,9 @@ function ConnectDataSources() {
         body: JSON.stringify({ pan: itrForm.pan, year: itrForm.year }),
       });
       if (res.ok) {
-        await fetchStatuses();
         setShowItrForm(false);
         setItrForm({ pan: "", year: "" });
+        await fetchStatuses();
       } else {
         const err = await res.json();
         setItrError(err.detail || "Failed to connect ITR");
@@ -248,7 +249,9 @@ function ConnectDataSources() {
                             )}
                           </div>
                         ) : (
-                          <div className="mb-3 text-xs text-gray-500">No sources connected yet</div>
+                          <div className="mb-3 text-xs text-gray-500">
+                            No sources connected yet
+                          </div>
                         )}
                         <button
                           className={`w-full py-2 px-4 rounded bg-blue-600 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50 mt-auto ${
