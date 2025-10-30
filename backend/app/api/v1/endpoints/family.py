@@ -16,6 +16,10 @@ def get_family(user_id: str):
 def add_family_member(user_id: str, member: dict):
     member["user_id"] = user_id
     supabase = get_supabase_client()
+    # Check for duplicate name for this user
+    existing = supabase.table("family_members").select("*").eq("user_id", user_id).eq("name", member["name"]).execute()
+    if existing["data"] and len(existing["data"]) > 0:
+        raise HTTPException(status_code=400, detail="Family member name already exists for this user.")
     result = supabase.table("family_members").insert(member).execute()
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"]["message"])
