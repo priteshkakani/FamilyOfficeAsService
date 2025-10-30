@@ -253,32 +253,45 @@ function ConnectDataSources() {
                             No sources connected yet
                           </div>
                         )}
-                        <button
-                          className={`w-full py-2 px-4 rounded bg-blue-600 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50 mt-auto ${
-                            actionLoading[ds.key]
-                              ? "opacity-60 cursor-wait"
-                              : "hover:bg-blue-700"
-                          }`}
-                          onClick={() =>
-                            handleConnect(ds.key, ds.connectEndpoint)
-                          }
-                          disabled={actionLoading[ds.key]}
-                          aria-label={
-                            status === "connected"
+                        {ds.key === "itr" && status === "not_connected" && !showItrForm ? (
+                          <button
+                            className={`w-full py-2 px-4 rounded bg-blue-600 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50 mt-auto ${
+                              actionLoading[ds.key]
+                                ? "opacity-60 cursor-wait"
+                                : "hover:bg-blue-700"
+                            }`}
+                            onClick={() => handleConnect(ds.key, ds.connectEndpoint)}
+                            disabled={actionLoading[ds.key]}
+                            aria-label="Connect"
+                          >
+                            {actionLoading[ds.key] ? "Loading..." : "Connect"}
+                          </button>
+                        ) : (
+                          <button
+                            className={`w-full py-2 px-4 rounded bg-blue-600 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50 mt-auto ${
+                              actionLoading[ds.key]
+                                ? "opacity-60 cursor-wait"
+                                : "hover:bg-blue-700"
+                            }`}
+                            onClick={() => handleConnect(ds.key, ds.connectEndpoint)}
+                            disabled={actionLoading[ds.key]}
+                            aria-label={
+                              status === "connected"
+                                ? "Manage"
+                                : status === "partial"
+                                ? "Reconnect"
+                                : "Connect"
+                            }
+                          >
+                            {actionLoading[ds.key]
+                              ? "Loading..."
+                              : status === "connected"
                               ? "Manage"
                               : status === "partial"
                               ? "Reconnect"
-                              : "Connect"
-                          }
-                        >
-                          {actionLoading[ds.key]
-                            ? "Loading..."
-                            : status === "connected"
-                            ? "Manage"
-                            : status === "partial"
-                            ? "Reconnect"
-                            : "Connect"}
-                        </button>
+                              : "Connect"}
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
