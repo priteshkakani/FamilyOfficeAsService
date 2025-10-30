@@ -60,9 +60,12 @@ function ConnectDataSources() {
   const [lastSynced, setLastSynced] = useState(null);
   const [actionLoading, setActionLoading] = useState({});
   const [itrForm, setItrForm] = useState({ pan: "", year: "" });
-  // Track ITR form per card (avoid global reset)
-  const [showItrForm, setShowItrForm] = useState(false);
-  const [itrError, setItrError] = useState("");
+  // Modal state for EPFO / ITR flows
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState(null); // 'itr' | 'epfo' | null
+  const [modalForm, setModalForm] = useState({ pan: "", year: "", mobile: "", otp: "" });
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState("");
 
   useEffect(() => {
     fetchStatuses();
@@ -83,8 +86,19 @@ function ConnectDataSources() {
   }
 
   async function handleConnect(key, endpoint) {
+    // Open modal for EPFO and ITR so user can enter required fields
     if (key === "itr") {
-      setShowItrForm(true);
+      setModalType("itr");
+      setModalForm({ pan: "", year: "", mobile: "", otp: "" });
+      setModalError("");
+      setModalVisible(true);
+      return;
+    }
+    if (key === "epfo") {
+      setModalType("epfo");
+      setModalForm({ pan: "", year: "", mobile: "", otp: "" });
+      setModalError("");
+      setModalVisible(true);
       return;
     }
     setActionLoading((prev) => ({ ...prev, [key]: true }));
@@ -101,26 +115,55 @@ function ConnectDataSources() {
   }
 
   async function submitItrForm(endpoint) {
-    setActionLoading((prev) => ({ ...prev, itr: true }));
-    setItrError("");
+    // keep backward compatible but now we use modalForm
+    setModalLoading(true);
+    setModalError("");
     try {
+      const body = { pan: modalForm.pan || itrForm.pan, year: modalForm.year || itrForm.year };
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pan: itrForm.pan, year: itrForm.year }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
-        setShowItrForm(false);
-        setItrForm({ pan: "", year: "" });
+        setModalVisible(false);
+        setModalForm({ pan: "", year: "", mobile: "", otp: "" });
         await fetchStatuses();
       } else {
         const err = await res.json();
-        setItrError(err.detail || "Failed to connect ITR");
+        setModalError(err.detail || "Failed to connect ITR");
       }
     } catch (e) {
-      setItrError("Network error");
+      setModalError("Network error");
     } finally {
-      setActionLoading((prev) => ({ ...prev, itr: false }));
+      setModalLoading(false);
+    }
+  }
+
+  async function submitEpfoForm(endpoint) {
+    setModalLoading(true);
+    setModalError("");
+    try {
+      const body = { pan: modalForm.pan, mobile: modalForm.mobile };
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Normally Surepass returns txn id — you may want to prompt for OTP next.
+        setModalVisible(false);
+        setModalForm({ pan: "", year: "", mobile: "", otp: "" });
+        await fetchStatuses();
+      } else {
+        const err = await res.json();
+        setModalError(err.detail || "Failed to generate EPFO OTP");
+      }
+    } catch (e) {
+      setModalError("Network error");
+    } finally {
+      setModalLoading(false);
     }
   }
 
@@ -169,66 +212,7 @@ function ConnectDataSources() {
                     >
                       {badge.text}
                     </span>
-                    {ds.key === "itr" && showItrForm ? (
-                      <form
-                        className="w-full mb-3 flex flex-col gap-2"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          submitItrForm(ds.connectEndpoint);
-                        }}
-                        aria-label="ITR Connect Form"
-                      >
-                        <input
-                          type="text"
-                          className="border rounded px-2 py-1"
-                          placeholder="PAN"
-                          value={itrForm.pan}
-                          onChange={(e) =>
-                            setItrForm((f) => ({ ...f, pan: e.target.value }))
-                          }
-                          required
-                          aria-label="PAN"
-                        />
-                        <input
-                          type="text"
-                          className="border rounded px-2 py-1"
-                          placeholder="Year (e.g. 2024)"
-                          value={itrForm.year}
-                          onChange={(e) =>
-                            setItrForm((f) => ({ ...f, year: e.target.value }))
-                          }
-                          required
-                          aria-label="Year"
-                        />
-                        {itrError && (
-                          <div className="text-red-600 text-xs">{itrError}</div>
-                        )}
-                        <div className="flex gap-2">
-                          <button
-                            type="submit"
-                            className={`py-2 px-4 rounded bg-blue-600 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50 ${
-                              actionLoading.itr
-                                ? "opacity-60 cursor-wait"
-                                : "hover:bg-blue-700"
-                            }`}
-                            disabled={actionLoading.itr}
-                          >
-                            {actionLoading.itr ? "Connecting..." : "Submit"}
-                          </button>
-                          <button
-                            type="button"
-                            className="py-2 px-4 rounded bg-gray-200 text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-gray-400"
-                            onClick={() => {
-                              setShowItrForm(false);
-                              setItrError("");
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <>
+                    <>
                         {summary &&
                         (status === "connected" || status === "partial") ? (
                           <div
@@ -253,14 +237,18 @@ function ConnectDataSources() {
                             No sources connected yet
                           </div>
                         )}
-                        {ds.key === "itr" && status === "not_connected" && !showItrForm ? (
+                        {ds.key === "itr" &&
+                        status === "not_connected" &&
+                        !showItrForm ? (
                           <button
                             className={`w-full py-2 px-4 rounded bg-blue-600 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50 mt-auto ${
                               actionLoading[ds.key]
                                 ? "opacity-60 cursor-wait"
                                 : "hover:bg-blue-700"
                             }`}
-                            onClick={() => handleConnect(ds.key, ds.connectEndpoint)}
+                            onClick={() =>
+                              handleConnect(ds.key, ds.connectEndpoint)
+                            }
                             disabled={actionLoading[ds.key]}
                             aria-label="Connect"
                           >
@@ -273,7 +261,9 @@ function ConnectDataSources() {
                                 ? "opacity-60 cursor-wait"
                                 : "hover:bg-blue-700"
                             }`}
-                            onClick={() => handleConnect(ds.key, ds.connectEndpoint)}
+                            onClick={() =>
+                              handleConnect(ds.key, ds.connectEndpoint)
+                            }
                             disabled={actionLoading[ds.key]}
                             aria-label={
                               status === "connected"
@@ -293,7 +283,6 @@ function ConnectDataSources() {
                           </button>
                         )}
                       </>
-                    )}
                   </div>
                 );
               })}
