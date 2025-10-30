@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -69,6 +69,8 @@ export default function OnboardingFlow() {
     fetchGoals,
   } = useOnboardingState();
 
+  const location = useLocation();
+
   // Per-step fetch on mount or step change
   useEffect(() => {
     if (stepIndex === 0) fetchProfile();
@@ -76,6 +78,41 @@ export default function OnboardingFlow() {
     else if (stepIndex === 4) fetchGoals();
     // Add fetchDataSources, fetchIncomeExpenses as needed
     // eslint-disable-next-line
+  }, [stepIndex]);
+
+  // Sync stepIndex with ?tab= query param so switching tabs doesn't change route
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab) {
+      const mapping = {
+        profile: 0,
+        family: 1,
+        dataSources: 2,
+        incomeExpense: 3,
+        goals: 4,
+        summary: 5,
+      };
+      const idx = mapping[tab] ?? null;
+      if (typeof idx === "number" && idx !== stepIndex) setStepIndex(idx);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update query param when step changes
+  useEffect(() => {
+    const mapping = [
+      "profile",
+      "family",
+      "dataSources",
+      "incomeExpense",
+      "goals",
+      "summary",
+    ];
+    const params = new URLSearchParams(location.search);
+    params.set("tab", mapping[stepIndex]);
+    navigate({ search: params.toString() }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepIndex]);
 
   useEffect(() => {

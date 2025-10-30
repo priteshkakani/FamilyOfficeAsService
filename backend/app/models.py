@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Date, Enum, ForeignKey, JSON, Bo
 from sqlalchemy.orm import relationship
 from .database import Base
 import uuid
+import datetime
 
 class User(Base):
     __tablename__ = "users"
@@ -69,3 +70,23 @@ class ExpenseRecord(Base):
     notes = Column(String(255))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+
+
+class EPFOOTPRequest(Base):
+    __tablename__ = "epfo_otp_requests"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    pan = Column(String(64))
+    mobile = Column(String(20))
+    transaction_id = Column(String(128), index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.utcnow())
+
+
+class EPFOSummary(Base):
+    __tablename__ = "epfo_summaries"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    transaction_id = Column(String(128), index=True)
+    raw_json = Column(JSON)
+    normalized_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.utcnow())

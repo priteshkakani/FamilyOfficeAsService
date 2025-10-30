@@ -1,5 +1,5 @@
 import React from "react";
-import { useClient } from "../../contexts/ClientContext";
+import { useClient } from "../../hooks/useClientContext";
 import useClientData from "../../hooks/useClientData";
 
 export default function DocumentsConsents() {

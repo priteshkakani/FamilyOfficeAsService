@@ -3,7 +3,7 @@ import ClientSwitcher from "./ClientSwitcher";
 import SettingsModal from "./SettingsModal";
 import { useNavigate } from "react-router-dom";
 import supabase from "../../supabaseClient";
-import { useClient } from "../../contexts/ClientContext";
+import { useClient } from "../../hooks/useClientContext";
 import { RefreshCcw, Settings, LogOut } from "lucide-react";
 
 export default function Topbar() {
@@ -24,9 +24,33 @@ export default function Topbar() {
     window.dispatchEvent(new Event("refresh-client-data"));
   };
 
+  const [showResume, setShowResume] = useState(false);
+  React.useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      const userId = data?.user?.id;
+      if (!userId) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_onboarded,onboarding_step")
+        .eq("id", userId)
+        .maybeSingle();
+      if (!profile?.is_onboarded) setShowResume(true);
+      else setShowResume(false);
+      console.log("[Dashboard][onboarding state]", profile);
+    });
+  }, []);
   return (
     <header className="flex items-center justify-between py-4 border-b bg-white px-6 shadow-sm">
       <div className="flex items-center gap-4">
+        {showResume && (
+          <a
+            href="/onboarding"
+            className="text-blue-600 underline text-sm ml-2"
+            data-testid="resume-onboarding-link"
+          >
+            Resume Onboarding
+          </a>
+        )}
         <h1 className="text-2xl font-semibold text-gray-800">
           Advisor Dashboard
         </h1>

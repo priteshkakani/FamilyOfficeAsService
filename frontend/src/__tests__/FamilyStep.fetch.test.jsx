@@ -30,14 +30,29 @@ describe("FamilyStep fetch", () => {
 
   it("shows loading then renders items when fetch returns data", async () => {
     // mock getUser
-    supabase.auth.getUser.mockResolvedValue({ data: { user: { id: "user-1" } }, error: null });
+    supabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: "user-1" } },
+      error: null,
+    });
 
     const fakeList = [
-      { id: "1", name: "Alice", relation: "Spouse", created_at: "2025-01-01T00:00:00Z" },
-      { id: "2", name: "Bob", relation: "Son", created_at: "2025-02-01T00:00:00Z" },
+      {
+        id: "1",
+        name: "Alice",
+        relation: "Spouse",
+        created_at: "2025-01-01T00:00:00Z",
+      },
+      {
+        id: "2",
+        name: "Bob",
+        relation: "Son",
+        created_at: "2025-02-01T00:00:00Z",
+      },
     ];
 
-    const selectMock = vi.fn().mockResolvedValue({ data: fakeList, error: null });
+    const selectMock = vi
+      .fn()
+      .mockResolvedValue({ data: fakeList, error: null });
     const fromMock = vi.fn(() => ({ select: selectMock }));
     supabase.from = fromMock;
 
@@ -55,7 +70,10 @@ describe("FamilyStep fetch", () => {
   });
 
   it("shows empty state when no members", async () => {
-    supabase.auth.getUser.mockResolvedValue({ data: { user: { id: "user-2" } }, error: null });
+    supabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: "user-2" } },
+      error: null,
+    });
     const selectMock = vi.fn().mockResolvedValue({ data: [], error: null });
     supabase.from = vi.fn(() => ({ select: selectMock }));
 
@@ -68,8 +86,13 @@ describe("FamilyStep fetch", () => {
   });
 
   it("shows error when fetch fails", async () => {
-    supabase.auth.getUser.mockResolvedValue({ data: { user: { id: "user-3" } }, error: null });
-    const selectMock = vi.fn().mockResolvedValue({ data: null, error: { message: "db error" } });
+    supabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: "user-3" } },
+      error: null,
+    });
+    const selectMock = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: "db error" } });
     supabase.from = vi.fn(() => ({ select: selectMock }));
 
     render(<FamilyStep />);

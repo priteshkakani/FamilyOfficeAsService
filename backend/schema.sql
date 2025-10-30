@@ -30,7 +30,7 @@ CREATE TABLE users
             AUTO_INCREMENT PRIMARY KEY,
     household_id INT,
     name VARCHAR
-        (100),
+            (100),
     relationship VARCHAR
             (50),
     role ENUM
@@ -127,7 +127,9 @@ CREATE TABLE users
                     CREATE POLICY "Users can insert their own income" ON income_records
     FOR
                     INSERT WITH CHECK
-                        (user_id = auth.uid()
+                        (user_id
+                    = auth.uid
+                    ()
        
                               
                       );
@@ -140,7 +142,9 @@ CREATE TABLE users
                     CREATE POLICY "Users can insert their own expenses" ON expense_records
     FOR
                     INSERT WITH CHECK
-                        (user_id = auth.uid()
+                        (user_id
+                    = auth.uid
+                    ()
        
                               
                       );

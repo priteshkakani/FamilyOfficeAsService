@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../../supabaseClient";
+import { useClient } from "../../hooks/useClientContext";
 import { notifyError, notifySuccess } from "../../utils/toast";
 import ModalWrapper from "../ModalWrapper";
 
@@ -23,12 +24,34 @@ export default function EPFOModal({ open, onClose, userId }) {
     }
     setBusy(true);
     try {
-      const res = await fetch("/surepass/epfo/generate-otp", {
+      // include auth token so backend can identify user
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch("/api/surepass/epfo/generate-otp", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uan: form.uan }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ pan: form.uan, mobile: "" }),
       });
-      if (!res.ok) throw new Error("Failed to generate OTP");
+      const payload = await res.json();
+      if (!res.ok) {
+        // vendor or app-level error
+        const msg =
+          payload?.detail || payload?.message || "Failed to generate OTP";
+        throw new Error(msg);
+      }
+      const txn =
+        payload.transaction_id ||
+        payload.transactionId ||
+        (payload.raw && payload.raw.request_id) ||
+        null;
+      if (txn) {
+        localStorage.setItem("epfo_transaction_id", txn);
+      }
       notifySuccess("OTP sent to your registered mobile");
       setStep(2);
     } catch (e) {
@@ -46,28 +69,45 @@ export default function EPFOModal({ open, onClose, userId }) {
     }
     setBusy(true);
     try {
-      const res = await fetch("/surepass/epfo/submit-otp", {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const txn = localStorage.getItem("epfo_transaction_id");
+      const res = await fetch("/api/surepass/epfo/verify-otp", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uan: form.uan, otp: form.otp }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          transaction_id: txn || form.txn_id,
+          otp: form.otp,
+        }),
       });
-      if (!res.ok) throw new Error("OTP verification failed");
-      notifySuccess("OTP verified. Fetching passbook...");
-      // Fetch passbook
-      const passbookRes = await fetch("/surepass/epfo/passbook", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uan: form.uan }),
-      });
-      if (!passbookRes.ok) throw new Error("Failed to fetch passbook");
-      const snapshot = await passbookRes.json();
-      // Save to Supabase
-      await supabase.from("epfo_passbooks").insert({
-        user_id: userId,
-        uan: form.uan,
-        snapshot,
-        fetched_at: new Date().toISOString(),
-      });
+      const payload = await res.json();
+      if (!res.ok) {
+        const msg =
+          payload?.detail || payload?.message || "OTP verification failed";
+        if (res.status === 424)
+          notifyError("Vendor temporarily unavailable. Try again.");
+        throw new Error(msg);
+      }
+      notifySuccess("OTP verified. Connected EPFO.");
+      // Optionally save to Supabase client-side if backend didn't
+      try {
+        if (payload?.data) {
+          await supabase.from("epfo_passbooks").insert({
+            user_id: userId,
+            uan: form.uan,
+            snapshot: payload.data,
+            fetched_at: new Date().toISOString(),
+          });
+        }
+      } catch (e) {
+        // non-fatal: backend already persisted
+        console.warn("Failed to persist EPFO passbook client-side", e);
+      }
       await supabase.from("consents").insert({
         user_id: userId,
         source: "EPFO",
@@ -85,9 +125,18 @@ export default function EPFOModal({ open, onClose, userId }) {
   };
 
   return (
-    <ModalWrapper open={open} onClose={onClose} ariaLabelledBy="modal-title" ariaDescribedBy="modal-desc-epfo">
+    <ModalWrapper
+      open={open}
+      onClose={onClose}
+      ariaLabelledBy="modal-title"
+      ariaDescribedBy="modal-desc-epfo"
+    >
       <div className="flex justify-between items-center mb-2">
-        <h2 id="modal-title" className="text-lg font-semibold" data-testid="modal-title">
+        <h2
+          id="modal-title"
+          className="text-lg font-semibold"
+          data-testid="modal-title"
+        >
           Connect EPFO
         </h2>
         <button
@@ -99,7 +148,10 @@ export default function EPFOModal({ open, onClose, userId }) {
           ✕
         </button>
       </div>
-      <p id="modal-desc-epfo" className="text-sm text-gray-500">We use UAN + OTP to fetch your EPFO passbook snapshot with your consent; we store only the snapshot and consent record.</p>
+      <p id="modal-desc-epfo" className="text-sm text-gray-500">
+        We use UAN + OTP to fetch your EPFO passbook snapshot with your consent;
+        we store only the snapshot and consent record.
+      </p>
       {step === 1 ? (
         <form onSubmit={handleGenerateOTP} className="space-y-4">
           <div>

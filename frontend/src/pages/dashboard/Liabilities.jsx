@@ -1,12 +1,8 @@
 import React from "react";
-
-export default function Liabilities() {
-  return <div data-testid="page-liabilities">Liabilities page (placeholder)</div>;
-}
-import React from "react";
 import { useClient } from "../../hooks/useClientContext";
 import useClientData from "../../hooks/useClientData";
 import DataTable from "../../components/dashboard/DataTable";
+import { supabase } from "../../supabaseClient";
 
 export default function Liabilities() {
   const { selectedClient } = useClient();
@@ -18,9 +14,7 @@ export default function Liabilities() {
     let mounted = true;
     async function load() {
       if (!selectedClient) return;
-      const { data, error } = await (
-        await import("../../supabaseClient")
-      ).supabase
+      const { data, error } = await supabase
         .from("liabilities")
         .select("*")
         .eq("user_id", selectedClient);

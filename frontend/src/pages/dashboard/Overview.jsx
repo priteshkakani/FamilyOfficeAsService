@@ -1,5 +1,6 @@
-import React from "react";
-import { useClient } from "../../contexts/ClientContext";
+import React, { useState } from "react";
+import formatINR from "../../utils/formatINR";
+import { useClient } from "../../hooks/useClientContext";
 import useClientData from "../../hooks/useClientData";
 import KpiCard from "../../components/dashboard/KpiCard";
 import IncomeExpenseChart from "../../components/dashboard/IncomeExpenseChart";
@@ -15,25 +16,36 @@ export default function Overview() {
   const monthlyCashflow = views?.cashflow || [];
   const assetAllocation = views?.allocation || [];
 
-  const monthlyIncome =
-    profile?.monthly_income ||
-    (monthlyCashflow.length
-      ? monthlyCashflow.reduce(
-          (s, m) => s + Number(m.total_income || m.income || 0),
-          0
-        ) / monthlyCashflow.length
-      : 0);
-  const monthlyExpenses =
-    profile?.monthly_expenses ||
-    (monthlyCashflow.length
-      ? monthlyCashflow.reduce(
-          (s, m) => s + Number(m.total_expenses || m.expenses || 0),
-          0
-        ) / monthlyCashflow.length
-      : 0);
+  // Use monthly_income_details if present
+  const monthlyIncomeDetails = profile?.monthly_income_details || {};
+  const [incomeInput, setIncomeInput] = useState(
+    monthlyIncomeDetails.income || ""
+  );
+  const [expenseInput, setExpenseInput] = useState(
+    monthlyIncomeDetails.expense || ""
+  );
+  const monthlyIncome = Number(incomeInput || 0);
+  const monthlyExpenses = Number(expenseInput || 0);
   const savingsRate = monthlyIncome
     ? Math.round(((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100)
     : 0;
+
+  // Save handler
+  const handleSaveIncomeExpense = async () => {
+    if (!userId) return;
+    const payload = {
+      monthly_income_details: {
+        income: Number(incomeInput || 0),
+        expense: Number(expenseInput || 0),
+      },
+    };
+    await fetch(`/api/profile`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, ...payload }),
+    });
+    refresh && refresh();
+  };
 
   return (
     <div data-testid="overview-page" className="space-y-6">
@@ -59,27 +71,61 @@ export default function Overview() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <KpiCard
-          title="Net Worth"
-          value={Number(netWorth || 0)}
-          testid="kpi-networth"
-        />
-        <KpiCard
-          title="Monthly Income"
-          value={Number(monthlyIncome || 0)}
-          testid="kpi-income"
-        />
-        <KpiCard
-          title="Monthly Expenses"
-          value={Number(monthlyExpenses || 0)}
-          testid="kpi-expenses"
-        />
-        <KpiCard
-          title="Savings Rate"
-          value={`${savingsRate}%`}
-          testid="kpi-savings"
-        />
+      <div className="flex justify-center items-center py-8">
+        <form
+          className="bg-white rounded-xl shadow-lg px-8 py-6 flex flex-col items-center w-full max-w-2xl"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSaveIncomeExpense();
+          }}
+        >
+          <h3 className="text-xl font-semibold mb-6">Income & Expenses</h3>
+          <div className="flex flex-row gap-6 w-full justify-center">
+            <div className="flex flex-col items-start">
+              <label className="mb-2 font-medium text-gray-700">
+                Monthly Income
+              </label>
+              <input
+                type="number"
+                value={incomeInput}
+                min={0}
+                onChange={(e) => setIncomeInput(e.target.value)}
+                className="border rounded px-4 py-2 w-40 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0"
+              />
+            </div>
+            <div className="flex flex-col items-start">
+              <label className="mb-2 font-medium text-gray-700">
+                Monthly Expenses
+              </label>
+              <input
+                type="number"
+                value={expenseInput}
+                min={0}
+                onChange={(e) => setExpenseInput(e.target.value)}
+                className="border rounded px-4 py-2 w-40 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0"
+              />
+            </div>
+            <div className="flex flex-col items-start">
+              <label className="mb-2 font-medium text-gray-700">
+                Savings Rate
+              </label>
+              <input
+                type="text"
+                value={`${savingsRate}%`}
+                readOnly
+                className="border rounded px-4 py-2 w-32 text-right bg-gray-50 text-gray-700"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            className="mt-6 bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition"
+          >
+            Save Income & Expense
+          </button>
+        </form>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -99,8 +145,7 @@ export default function Overview() {
                     <div>
                       <div className="font-semibold">{g.title}</div>
                       <div className="text-xs text-gray-500">
-                        Target: ₹
-                        {Number(g.target_amount || 0).toLocaleString("en-IN")}
+                        Target: {formatINR(g.target_amount)}
                       </div>
                     </div>
                     <div className="text-xs text-gray-400">{g.target_date}</div>

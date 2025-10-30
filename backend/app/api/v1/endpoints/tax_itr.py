@@ -4,6 +4,41 @@ from app.supabase_client import get_supabase_client
 import requests
 import os
 import datetime
+from pydantic import BaseModel
+
+router = APIRouter()
+
+SUREPASS_API_KEY = os.getenv("SUREPASS_API_KEY", "<your-surepass-api-key>")
+SUREPASS_BASE_URL = "https://api.surepass.io/v1"
+
+class AISRequest(BaseModel):
+    pan: str
+    year: str
+
+@router.post("/surepass/itr/ais")
+async def itr_ais(payload: AISRequest, user=Depends(verify_jwt_token)):
+    try:
+        uid = user.get("sub")
+        pan = payload.pan
+        year = payload.year
+        if not (uid and pan and year):
+            raise HTTPException(status_code=400, detail="user_id, pan, year required")
+        headers = {"Authorization": f"Bearer {SUREPASS_API_KEY}"}
+        ais_url = f"{SUREPASS_BASE_URL}/itr/ais"
+        ais_resp = requests.post(ais_url, json={"pan": pan, "year": year}, headers=headers)
+        if ais_resp.status_code != 200:
+            raise HTTPException(status_code=400, detail="AIS fetch failed")
+        ais_data = ais_resp.json()
+        # TODO: normalize/store as needed
+        return {"success": True, "data": ais_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch AIS: {str(e)}")
+from fastapi import APIRouter, HTTPException, Request, Depends
+from app.auth import verify_jwt_token
+from app.supabase_client import get_supabase_client
+import requests
+import os
+import datetime
 
 router = APIRouter()
 

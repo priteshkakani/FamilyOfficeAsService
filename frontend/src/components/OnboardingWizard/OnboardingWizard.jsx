@@ -76,6 +76,7 @@ export default function OnboardingWizard() {
             <ProfileStep
               currentStep={0}
               setCompleted={setCompletedSteps}
+              showTitle={false}
               onNext={() => {
                 setCompletedSteps((c) =>
                   Array.from(new Set([...(c || []), 0]))

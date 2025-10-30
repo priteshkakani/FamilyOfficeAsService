@@ -3,6 +3,7 @@ import OnboardingLayout from "../../layouts/OnboardingLayout";
 import { supabase } from "../../supabaseClient";
 import { notifyError, notifySuccess } from "../../utils/toast";
 import LoadingSpinner from "../LoadingSpinner";
+import formatINR from "../../utils/formatINR";
 
 const INCOME_KEYS = ["salary", "business", "rent", "dividends", "other_income"];
 const EXPENSE_KEYS = [
@@ -120,7 +121,7 @@ export default function IncomeExpenseStep({ userId, data, onChange }) {
             ))}
           </div>
           <div className="mt-2 font-medium">
-            Total Income: \u20b9{totalIncome}
+            Total Income: {formatINR(totalIncome)}
           </div>
         </div>
 
@@ -148,7 +149,7 @@ export default function IncomeExpenseStep({ userId, data, onChange }) {
             ))}
           </div>
           <div className="mt-2 font-medium">
-            Total Expenses: \u20b9{totalExpenses}
+            Total Expenses: {formatINR(totalExpenses)}
           </div>
         </div>
 

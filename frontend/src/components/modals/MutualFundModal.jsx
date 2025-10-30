@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../../supabaseClient";
+import { useClient } from "../../hooks/useClientContext";
 import { notifyError, notifySuccess } from "../../utils/toast";
 import ModalWrapper from "../ModalWrapper";
 
@@ -43,9 +44,18 @@ export default function MutualFundModal({ open, onClose, userId }) {
     }
   };
   return (
-    <ModalWrapper open={open} onClose={onClose} ariaLabelledBy="modal-title" ariaDescribedBy="modal-desc-mf">
+    <ModalWrapper
+      open={open}
+      onClose={onClose}
+      ariaLabelledBy="modal-title"
+      ariaDescribedBy="modal-desc-mf"
+    >
       <div className="flex justify-between items-center mb-2">
-        <h2 id="modal-title" className="text-lg font-semibold" data-testid="modal-title">
+        <h2
+          id="modal-title"
+          className="text-lg font-semibold"
+          data-testid="modal-title"
+        >
           Connect Mutual Fund
         </h2>
         <button
@@ -57,7 +67,10 @@ export default function MutualFundModal({ open, onClose, userId }) {
           ✕
         </button>
       </div>
-      <p id="modal-desc-mf" className="text-sm text-gray-500">We only store identifiers (PAN) and your consent. No credentials are stored.</p>
+      <p id="modal-desc-mf" className="text-sm text-gray-500">
+        We only store identifiers (PAN) and your consent. No credentials are
+        stored.
+      </p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block mb-1 font-medium">RTA</label>

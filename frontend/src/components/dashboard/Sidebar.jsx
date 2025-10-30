@@ -18,6 +18,7 @@ const items = [
   { to: "/dashboard/liabilities", label: "Liabilities", Icon: CreditCard },
   { to: "/dashboard/cashflow", label: "Cashflow", Icon: DollarSign },
   { to: "/dashboard/goals", label: "Goals", Icon: Target },
+  { to: "/dashboard/family", label: "Family", Icon: CheckSquare },
   {
     to: "/dashboard/recommendations",
     label: "Recommendations",

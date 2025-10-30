@@ -165,7 +165,9 @@ export function useOnboardingState() {
           await supabaseSafeQuery("insertGoals", () =>
             supabase
               .from("goals")
-              .insert(newState.goals.map((goal) => ({ goal, user_id: userId })))
+              .insert(
+                newState.goals.map((goal) => ({ ...goal, user_id: userId }))
+              )
           );
         }
       } else if (stepKey === "dataSources" || stepKey === "incomeExpense") {

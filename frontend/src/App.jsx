@@ -1174,10 +1174,18 @@ import { supabase } from "./supabaseClient";
 
 // Extracted AppRoutes for testability
 export function AppRoutes() {
-  // Lazy load DashboardHomeTab for test mocking
-  const DashboardHomeTab = React.lazy(() =>
-    import("./components/DashboardHomeTab")
+  // Lazy load all dashboard sub-tab pages
+  const DashboardShell = React.lazy(() => import("./pages/DashboardShell.jsx"));
+  // Placeholder lazy imports for sub-tab pages
+  const OverviewFeeds = React.lazy(() =>
+    import("./pages/dashboard/Overview.jsx")
   );
+  const PortfolioSummary = React.lazy(() =>
+    import("./pages/dashboard/Portfolio.jsx")
+  );
+  const PlanSummary = React.lazy(() => import("./pages/dashboard/Goals.jsx"));
+  // ...add other sub-tab lazy imports as needed
+  const NotFoundPage = React.lazy(() => import("./NotFoundPage.jsx"));
   const ForgotPassword = React.lazy(() => import("./ForgotPassword"));
   return (
     <Routes>
@@ -1192,7 +1200,6 @@ export function AppRoutes() {
           </React.Suspense>
         }
       />
-
       <Route
         path="/onboarding"
         element={
@@ -1202,90 +1209,86 @@ export function AppRoutes() {
         }
       />
       <Route
-        path="/dashboard"
+        path="/dashboard/*"
         element={
           <ProtectedRoute>
             <RequireOnboarded>
               <React.Suspense fallback={<DashboardSkeleton />}>
-                <DashboardHomeTab />
+                <DashboardShell />
               </React.Suspense>
             </RequireOnboarded>
           </ProtectedRoute>
         }
-      />
+      >
+        {/* Overview Section */}
+        <Route index element={<Navigate to="overview/feeds" replace />} />
+        <Route path="overview">
+          <Route index element={<Navigate to="feeds" replace />} />
+          <Route
+            path="feeds"
+            element={
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <OverviewFeeds />
+              </React.Suspense>
+            }
+          />
+          {/* Add other overview sub-tabs here */}
+        </Route>
+        {/* Portfolio Section */}
+        <Route path="portfolio">
+          <Route index element={<Navigate to="summary" replace />} />
+          <Route
+            path="summary"
+            element={
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <PortfolioSummary />
+              </React.Suspense>
+            }
+          />
+          {/* Add other portfolio sub-tabs here */}
+        </Route>
+        {/* Plan Section */}
+        <Route path="plan">
+          <Route index element={<Navigate to="summary" replace />} />
+          <Route
+            path="summary"
+            element={
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <PlanSummary />
+              </React.Suspense>
+            }
+          />
+          {/* Add other plan sub-tabs here */}
+        </Route>
+        {/* Activity Section */}
+        <Route path="activity">
+          <Route index element={<Navigate to="notes" replace />} />
+          {/* Add activity sub-tabs here */}
+        </Route>
+        {/* Transactions Section */}
+        <Route path="transactions">
+          <Route index element={<Navigate to="mandates" replace />} />
+          {/* Add transactions sub-tabs here */}
+        </Route>
+        {/* Fallback for unmatched dashboard routes */}
+        <Route
+          path="*"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <NotFoundPage />
+            </React.Suspense>
+          }
+        />
+      </Route>
+      {/* Fallback for unmatched routes */}
       <Route
-        path="/dashboard/assets"
+        path="*"
         element={
-          <ProtectedRoute>
-            <RequireOnboarded>
-              <React.Suspense fallback={<DashboardSkeleton />}>
-                <AssetsPage />
-              </React.Suspense>
-            </RequireOnboarded>
-          </ProtectedRoute>
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <NotFoundPage />
+          </React.Suspense>
         }
       />
-      <Route
-        path="/dashboard/liabilities"
-        element={
-          <ProtectedRoute>
-            <RequireOnboarded>
-              <React.Suspense fallback={<DashboardSkeleton />}>
-                <LiabilitiesPage />
-              </React.Suspense>
-            </RequireOnboarded>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/insurance"
-        element={
-          <ProtectedRoute>
-            <RequireOnboarded>
-              <React.Suspense fallback={<DashboardSkeleton />}>
-                <InsurancePage />
-              </React.Suspense>
-            </RequireOnboarded>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/epfo"
-        element={
-          <ProtectedRoute>
-            <RequireOnboarded>
-              <React.Suspense fallback={<DashboardSkeleton />}>
-                <EPFOPage />
-              </React.Suspense>
-            </RequireOnboarded>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/reports"
-        element={
-          <ProtectedRoute>
-            <RequireOnboarded>
-              <React.Suspense fallback={<DashboardSkeleton />}>
-                <ReportsPage />
-              </React.Suspense>
-            </RequireOnboarded>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/income-expense"
-        element={
-          <ProtectedRoute>
-            <RequireOnboarded>
-              <React.Suspense fallback={<DashboardSkeleton />}>
-                <IncomeExpensePage />
-              </React.Suspense>
-            </RequireOnboarded>
-          </ProtectedRoute>
-        }
-      />
-      {/* Add more dashboard routes as needed */}
     </Routes>
   );
 }

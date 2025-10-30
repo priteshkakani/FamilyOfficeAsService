@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../../supabaseClient";
+import { useClient } from "../../hooks/useClientContext";
 import { notifyError, notifySuccess } from "../../utils/toast";
 import ModalWrapper from "../ModalWrapper";
 
@@ -74,9 +75,18 @@ export default function BankModal({ open, onClose, userId }) {
   };
 
   return (
-    <ModalWrapper open={open} onClose={onClose} ariaLabelledBy="modal-title" ariaDescribedBy="modal-desc-bank">
+    <ModalWrapper
+      open={open}
+      onClose={onClose}
+      ariaLabelledBy="modal-title"
+      ariaDescribedBy="modal-desc-bank"
+    >
       <div className="flex justify-between items-center mb-2">
-        <h2 id="modal-title" className="text-lg font-semibold" data-testid="modal-title">
+        <h2
+          id="modal-title"
+          className="text-lg font-semibold"
+          data-testid="modal-title"
+        >
           Connect Bank
         </h2>
         <button
@@ -88,7 +98,10 @@ export default function BankModal({ open, onClose, userId }) {
           ✕
         </button>
       </div>
-      <p id="modal-desc-bank" className="text-sm text-gray-500">We store a masked account number and IFSC for read-only display; no credentials are stored.</p>
+      <p id="modal-desc-bank" className="text-sm text-gray-500">
+        We store a masked account number and IFSC for read-only display; no
+        credentials are stored.
+      </p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block mb-1 font-medium">Bank Name</label>
@@ -135,7 +148,9 @@ export default function BankModal({ open, onClose, userId }) {
             onChange={handleInput}
             className="form-checkbox"
           />
-          <span className="text-sm">I consent to connect this bank account</span>
+          <span className="text-sm">
+            I consent to connect this bank account
+          </span>
         </div>
         <button
           type="submit"

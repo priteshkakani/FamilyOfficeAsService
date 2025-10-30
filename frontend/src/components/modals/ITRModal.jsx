@@ -4,6 +4,11 @@ import { notifyError, notifySuccess } from "../../utils/toast";
 import ModalWrapper from "../ModalWrapper";
 
 export default function ITRModal({ open, onClose, userId }) {
+  React.useEffect(() => {
+    if (open) {
+      console.log("[ITRModal] Modal is now visible");
+    }
+  }, [open]);
   const [form, setForm] = useState({ pan: "", year: "", consent: false });
   const [busy, setBusy] = useState(false);
   if (!open) return null;
@@ -19,7 +24,7 @@ export default function ITRModal({ open, onClose, userId }) {
     }
     setBusy(true);
     try {
-      const res = await fetch("/surepass/itr/ais", {
+      const res = await fetch("/api/surepass/itr/ais", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pan: form.pan, year: form.year }),
@@ -40,16 +45,24 @@ export default function ITRModal({ open, onClose, userId }) {
         status: "approved",
         meta: {},
       });
-      notifySuccess("ITR AIS connected");
+      notifySuccess("ITR/AIS fetched");
+      if (window.refreshConnectedSources) window.refreshConnectedSources();
       onClose(true);
     } catch (e) {
+      console.error("[ITRModal][submit]", e);
       notifyError(`[ITRModal][fetch] ${e.message}`);
     } finally {
       setBusy(false);
     }
   };
   return (
-    <ModalWrapper open={open} onClose={onClose} ariaLabelledBy="modal-title">
+    <ModalWrapper
+      open={open}
+      onClose={onClose}
+      ariaLabelledBy="modal-title"
+      data-testid="itr-modal"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+    >
       <div className="flex justify-between items-center mb-2">
         <h2
           id="modal-title"

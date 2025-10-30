@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.middleware import LoggingMiddleware
 
 from app.api.v1.endpoints import users, households, assets, email_auth, tax_itr, epfo, profile, family, liabilities, insurance, reports, dashboard, income_expense
+from app.api.v1.endpoints import surepass_epfo
 from app.models import IncomeRecord, ExpenseRecord
 from app.database import SessionLocal
 from app.schemas import IncomeRecordCreate, IncomeRecordOut, ExpenseRecordCreate, ExpenseRecordOut
@@ -43,10 +44,16 @@ app.include_router(email_auth.router, prefix="/api/v1/users", tags=["auth"])
 app.include_router(income_expense.router, prefix="/api/v1", tags=["income-expense"])
 app.include_router(tax_itr.router, prefix="/api/v1/tax-itr", tags=["tax-itr"])
 app.include_router(epfo.router, prefix="/api/v1/epfo", tags=["epfo"])
+app.include_router(surepass_epfo.router, prefix="/api", tags=["surepass"])
 
 @app.get("/api/v1/protected-check")
 def protected_check(user=Depends(verify_jwt_token)):
 	return {"message": "You are authenticated!", "user": user}
+
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok"}
 
 # Supabase Google OAuth endpoint
 import os

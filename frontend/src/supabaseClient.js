@@ -4,3 +4,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Provide a default export for modules that import the default
+// (some files in the codebase use `import supabase from './supabaseClient'`).
+export default supabase;

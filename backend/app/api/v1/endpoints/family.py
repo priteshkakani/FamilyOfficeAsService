@@ -1,3 +1,14 @@
+@router.delete("/{member_id}")
+def delete_family_member(member_id: int, user_id: str):
+    supabase = get_supabase_client()
+    # Only allow delete if member belongs to user
+    existing = supabase.table("family_members").select("*").eq("id", member_id).eq("user_id", user_id).single().execute()
+    if not existing or existing.get("error") or not existing.get("data"):
+        raise HTTPException(status_code=404, detail="Family member not found or does not belong to user.")
+    result = supabase.table("family_members").delete().eq("id", member_id).execute()
+    if result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"]["message"])
+    return {"message": "Family member deleted", "id": member_id}
 from fastapi import APIRouter, HTTPException, Request, Depends
 from app.supabase_client import get_supabase_client
 

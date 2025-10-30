@@ -1,5 +1,5 @@
 import React from "react";
-import { useClient } from "../../contexts/ClientContext";
+import { useClient } from "../../hooks/useClientContext";
 import useClientData from "../../hooks/useClientData";
 import DataTable from "../../components/dashboard/DataTable";
 

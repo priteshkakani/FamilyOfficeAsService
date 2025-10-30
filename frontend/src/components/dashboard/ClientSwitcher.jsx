@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useClient } from "../../contexts/ClientContext";
+import { useClient } from "../../hooks/useClientContext";
 import supabase from "../../supabaseClient";
 
 export default function ClientSwitcher() {
-  const { client, setClient } = useClient();
+  const { selectedClient, setSelectedClient } = useClient();
   const [clients, setClients] = useState([]);
   const [q, setQ] = useState("");
 
@@ -27,8 +27,9 @@ export default function ClientSwitcher() {
 
   useEffect(() => {
     // pick the first client as default when none selected
-    if (!client && clients && clients.length) setClient(clients[0]);
-  }, [clients]);
+    if (!selectedClient && clients && clients.length)
+      setSelectedClient(clients[0]);
+  }, [clients, selectedClient, setSelectedClient]);
 
   const filtered = clients.filter(
     (c) =>
@@ -48,11 +49,11 @@ export default function ClientSwitcher() {
           data-testid="client-search"
         />
         <select
-          value={(client && client.id) || ""}
+          value={(selectedClient && selectedClient.id) || ""}
           onChange={(e) => {
             const id = e.target.value;
             const found = clients.find((c) => c.id === id) || null;
-            setClient(found);
+            setSelectedClient(found);
           }}
           className="border rounded px-2 py-1 text-sm"
           data-testid="client-select"

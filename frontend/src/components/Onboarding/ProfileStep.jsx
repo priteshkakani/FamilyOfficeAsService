@@ -5,7 +5,7 @@ import { supabase } from "../../supabaseClient";
 import LoadingSpinner from "../LoadingSpinner";
 import { notifySuccess, notifyError } from "../../utils/toast";
 
-export default function ProfileStep({ onNext, currentStep }) {
+export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [user, setUser] = React.useState(null);
@@ -83,66 +83,84 @@ export default function ProfileStep({ onNext, currentStep }) {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading)
+    return (
+      <div data-testid="profile-loading">
+        <LoadingSpinner />
+      </div>
+    );
 
   return (
-    <OnboardingLayout title="Profile Information">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              data-testid="input-full_name"
-              {...register("full_name", { required: true })}
-              placeholder="Your full name"
-              className="border border-gray-300 rounded-lg w-full p-2.5 focus:ring-2 focus:ring-blue-200"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              data-testid="input-email"
-              {...register("email")}
-              readOnly
-              className="border border-gray-200 bg-gray-50 text-gray-500 rounded-lg w-full p-2.5 cursor-not-allowed"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Email is linked to your account and cannot be edited.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Mobile Number
-            </label>
-            <input
-              type="tel"
-              data-testid="input-mobile_number"
-              {...register("mobile_number")}
-              placeholder="Enter mobile number"
-              className="border border-gray-300 rounded-lg w-full p-2.5 focus:ring-2 focus:ring-blue-200"
-            />
-          </div>
-        </div>
-
-        <div className="pt-4 flex justify-center">
-          <button
-            type="submit"
-            disabled={saving}
-            data-testid="btn-save-profile"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-6 py-2.5"
-          >
-            {saving ? "Saving..." : "Save & Continue →"}
-          </button>
-        </div>
-      </form>
-    </OnboardingLayout>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 space-y-5">
+        <OnboardingLayout title={showTitle ? "Profile Information" : undefined}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="full_name"
+                  className="block text-sm font-medium text-gray-600 mb-1"
+                >
+                  Full Name
+                </label>
+                <input
+                  id="full_name"
+                  type="text"
+                  data-testid="input-full_name"
+                  {...register("full_name", { required: true })}
+                  placeholder="Your full name"
+                  className="border border-gray-300 rounded-lg w-full p-2.5 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-600 mb-1"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  data-testid="input-email"
+                  {...register("email")}
+                  readOnly
+                  className="border border-gray-200 bg-gray-50 text-gray-500 rounded-lg w-full p-2.5 cursor-not-allowed"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Email is linked to your account and cannot be edited.
+                </p>
+              </div>
+              <div>
+                <label
+                  htmlFor="mobile_number"
+                  className="block text-sm font-medium text-gray-600 mb-1"
+                >
+                  Mobile Number
+                </label>
+                <input
+                  id="mobile_number"
+                  type="tel"
+                  data-testid="input-mobile_number"
+                  {...register("mobile_number")}
+                  placeholder="Enter mobile number"
+                  className="border border-gray-300 rounded-lg w-full p-2.5 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+            </div>
+            <div className="pt-4 flex justify-end gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                data-testid="btn-save-profile"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-6 py-2.5"
+              >
+                {saving ? "Saving..." : "Save & Continue →"}
+              </button>
+            </div>
+          </form>
+        </OnboardingLayout>
+      </div>
+    </div>
   );
 }
