@@ -10,8 +10,18 @@ export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
   const [saving, setSaving] = React.useState(false);
   const [user, setUser] = React.useState(null);
 
-  const { register, handleSubmit, setValue } = useForm({
-    defaultValues: { full_name: "", email: "", mobile_number: "" },
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      full_name: "",
+      email: "",
+      mobile_number: "",
+      email_secondary: "",
+    },
   });
 
   React.useEffect(() => {
@@ -30,7 +40,7 @@ export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
 
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("full_name,email,mobile_number")
+          .select("full_name,email,mobile_number,email_secondary")
           .eq("id", userObj.id)
           .maybeSingle();
         if (profileError) {
@@ -40,6 +50,7 @@ export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
           setValue("full_name", profile.full_name ?? "");
           setValue("email", profile.email ?? userObj.email ?? "");
           setValue("mobile_number", profile.mobile_number ?? "");
+          setValue("email_secondary", profile.email_secondary ?? "");
         } else {
           setValue("email", userObj.email ?? "");
         }
@@ -62,6 +73,7 @@ export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
         full_name: values.full_name,
         email: values.email,
         mobile_number: values.mobile_number,
+        email_secondary: values.email_secondary,
         onboarding_step: currentStep + 1,
       };
 
@@ -117,7 +129,7 @@ export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-600 mb-1"
                 >
-                  Email
+                  Primary Email
                 </label>
                 <input
                   id="email"
@@ -128,7 +140,38 @@ export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
                   className="border border-gray-200 bg-gray-50 text-gray-500 rounded-lg w-full p-2.5 cursor-not-allowed"
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Email is linked to your account and cannot be edited.
+                  Primary email is linked to your account and cannot be edited.
+                </p>
+              </div>
+              <div>
+                <label
+                  htmlFor="email_secondary"
+                  className="block text-sm font-medium text-gray-600 mb-1"
+                >
+                  Secondary Email
+                </label>
+                <input
+                  id="email_secondary"
+                  type="email"
+                  data-testid="input-email-secondary"
+                  {...register("email_secondary", {
+                    pattern: {
+                      value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
+                      message: "Invalid email format",
+                    },
+                  })}
+                  placeholder="Enter secondary email"
+                  className={`border border-gray-300 rounded-lg w-full p-2.5 focus:ring-2 focus:ring-blue-200 ${
+                    errors.email_secondary ? "border-red-400" : ""
+                  }`}
+                />
+                {errors.email_secondary && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.email_secondary.message}
+                  </p>
+                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  Optional. Used for notifications and backup contact.
                 </p>
               </div>
               <div>
