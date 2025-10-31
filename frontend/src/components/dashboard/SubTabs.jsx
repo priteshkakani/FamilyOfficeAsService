@@ -10,11 +10,11 @@ const SUBTABS = {
       testid: "subtab-overview-portfolio",
     },
     {
-      name: "Transaction",
+      name: "Transactions",
       path: "transactions",
       testid: "subtab-overview-transactions",
     },
-    { name: "Profile", path: "profile", testid: "subtab-overview-profile" },
+    { name: "Family Member", path: "family", testid: "subtab-overview-family" },
   ],
   portfolio: [
     { name: "Summary", path: "summary", testid: "subtab-portfolio-summary" },
@@ -37,8 +37,6 @@ const SUBTABS = {
   ],
   plan: [
     { name: "Summary", path: "summary", testid: "subtab-plan-summary" },
-    { name: "Ratio", path: "ratio", testid: "subtab-plan-ratio" },
-    { name: "Insurance", path: "insurance", testid: "subtab-plan-insurance" },
     { name: "Goals", path: "goals", testid: "subtab-plan-goals" },
   ],
   activity: [
@@ -91,11 +89,11 @@ export default function SubTabs() {
 
   return (
     <nav
-      className="sticky top-12 z-10 bg-white border-b flex items-center px-2 py-1"
+      className="sticky top-12 z-10 bg-white border-b shadow flex items-center px-2 py-1"
       role="tablist"
       aria-label={`${section} Subtabs`}
     >
-      {SUBTABS[section].map((tab) => (
+      {SUBTABS[section].map((tab, idx) => (
         <NavLink
           key={tab.path}
           to={`/dashboard/${section}/${tab.path}`}
@@ -108,12 +106,22 @@ export default function SubTabs() {
           }
           role="tab"
           aria-selected={activeSubtab === tab.path}
-          tabIndex={0}
+          aria-controls={`panel-${section}-${tab.path}`}
+          id={`subtab-${section}-${tab.path}`}
+          tabIndex={activeSubtab === tab.path ? 0 : -1}
           data-testid={tab.testid}
         >
           {tab.name}
         </NavLink>
       ))}
+      <button
+        className="ml-auto px-3 py-1 rounded bg-blue-600 text-white"
+        aria-label="Refresh"
+        onClick={() => window.location.reload()}
+        data-testid={`refresh-${section}`}
+      >
+        Refresh
+      </button>
     </nav>
   );
 }

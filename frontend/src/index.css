@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Diagnostic class for CSS verification */
+.diagnostic-tailwind {
+  @apply bg-yellow-200 text-black font-bold border-2 border-yellow-600 p-4 rounded;
+}

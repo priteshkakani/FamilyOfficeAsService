@@ -1,3 +1,8 @@
+import { useProfile } from "./contexts/ProfileContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const queryClient = new QueryClient();
+import { ProfileProvider } from "./contexts/ProfileContext";
+import { AuthProvider, useAuth } from "./contexts/AuthProvider";
 import React from "react";
 console.log("React version:", React.version);
 // Fallbacks for missing dashboard pages
@@ -32,34 +37,30 @@ const DashboardSkeleton = () => (
 
 function RequireOnboarded({ children }) {
   const navigate = useNavigate();
-  const { loading, session, profile } = useAuthState();
-  // If still loading, show loading placeholder
-  if (loading) {
+  const { authLoading, session } = useAuth();
+  const { loading, profile } = useProfile();
+  if (authLoading || loading) {
     return (
       <div className="text-center py-12" data-testid="loading">
         Loading...
       </div>
     );
   }
-
-  // Declarative redirects: render <Navigate> during render pass so tests see the redirected route immediately
   if (!session) {
     return <Navigate to="/login" replace />;
   }
   if (profile && !profile.is_onboarded) {
     return <Navigate to="/onboarding" replace />;
   }
-
-  // Only render children if session exists and user is onboarded
   return children;
 }
 
 import OnboardingStepper from "./components/Onboarding/OnboardingStepper.jsx";
 import OnboardingFlow from "./pages/OnboardingFlow";
-import { useAuthState } from "./useAuthState";
 
 function OnboardingStepperGuard() {
-  const { loading, profile } = useAuthState();
+  // Already using useProfile above; remove duplicate
+  const { loading, profile } = useProfile();
   const navigate = useNavigate();
   React.useEffect(() => {
     if (!loading && profile?.is_onboarded) {
@@ -417,28 +418,11 @@ function DashboardLayout({
     { icon: <Settings className="w-5 h-5" />, label: "Settings" },
   ];
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-56 bg-white shadow flex flex-col gap-2 p-4">
-        <div className="text-xl font-bold text-blue-700 mb-4">
-          Family Office
-        </div>
-        {tabs.map((tab, idx) => (
-          <Button
-            key={tab.label}
-            variant={activeTab === idx ? "default" : "ghost"}
-            className={`justify-start font-semibold rounded-lg mb-1 w-full ${
-              activeTab === idx ? "bg-blue-50 text-blue-700" : "text-gray-700"
-            }`}
-            onClick={() => setActiveTab(idx)}
-            startIcon={tab.icon}
-          >
-            {tab.label}
-          </Button>
-        ))}
-      </aside>
-      {/* Main Content */}
-      <main className="flex-1 p-6 flex flex-col">{children}</main>
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content: full width, no sidebar */}
+      <main className="max-w-7xl mx-auto px-4 py-6 flex flex-col">
+        {children}
+      </main>
     </div>
   );
 }
@@ -1160,10 +1144,8 @@ function LandingPage() {
 
 // --- ProtectedRoute moved above App for scope ---
 function ProtectedRoute({ children }) {
-  // Use the centralized useAuthState hook so tests can mock supabaseAuth.* calls
-  // and drive auth/profile state deterministically.
-  const { loading, session } = useAuthState();
-  if (loading) return <div data-testid="loading">Loading...</div>;
+  const { authLoading, session } = useAuth();
+  if (authLoading) return <div data-testid="loading">Loading...</div>;
   if (!session || !session.user) return <Navigate to="/login" replace />;
   return children;
 }
@@ -1187,10 +1169,27 @@ export function AppRoutes() {
   // ...add other sub-tab lazy imports as needed
   const NotFoundPage = React.lazy(() => import("./NotFoundPage.jsx"));
   const ForgotPassword = React.lazy(() => import("./ForgotPassword"));
+  const { session } = useAuth();
+  const { profile, loading } = useProfile();
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<AuthForm mode="login" />} />
+      <Route
+        path="/login"
+        element={
+          session ? (
+            loading ? (
+              <div className="text-center py-12">Loading...</div>
+            ) : profile?.is_onboarded ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Navigate to="/onboarding" replace />
+            )
+          ) : (
+            <AuthForm mode="login" />
+          )
+        }
+      />
       <Route path="/signup" element={<AuthForm mode="signup" />} />
       <Route
         path="/forgot-password"
@@ -1270,14 +1269,10 @@ export function AppRoutes() {
           <Route index element={<Navigate to="mandates" replace />} />
           {/* Add transactions sub-tabs here */}
         </Route>
-        {/* Fallback for unmatched dashboard routes */}
+        {/* Catch-all: redirect unknown dashboard subpaths to overview/feeds */}
         <Route
           path="*"
-          element={
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <NotFoundPage />
-            </React.Suspense>
-          }
+          element={<Navigate to="/dashboard/overview/feeds" replace />}
         />
       </Route>
       {/* Fallback for unmatched routes */}
@@ -1296,12 +1291,16 @@ export function AppRoutes() {
 // App now just provides BrowserRouter and AppRoutes
 function App() {
   return (
-    <>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
-    </>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <ProfileProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+          <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+        </ProfileProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 }
 

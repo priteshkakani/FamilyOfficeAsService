@@ -2,84 +2,126 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import { ClientProvider } from "../hooks/useClientContext";
 import TopNav from "../components/dashboard/TopNav";
+import {
+  AdvisorClientProvider,
+  useAdvisorClient,
+} from "../contexts/AdvisorClientContext";
+import ClientPicker from "../components/dashboard/ClientPicker";
+import EntityFormPanel from "../components/dashboard/EntityFormPanel";
+import { useAuth } from "../contexts/AuthProvider";
 import SubTabs from "../components/dashboard/SubTabs";
 
 export default function Dashboard() {
   const TABS = [
-    { key: "portfolio", label: "Portfolio", testid: "tab-portfolio" },
-    { key: "liabilities", label: "Liabilities", testid: "tab-liabilities" },
-    { key: "cashflow", label: "Cashflow", testid: "tab-cashflow" },
-    { key: "goals", label: "Goals", testid: "tab-goals" },
-    { key: "family", label: "Family", testid: "tab-family" },
     {
-      key: "recommendations",
-      label: "Recommendations",
-      testid: "tab-recommendations",
+      key: "profiles",
+      label: "Client Profile",
+      testid: "advisor-item-profiles",
     },
-    { key: "next-steps", label: "Next Steps", testid: "tab-next-steps" },
-    { key: "documents", label: "Documents", testid: "tab-documents" },
-    { key: "audit", label: "Audit", testid: "tab-audit" },
+    {
+      key: "family_members",
+      label: "Family",
+      testid: "advisor-item-family_members",
+    },
+    { key: "assets", label: "Assets", testid: "advisor-item-assets" },
+    {
+      key: "liabilities",
+      label: "Liabilities",
+      testid: "advisor-item-liabilities",
+    },
+    {
+      key: "insurance_policies",
+      label: "Insurance",
+      testid: "advisor-item-insurance_policies",
+    },
+    {
+      key: "income_records",
+      label: "Cashflow",
+      testid: "advisor-item-income_records",
+    },
+    { key: "goals", label: "Goals", testid: "advisor-item-goals" },
+    { key: "documents", label: "Documents", testid: "advisor-item-documents" },
+    { key: "audit", label: "Audit", testid: "advisor-item-audit" },
   ];
-  const [activeTab, setActiveTab] = React.useState(() => {
-    return localStorage.getItem("dashboard-active-tab") || "portfolio";
-  });
+  const [selectedEntity, setSelectedEntity] = React.useState(null);
+  const [selectedRowId, setSelectedRowId] = React.useState(null);
   const tabRefs = React.useRef([]);
-  React.useEffect(() => {
-    localStorage.setItem("dashboard-active-tab", activeTab);
-  }, [activeTab]);
+  // Get userId from AuthProvider
+  const { user } = useAuth();
 
   // Keyboard navigation for tabs
   const handleKeyDown = (e, idx) => {
     if (e.key === "ArrowRight") {
       const next = (idx + 1) % TABS.length;
       tabRefs.current[next]?.focus();
-      setActiveTab(TABS[next].key);
+      setSelectedEntity(TABS[next].key);
     } else if (e.key === "ArrowLeft") {
       const prev = (idx - 1 + TABS.length) % TABS.length;
       tabRefs.current[prev]?.focus();
-      setActiveTab(TABS[prev].key);
+      setSelectedEntity(TABS[prev].key);
     } else if (e.key === "Home") {
       tabRefs.current[0]?.focus();
-      setActiveTab(TABS[0].key);
+      setSelectedEntity(TABS[0].key);
     } else if (e.key === "End") {
       tabRefs.current[TABS.length - 1]?.focus();
-      setActiveTab(TABS[TABS.length - 1].key);
+      setSelectedEntity(TABS[TABS.length - 1].key);
     }
   };
 
+  // Diagnostic Tailwind test class for CSS verification
+  const diagnostic = (
+    <div className="diagnostic-tailwind" data-testid="diagnostic-tailwind">
+      Tailwind Diagnostic: If you see this yellow box, Tailwind CSS is working!
+    </div>
+  );
   return (
-    <ClientProvider>
+    <AdvisorClientProvider>
       <div className="max-w-7xl mx-auto px-2 md:px-4 py-8">
+        <div className="flex justify-end items-center mb-6 gap-4">
+          <ClientPicker />
+        </div>
+        {/* Diagnostic Tailwind container for CSS verification */}
+        <div className="diagnostic-tailwind mb-4" data-testid="css-diagnostic">
+          Tailwind Diagnostic: If you see this yellow box, Tailwind CSS is
+          working!
+        </div>
+        {/* Advisor entity list/cards */}
         <nav
-          className="flex gap-2 mb-6"
+          className="flex gap-4 mb-6 flex-wrap"
           role="tablist"
-          aria-label="Dashboard Tabs"
+          aria-label="Advisor Entities"
         >
           {TABS.map((tab, idx) => (
             <button
               key={tab.key}
               ref={(el) => (tabRefs.current[idx] = el)}
               role="tab"
-              aria-selected={activeTab === tab.key}
+              aria-selected={selectedEntity === tab.key}
               aria-controls={`panel-${tab.key}`}
               id={`tab-${tab.key}`}
-              tabIndex={activeTab === tab.key ? 0 : -1}
+              tabIndex={selectedEntity === tab.key ? 0 : -1}
               data-testid={tab.testid}
-              className={`px-4 py-2 rounded font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                activeTab === tab.key
+              className={`px-6 py-3 rounded font-bold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                selectedEntity === tab.key
                   ? "bg-blue-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-blue-50"
               }`}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                setSelectedEntity(tab.key);
+                setSelectedRowId(null); // Reset row selection
+              }}
               onKeyDown={(e) => handleKeyDown(e, idx)}
             >
               {tab.label}
             </button>
           ))}
         </nav>
-        {/* SectionPanel renders below tabs, swaps content by activeTab */}
-        <SectionPanel activeTab={activeTab} />
+        {/* EntityFormPanel below cards, filtered by selected client */}
+        <AdvisorPanelContainer
+          selectedEntity={selectedEntity}
+          selectedRowId={selectedRowId}
+        />
       </div>
-    </ClientProvider>
+    </AdvisorClientProvider>
   );
 }

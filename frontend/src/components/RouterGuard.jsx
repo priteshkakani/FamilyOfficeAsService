@@ -1,36 +1,36 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthProfile } from "../hooks/useAuthProfile";
+import { useProfile } from "../contexts/ProfileContext";
 
 export default function RouterGuard({ children }) {
   const navigate = useNavigate();
-  const { loading, session, profile } = useAuthProfile();
+  const { isLoading, data } = useProfile();
   const [minDelay, setMinDelay] = React.useState(true);
 
   React.useEffect(() => {
     setMinDelay(true);
     const t = setTimeout(() => setMinDelay(false), 100);
     return () => clearTimeout(t);
-  }, [loading]);
+  }, [isLoading]);
 
   React.useEffect(() => {
-    if (!loading && !minDelay) {
-      if (!session) {
+    if (!isLoading && !minDelay) {
+      if (!data?.session) {
         navigate("/login", { replace: true });
-      } else if (profile && !profile.is_onboarded) {
+      } else if (data?.profile && !data.profile.is_onboarded) {
         navigate("/onboarding", { replace: true });
       }
     }
-  }, [loading, minDelay, session, profile, navigate]);
+  }, [isLoading, minDelay, data, navigate]);
 
-  if (loading || minDelay) {
+  if (isLoading || minDelay) {
     return (
       <div className="text-center py-12" data-testid="loading">
         Loading...
       </div>
     );
   }
-  if (!session || (profile && !profile.is_onboarded)) {
+  if (!data?.session || (data?.profile && !data.profile.is_onboarded)) {
     return <div data-testid="loading">Loading...</div>;
   }
   return children;

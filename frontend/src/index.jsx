@@ -1,3 +1,4 @@
+import "./index.css";
 console.log("Vercel env check:", import.meta.env.VITE_SUPABASE_URL);
 import React from "react";
 import ReactDOM from "react-dom/client";
