@@ -25,17 +25,35 @@ export default function Insurance() {
   const pageSize = 10;
 
   useEffect(() => {
+    // UUID v4 regex
+    const uuidRegex =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    if (
+      !selectedClient ||
+      typeof selectedClient !== "string" ||
+      !uuidRegex.test(selectedClient)
+    ) {
+      console.error(
+        "Invalid selectedClient for insurance query:",
+        selectedClient
+      );
+      setError("Invalid client ID");
+      setLoading(false);
+      return;
+    }
     async function load() {
       setLoading(true);
       setError("");
-      if (!selectedClient) return;
       const { data, error } = await supabase
         .from("insurance")
         .select("*")
         .eq("user_id", selectedClient)
         .order("start_date", { ascending: false })
         .limit(100);
-      if (error) setError("Failed to load insurance");
+      if (error) {
+        console.error("Supabase error loading insurance:", error);
+        setError("Failed to load insurance");
+      }
       setRows(data || []);
       setLoading(false);
     }

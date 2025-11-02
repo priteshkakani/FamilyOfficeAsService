@@ -1,16 +1,15 @@
 import React, { useState } from "react";
 import { useClient } from "../../hooks/useClientContext";
-import useClientData from "../../hooks/useClientData";
 import DataTable from "../../components/dashboard/DataTable";
 import { supabase } from "../../supabaseClient";
 import { MoreVertical } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 export default function Portfolio() {
   const { client } = useClient();
   const userId = client?.id;
-  const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [menuOpen, setMenuOpen] = useState(null);
   const [editRow, setEditRow] = useState(null);
@@ -22,37 +21,75 @@ export default function Portfolio() {
   });
   const pageSize = 10;
 
-  React.useEffect(() => {
-    async function fetchAssets() {
-      setLoading(true);
-      setError("");
+  // React Query: fetch assets
+  const {
+    data: assets = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["assets", userId],
+    queryFn: async () => {
+      if (!userId) return [];
       const { data, error } = await supabase
         .from("assets")
         .select("*")
         .eq("user_id", userId)
         .order("as_of_date", { ascending: false })
         .limit(100);
-      if (error) setError("Failed to load assets");
-      setAssets(data || []);
-      setLoading(false);
-    }
-    if (userId) fetchAssets();
-  }, [userId]);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  // React Query: mutations
+  const addMutation = useMutation({
+    mutationFn: async (payload) => {
+      const { error } = await supabase.from("assets").insert([payload]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["assets", userId]);
+      toast.success("Asset added");
+    },
+    onError: (err) => toast.error(err.message || "Add failed"),
+  });
+  const editMutation = useMutation({
+    mutationFn: async ({ id, ...payload }) => {
+      const { error } = await supabase
+        .from("assets")
+        .update(payload)
+        .eq("id", id)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["assets", userId]);
+      toast.success("Asset updated");
+    },
+    onError: (err) => toast.error(err.message || "Edit failed"),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase
+        .from("assets")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["assets", userId]);
+      toast.success("Asset deleted");
+    },
+    onError: (err) => toast.error(err.message || "Delete failed"),
+  });
 
   // CRUD handlers
-  const handleDelete = async (id) => {
-    setError("");
-    const prev = assets;
-    setAssets(assets.filter((a) => a.id !== id));
-    const { error } = await supabase
-      .from("assets")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", userId);
-    if (error) {
-      setAssets(prev);
-      setError("Delete failed");
-    }
+  const handleDelete = (id) => {
+    deleteMutation.mutate(id);
+    setMenuOpen(null);
   };
   const handleEdit = (row) => {
     setEditRow(row);
@@ -63,33 +100,29 @@ export default function Portfolio() {
       as_of_date: row.as_of_date,
     });
   };
-  const handleSave = async () => {
-    setError("");
+  const handleSave = () => {
+    // Validation
+    if (
+      !form.name.trim() ||
+      !form.category.trim() ||
+      !form.amount ||
+      !form.as_of_date
+    ) {
+      toast.error("All fields required");
+      return;
+    }
+    if (Number(form.amount) < 0) {
+      toast.error("Amount must be non-negative");
+      return;
+    }
     const payload = { ...form, user_id: userId };
-    let res;
     if (editRow) {
-      res = await supabase
-        .from("assets")
-        .update(payload)
-        .eq("id", editRow.id)
-        .eq("user_id", userId);
+      editMutation.mutate({ id: editRow.id, ...payload });
     } else {
-      res = await supabase.from("assets").insert([payload]);
+      addMutation.mutate(payload);
     }
-    if (res.error) {
-      setError("Save failed");
-    } else {
-      setEditRow(null);
-      setForm({ name: "", category: "", amount: "", as_of_date: "" });
-      // refetch
-      const { data } = await supabase
-        .from("assets")
-        .select("*")
-        .eq("user_id", userId)
-        .order("as_of_date", { ascending: false })
-        .limit(100);
-      setAssets(data || []);
-    }
+    setEditRow(null);
+    setForm({ name: "", category: "", amount: "", as_of_date: "" });
   };
 
   // Pagination
@@ -147,12 +180,40 @@ export default function Portfolio() {
     },
   ];
 
-  if (loading)
-    return <div data-testid="portfolio-loading">Loading portfolio…</div>;
-  if (error)
+  if (isLoading)
     return (
-      <div className="text-red-600 mb-2" role="alert">
-        {error}
+      <div
+        data-testid="portfolio-loading"
+        className="animate-pulse py-8 text-center text-gray-400"
+      >
+        Loading portfolio…
+      </div>
+    );
+  if (isError)
+    return (
+      <div
+        className="text-red-600 mb-2"
+        role="alert"
+        data-testid="portfolio-error"
+      >
+        {error?.message || "Error loading assets"}
+      </div>
+    );
+  if (!assets.length)
+    return (
+      <div
+        data-testid="portfolio-empty"
+        className="py-8 text-center text-gray-500"
+      >
+        No assets found.
+        <br />
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+          onClick={() => setEditRow({})}
+          data-testid="btn-add-asset-empty"
+        >
+          Add Asset
+        </button>
       </div>
     );
 
@@ -161,7 +222,7 @@ export default function Portfolio() {
       <h2 className="text-xl font-semibold mb-4">Portfolio</h2>
       <button
         className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-        onClick={() => setEditRow(null)}
+        onClick={() => setEditRow({})}
         data-testid="btn-add-asset"
       >
         Add Asset
@@ -197,11 +258,9 @@ export default function Portfolio() {
         </div>
       )}
       {/* Edit/Add Modal */}
-      {(editRow !== null || editRow === null) && (
+      {editRow !== null && (
         <div
-          className={`fixed inset-0 flex items-center justify-center z-50 ${
-            editRow === null ? "hidden" : ""
-          }`}
+          className="fixed inset-0 flex items-center justify-center z-50"
           role="dialog"
           aria-modal="true"
           data-testid="portfolio-edit-modal"
@@ -214,7 +273,7 @@ export default function Portfolio() {
             className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-4"
           >
             <h3 className="text-lg font-semibold mb-2">
-              {editRow ? "Edit Asset" : "Add Asset"}
+              {editRow && editRow.id ? "Edit Asset" : "Add Asset"}
             </h3>
             <input
               name="name"

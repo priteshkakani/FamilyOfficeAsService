@@ -1,70 +1,146 @@
 import React, { useState } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import PortfolioPanel from "./Portfolio";
 import TransactionPanel from "./Transaction";
 import ProfilePanel from "./Profile";
 import formatINR from "../../utils/formatINR";
 import { useClient } from "../../hooks/useClientContext";
 import useClientData from "../../hooks/useClientData";
-import KpiCard from "../../components/dashboard/KpiCard";
-import IncomeExpenseChart from "../../components/dashboard/IncomeExpenseChart";
-import AssetAllocationDonut from "../../components/dashboard/AssetAllocationDonut";
 
 export default function Overview() {
-  // Sub-tabs
-  const subTabs = [
-    { key: "overview", label: "Overview", testid: "tab-ov-overview" },
-    { key: "portfolio", label: "Portfolio", testid: "tab-ov-portfolio" },
-    { key: "transaction", label: "Transaction", testid: "tab-ov-transaction" },
-    { key: "profile", label: "Profile", testid: "tab-ov-profile" },
+  // Tab config
+  const tabs = [
+    { key: "feeds", label: "All Feeds", testid: "tab-feeds" },
+    { key: "portfolio", label: "Portfolio", testid: "tab-portfolio" },
+    { key: "transactions", label: "Transactions", testid: "tab-transactions" },
+    { key: "profile", label: "Profile", testid: "tab-profile" },
   ];
   const location = useLocation();
   const navigate = useNavigate();
-  const currentTab = location.pathname.split("/").pop() || "overview";
-  React.useEffect(() => {
-    localStorage.setItem("last-ov-subtab", currentTab);
-  }, [currentTab]);
-  React.useEffect(() => {
-    if (location.pathname === "/dashboard/overview") {
-      const last = localStorage.getItem("last-ov-subtab") || "overview";
-      navigate(`/dashboard/overview/${last}`, { replace: true });
-    }
-  }, [location, navigate]);
+  const params = new URLSearchParams(location.search);
+  const currentTab = params.get("tab") || "feeds";
 
+  // Tab badge counts (optional, mock for now)
+  const [counts, setCounts] = React.useState({
+    feeds: 2,
+    portfolio: 5,
+    transactions: 3,
+    profile: 0,
+  });
+
+  // Keyboard navigation
+  const tabRefs = React.useRef([]);
+  const handleKeyDown = (e) => {
+    const idx = tabs.findIndex((t) => t.key === currentTab);
+    if (e.key === "ArrowRight") {
+      const next = (idx + 1) % tabs.length;
+      tabRefs.current[next]?.focus();
+      navigate(`?tab=${tabs[next].key}`);
+    } else if (e.key === "ArrowLeft") {
+      const prev = (idx - 1 + tabs.length) % tabs.length;
+      tabRefs.current[prev]?.focus();
+      navigate(`?tab=${tabs[prev].key}`);
+    } else if (e.key === "Home") {
+      tabRefs.current[0]?.focus();
+      navigate(`?tab=${tabs[0].key}`);
+    } else if (e.key === "End") {
+      tabRefs.current[tabs.length - 1]?.focus();
+      navigate(`?tab=${tabs[tabs.length - 1].key}`);
+    }
+  };
+
+  // Responsive tab bar
   return (
     <div className="space-y-6" data-testid="panel-overview">
       <nav
-        className="sticky top-0 bg-white z-10 flex gap-4 mb-6 border-b"
+        className="sticky top-0 bg-white z-10 flex overflow-x-auto gap-2 mb-6 border-b"
         role="tablist"
-        aria-label="Overview Sub-Tabs"
+        aria-label="Overview Tabs"
       >
-        {subTabs.map((tab) => (
+        {tabs.map((tab, i) => (
           <button
             key={tab.key}
+            ref={(el) => (tabRefs.current[i] = el)}
             role="tab"
             aria-selected={currentTab === tab.key}
+            aria-controls={`tabpanel-${tab.key}`}
+            tabIndex={currentTab === tab.key ? 0 : -1}
             data-testid={tab.testid}
-            className={`px-6 py-3 rounded-t font-bold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+            className={`px-4 py-2 rounded-t font-bold text-base whitespace-nowrap transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
               currentTab === tab.key
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-blue-50"
             }`}
-            onClick={() => navigate(`/dashboard/overview/${tab.key}`)}
+            onClick={() => navigate(`?tab=${tab.key}`)}
+            onKeyDown={handleKeyDown}
           >
             {tab.label}
+            {counts[tab.key] > 0 && (
+              <span
+                className="ml-2 bg-blue-100 text-blue-700 rounded-full px-2 text-xs align-middle"
+                data-testid={`badge-${tab.key}`}
+              >
+                {counts[tab.key]}
+              </span>
+            )}
           </button>
         ))}
       </nav>
       <div className="mt-4">
-        <Routes>
-          <Route path="overview" element={<OverviewPanel />} />
-          <Route path="portfolio" element={<PortfolioPanel />} />
-          <Route path="transaction" element={<TransactionPanel />} />
-          <Route path="profile" element={<ProfilePanel />} />
-        </Routes>
+        <TabPanels currentTab={currentTab} />
       </div>
     </div>
   );
+  // TabPanels component renders content for each tab
+  function TabPanels({ currentTab }) {
+    // Loading, error, and empty states can be customized per tab
+    switch (currentTab) {
+      case "feeds":
+        return <FeedsPanel />;
+      case "portfolio":
+        return <PortfolioPanel />;
+      case "transactions":
+        return <TransactionPanel />;
+      case "profile":
+        return <ProfilePanel />;
+      default:
+        return <FeedsPanel />;
+    }
+  }
+
+  // Example FeedsPanel (replace with real feed logic)
+  function FeedsPanel() {
+    // Simulate loading/error/empty states
+    const [loading, setLoading] = React.useState(false);
+    const [error, setError] = React.useState("");
+    const [feeds, setFeeds] = React.useState([]);
+    React.useEffect(() => {
+      setLoading(true);
+      setTimeout(() => {
+        setFeeds([
+          { id: 1, title: "Welcome!" },
+          { id: 2, title: "Portfolio updated" },
+        ]);
+        setLoading(false);
+      }, 500);
+    }, []);
+    if (loading) return <div className="p-4">Loading feeds…</div>;
+    if (error) return <div className="p-4 text-red-600">{error}</div>;
+    if (!feeds.length)
+      return <div className="p-4 text-gray-500">No feed items.</div>;
+    return (
+      <div className="p-4" id="tabpanel-feeds" role="tabpanel" tabIndex={0}>
+        <h2 className="text-lg font-semibold mb-4">All Feeds</h2>
+        <ul className="space-y-2">
+          {feeds.map((f) => (
+            <li key={f.id} className="bg-white rounded shadow p-3">
+              {f.title}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 }
 
 import { useAdvisorClient } from "../../contexts/AdvisorClientContext";
@@ -80,7 +156,19 @@ function OverviewPanel() {
   const [family, setFamily] = useState([]);
 
   useEffect(() => {
-    if (!clientId) return;
+    // UUID v4 regex
+    const uuidRegex =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    if (
+      !clientId ||
+      typeof clientId !== "string" ||
+      !uuidRegex.test(clientId)
+    ) {
+      console.error("Invalid clientId for overview queries:", clientId);
+      setError("Invalid client ID");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError("");
     Promise.all([

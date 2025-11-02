@@ -140,13 +140,27 @@ export default function Profile() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
+  // Validate clientId from supabase user
+  function isValidUUID(id) {
+    return (
+      typeof id === "string" &&
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+        id
+      )
+    );
+  }
+
   useEffect(() => {
     let mounted = true;
     async function fetchData() {
       setLoading(true);
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id;
-      if (!userId) return setLoading(false);
+      if (!isValidUUID(userId)) {
+        console.error("Invalid or missing clientId in Profile panel", userId);
+        setLoading(false);
+        return;
+      }
       const { data: prof } = await supabase
         .from("profiles")
         .select("*")
@@ -203,7 +217,7 @@ export default function Profile() {
   const totalPages = Math.ceil(family.length / pageSize);
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
+    <div className="max-w-3xl mx-auto py-8" data-testid="panel-profile">
       <h2 className="text-2xl font-bold mb-4">Profile</h2>
       {loading ? (
         <div>Loading...</div>
@@ -236,7 +250,7 @@ export default function Profile() {
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full border rounded">
+        <table className="min-w-full border rounded" data-testid="family-table">
           <thead>
             <tr className="bg-gray-100">
               <th className="px-2 py-1">Name</th>

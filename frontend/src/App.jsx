@@ -1166,7 +1166,30 @@ export function AppRoutes() {
   const PortfolioSummary = React.lazy(() =>
     import("./pages/dashboard/Portfolio.jsx")
   );
-  const PlanSummary = React.lazy(() => import("./pages/dashboard/Goals.jsx"));
+  const LiabilitiesPanel = React.lazy(() =>
+    import("./pages/dashboard/Liabilities.jsx")
+  );
+  const InsurancePanel = React.lazy(() =>
+    import("./pages/dashboard/Insurance.jsx")
+  );
+  const AnalyticsPanel = React.lazy(() =>
+    import("./pages/dashboard/Analytics.jsx")
+  );
+  const CashflowPanel = React.lazy(() =>
+    import("./pages/dashboard/Cashflow.jsx")
+  );
+  const GoalsPanel = React.lazy(() => import("./pages/dashboard/Goals.jsx"));
+  const FamilyPanel = React.lazy(() => import("./pages/dashboard/Family.jsx"));
+  const RecommendationsPanel = React.lazy(() =>
+    import("./pages/dashboard/Recommendations.jsx")
+  );
+  const NextStepsPanel = React.lazy(() =>
+    import("./pages/dashboard/NextSteps.jsx")
+  );
+  const DocumentsPanel = React.lazy(() =>
+    import("./pages/dashboard/Documents.jsx")
+  );
+  const AuditPanel = React.lazy(() => import("./pages/dashboard/Audit.jsx"));
   // ...add other sub-tab lazy imports as needed
   const NotFoundPage = React.lazy(() => import("./NotFoundPage.jsx"));
   const ForgotPassword = React.lazy(() => import("./ForgotPassword"));
@@ -1221,55 +1244,113 @@ export function AppRoutes() {
         }
       >
         {/* Overview Section */}
-        <Route index element={<Navigate to="overview/feeds" replace />} />
-        <Route path="overview">
-          <Route index element={<Navigate to="feeds" replace />} />
-          <Route
-            path="feeds"
-            element={
-              <React.Suspense fallback={<div>Loading...</div>}>
-                <OverviewFeeds />
-              </React.Suspense>
-            }
-          />
-          {/* Add other overview sub-tabs here */}
-        </Route>
-        {/* Portfolio Section */}
-        <Route path="portfolio">
-          <Route index element={<Navigate to="summary" replace />} />
-          <Route
-            path="summary"
-            element={
-              <React.Suspense fallback={<div>Loading...</div>}>
-                <PortfolioSummary />
-              </React.Suspense>
-            }
-          />
-          {/* Add other portfolio sub-tabs here */}
-        </Route>
-        {/* Plan Section */}
-        <Route path="plan">
-          <Route index element={<Navigate to="summary" replace />} />
-          <Route
-            path="summary"
-            element={
-              <React.Suspense fallback={<div>Loading...</div>}>
-                <PlanSummary />
-              </React.Suspense>
-            }
-          />
-          {/* Add other plan sub-tabs here */}
-        </Route>
-        {/* Activity Section */}
-        <Route path="activity">
-          <Route index element={<Navigate to="notes" replace />} />
-          {/* Add activity sub-tabs here */}
-        </Route>
-        {/* Transactions Section */}
-        <Route path="transactions">
-          <Route index element={<Navigate to="mandates" replace />} />
-          {/* Add transactions sub-tabs here */}
-        </Route>
+        <Route
+          path="overview"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <OverviewFeeds />
+            </React.Suspense>
+          }
+        />
+        {/* Portfolio */}
+        <Route
+          path="portfolio"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <PortfolioSummary />
+            </React.Suspense>
+          }
+        />
+        {/* Liabilities */}
+        <Route
+          path="liabilities"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <LiabilitiesPanel />
+            </React.Suspense>
+          }
+        />
+        {/* Insurance */}
+        <Route
+          path="insurance"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <InsurancePanel />
+            </React.Suspense>
+          }
+        />
+        {/* Analytics */}
+        <Route
+          path="analytics"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AnalyticsPanel />
+            </React.Suspense>
+          }
+        />
+        {/* Cashflow */}
+        <Route
+          path="cashflow"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <CashflowPanel />
+            </React.Suspense>
+          }
+        />
+        {/* Goals */}
+        <Route
+          path="goals"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <GoalsPanel />
+            </React.Suspense>
+          }
+        />
+        {/* Family */}
+        <Route
+          path="family"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <FamilyPanel />
+            </React.Suspense>
+          }
+        />
+        {/* Recommendations */}
+        <Route
+          path="recommendations"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <RecommendationsPanel />
+            </React.Suspense>
+          }
+        />
+        {/* Next Steps */}
+        <Route
+          path="next-steps"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <NextStepsPanel />
+            </React.Suspense>
+          }
+        />
+        {/* Documents */}
+        <Route
+          path="documents"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <DocumentsPanel />
+            </React.Suspense>
+          }
+        />
+        {/* Audit */}
+        <Route
+          path="audit"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AuditPanel />
+            </React.Suspense>
+          }
+        />
         {/* Catch-all: redirect unknown dashboard subpaths to overview/feeds */}
         <Route
           path="*"

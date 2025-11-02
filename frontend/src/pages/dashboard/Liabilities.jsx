@@ -26,17 +26,35 @@ export default function Liabilities() {
   const pageSize = 10;
 
   useEffect(() => {
+    // UUID v4 regex
+    const uuidRegex =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    if (
+      !selectedClient ||
+      typeof selectedClient !== "string" ||
+      !uuidRegex.test(selectedClient)
+    ) {
+      console.error(
+        "Invalid selectedClient for liabilities query:",
+        selectedClient
+      );
+      setError("Invalid client ID");
+      setLoading(false);
+      return;
+    }
     async function load() {
       setLoading(true);
       setError("");
-      if (!selectedClient) return;
       const { data, error } = await supabase
         .from("liabilities")
         .select("*")
         .eq("user_id", selectedClient)
         .order("as_of_date", { ascending: false })
         .limit(100);
-      if (error) setError("Failed to load liabilities");
+      if (error) {
+        console.error("Supabase error loading liabilities:", error);
+        setError("Failed to load liabilities");
+      }
       setRows(data || []);
       setLoading(false);
     }

@@ -27,7 +27,9 @@ export default function DashboardShell() {
         <div className="flex-1 flex flex-col">
           <Topbar />
           <main className="p-6 lg:p-8">
-            <Outlet />
+            <div data-testid="panel-right" className="min-h-[60vh]">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

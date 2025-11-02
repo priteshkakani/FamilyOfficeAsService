@@ -6,8 +6,8 @@ import useClientData from "../../hooks/useClientData";
 import GoalModal from "../../components/dashboard/GoalModal";
 
 export default function Goals() {
-  const { client } = useClient();
-  const userId = client?.id;
+  const { selectedClient } = useClient();
+  const userId = selectedClient;
   const { loading, goals = [], refresh } = useClientData(userId);
   const [openGoal, setOpenGoal] = React.useState(false);
   const [goalPayload, setGoalPayload] = React.useState(null);

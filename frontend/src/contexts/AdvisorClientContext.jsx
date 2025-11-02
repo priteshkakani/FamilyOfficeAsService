@@ -15,14 +15,25 @@ export function AdvisorClientProvider({ children }) {
 
   // Hydrate clientId from URL or localStorage
   useEffect(() => {
+    // UUID v4 regex
+    const uuidRegex =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
     let urlClientId =
       params.clientId || new URLSearchParams(location.search).get("client");
-    if (urlClientId) {
+    if (
+      urlClientId &&
+      typeof urlClientId === "string" &&
+      uuidRegex.test(urlClientId)
+    ) {
       setClientId(urlClientId);
       localStorage.setItem("advisor-selected-client", urlClientId);
     } else {
       const stored = localStorage.getItem("advisor-selected-client");
-      if (stored) setClientId(stored);
+      if (stored && typeof stored === "string" && uuidRegex.test(stored)) {
+        setClientId(stored);
+      } else {
+        setClientId(null);
+      }
     }
   }, [location, params]);
 
@@ -47,10 +58,18 @@ export function AdvisorClientProvider({ children }) {
 
   // Update URL and localStorage on client change
   const handleSetClientId = (id) => {
-    setClientId(id);
-    localStorage.setItem("advisor-selected-client", id);
-    navigate(`/advisor/${id}`);
-    console.log("[Advisor] Selected client", id, location.pathname);
+    const uuidRegex =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    if (typeof id === "string" && uuidRegex.test(id)) {
+      setClientId(id);
+      localStorage.setItem("advisor-selected-client", id);
+      navigate(`/advisor/${id}`);
+      console.log("[Advisor] Selected client", id, location.pathname);
+    } else {
+      setClientId(null);
+      localStorage.removeItem("advisor-selected-client");
+      console.error("Attempted to set invalid clientId:", id);
+    }
   };
 
   return (

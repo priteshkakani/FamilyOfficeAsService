@@ -13,9 +13,11 @@ import {
 } from "lucide-react";
 
 const items = [
-  { to: "/dashboard", label: "Overview", Icon: Home },
+  { to: "/dashboard/overview", label: "Overview", Icon: Home },
   { to: "/dashboard/portfolio", label: "Portfolio", Icon: PieChart },
   { to: "/dashboard/liabilities", label: "Liabilities", Icon: CreditCard },
+  { to: "/dashboard/insurance", label: "Insurance", Icon: DollarSign },
+  { to: "/dashboard/analytics", label: "Analytics", Icon: PieChart },
   { to: "/dashboard/cashflow", label: "Cashflow", Icon: DollarSign },
   { to: "/dashboard/goals", label: "Goals", Icon: Target },
   { to: "/dashboard/family", label: "Family", Icon: CheckSquare },
@@ -24,7 +26,7 @@ const items = [
     label: "Recommendations",
     Icon: Lightbulb,
   },
-  { to: "/dashboard/tasks", label: "Next Steps", Icon: CheckSquare },
+  { to: "/dashboard/next-steps", label: "Next Steps", Icon: CheckSquare },
   { to: "/dashboard/documents", label: "Documents", Icon: FileText },
   { to: "/dashboard/audit", label: "Audit", Icon: Clock },
 ];
@@ -43,7 +45,7 @@ export default function Sidebar() {
               <li key={to}>
                 <NavLink
                   to={to}
-                  data-testid={`sidebar-${label
+                  data-testid={`nav-${label
                     .toLowerCase()
                     .replace(/\s+/g, "-")}`}
                   className={({ isActive }) =>

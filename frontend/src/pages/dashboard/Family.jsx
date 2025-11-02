@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import FamilyMembers from "../../src/components/dashboard/FamilyMembers";
+import FamilyMembers from "../../components/dashboard/FamilyMembers";
 import { useClient } from "../../hooks/useClientContext";
-import Modal from "../../src/components/common/Modal";
+import Modal from "../../components/common/Modal";
 
 export default function Family() {
   const { client } = useClient();

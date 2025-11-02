@@ -10,10 +10,25 @@ export default function Analytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // UUID v4 validation
+  function isValidUUID(id) {
+    return (
+      typeof id === "string" &&
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+        id
+      )
+    );
+  }
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       setError("");
+      if (!isValidUUID(selectedClient)) {
+        setError("Invalid client ID");
+        setLoading(false);
+        return;
+      }
       try {
         const { data: alloc, error: allocErr } = await supabase
           .from("vw_asset_allocation")
