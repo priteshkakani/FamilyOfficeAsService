@@ -1,4 +1,5 @@
 import { useProfile } from "./contexts/ProfileContext";
+import { AdvisorClientProvider } from "./contexts/AdvisorClientContext.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const queryClient = new QueryClient();
 import { ProfileProvider } from "./contexts/ProfileContext";
@@ -1295,7 +1296,9 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ProfileProvider>
           <BrowserRouter>
-            <AppRoutes />
+            <AdvisorClientProvider>
+              <AppRoutes />
+            </AdvisorClientProvider>
           </BrowserRouter>
           <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
         </ProfileProvider>

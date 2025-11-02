@@ -1,361 +1,308 @@
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "../../supabaseClient";
-import formatINR from "../../utils/formatINR";
+import React, { useEffect, useState } from "react";
+import supabase from "../../supabaseClient";
+
+function validatePAN(pan) {
+  return /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan);
+}
+
+function FamilyModal({ open, onClose, onSave, initial, clientId }) {
+  const [form, setForm] = useState(
+    initial || { name: "", relation: "", dob: "", pan: "" }
+  );
+  const [errors, setErrors] = useState({});
+  useEffect(() => {
+    setForm(initial || { name: "", relation: "", dob: "", pan: "" });
+    setErrors({});
+  }, [open, initial]);
+
+  function validate() {
+    const e = {};
+    if (!form.name) e.name = "Name required";
+    if (!form.relation) e.relation = "Relation required";
+    if (!form.dob) e.dob = "DOB required";
+    else if (new Date(form.dob) > new Date()) e.dob = "DOB cannot be future";
+    if (!form.pan) e.pan = "PAN required";
+    else if (!validatePAN(form.pan)) e.pan = "Invalid PAN format";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function handleChange(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!validate()) return;
+    onSave(form);
+  }
+
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+    >
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <form
+        className="bg-white rounded-xl shadow p-6 z-10 w-full max-w-md"
+        onSubmit={handleSubmit}
+      >
+        <h3 className="text-lg font-semibold mb-4">
+          {initial ? "Edit" : "Add"} Family Member
+        </h3>
+        <div className="space-y-3">
+          <div>
+            <label>Name</label>
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              className="w-full border rounded px-2 py-1"
+              required
+              autoFocus
+            />
+            {errors.name && (
+              <div className="text-red-600 text-xs">{errors.name}</div>
+            )}
+          </div>
+          <div>
+            <label>Relation</label>
+            <input
+              name="relation"
+              value={form.relation}
+              onChange={handleChange}
+              className="w-full border rounded px-2 py-1"
+              required
+            />
+            {errors.relation && (
+              <div className="text-red-600 text-xs">{errors.relation}</div>
+            )}
+          </div>
+          <div>
+            <label>Date of Birth</label>
+            <input
+              name="dob"
+              type="date"
+              value={form.dob}
+              onChange={handleChange}
+              className="w-full border rounded px-2 py-1"
+              required
+            />
+            {errors.dob && (
+              <div className="text-red-600 text-xs">{errors.dob}</div>
+            )}
+          </div>
+          <div>
+            <label>PAN</label>
+            <input
+              name="pan"
+              value={form.pan}
+              onChange={handleChange}
+              className="w-full border rounded px-2 py-1 uppercase"
+              required
+              maxLength={10}
+              pattern="[A-Z]{5}[0-9]{4}[A-Z]"
+            />
+            {errors.pan && (
+              <div className="text-red-600 text-xs">{errors.pan}</div>
+            )}
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-3 py-1 rounded bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-3 py-1 rounded bg-blue-600 text-white"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
 export default function Profile() {
-  const userId = supabase.auth.user()?.id;
-  const queryClient = useQueryClient();
-  // Profile fetch
-  const { data: profile, isLoading: loadingProfile } = useQuery({
-    queryKey: ["profile", userId],
-    queryFn: async () => {
-      if (!userId) return null;
-      const { data, error } = await supabase
+  const [profile, setProfile] = useState(null);
+  const [family, setFamily] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editIdx, setEditIdx] = useState(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchData() {
+      setLoading(true);
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) return setLoading(false);
+      const { data: prof } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!userId,
-    staleTime: 1000 * 60 * 10,
-  });
-  // Edit state
-  const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState({});
-  React.useEffect(() => {
-    if (profile) setForm(profile);
-  }, [profile]);
-  // Save mutation
-  const updateMutation = useMutation({
-    mutationFn: async (values) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update(values)
-        .eq("id", userId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["profile", userId]);
-      setEditMode(false);
-    },
-  });
-
-  // Family members fetch
-  const { data: family, isLoading: loadingFamily } = useQuery({
-    queryKey: ["family", userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      const { data, error } = await supabase
+      const { data: fam } = await supabase
         .from("family_members")
         .select("*")
-        .eq("user_id", userId);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!userId,
-    staleTime: 1000 * 60 * 10,
-  });
+        .eq("profile_id", userId);
+      if (mounted) {
+        setProfile(prof);
+        setFamily(fam || []);
+        setLoading(false);
+      }
+    }
+    fetchData();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  // Family member CRUD
-  const addFamilyMutation = useMutation({
-    mutationFn: async (values) => {
-      const { error } = await supabase
+  async function handleSave(member) {
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id;
+    if (!userId) return;
+    if (editIdx != null) {
+      // Edit
+      const id = family[editIdx].id;
+      await supabase.from("family_members").update(member).eq("id", id);
+    } else {
+      // Add
+      await supabase
         .from("family_members")
-        .insert([{ ...values, user_id: userId }]);
-      if (error) throw error;
-    },
-    onSuccess: () => queryClient.invalidateQueries(["family", userId]),
-  });
-  const updateFamilyMutation = useMutation({
-    mutationFn: async (values) => {
-      const { error } = await supabase
-        .from("family_members")
-        .update(values)
-        .eq("id", values.id)
-        .eq("user_id", userId);
-      if (error) throw error;
-    },
-    onSuccess: () => queryClient.invalidateQueries(["family", userId]),
-  });
-  const deleteFamilyMutation = useMutation({
-    mutationFn: async (id) => {
-      const { error } = await supabase
-        .from("family_members")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId);
-      if (error) throw error;
-    },
-    onSuccess: () => queryClient.invalidateQueries(["family", userId]),
-  });
+        .insert({ ...member, profile_id: userId });
+    }
+    setModalOpen(false);
+    setEditIdx(null);
+    // Refresh
+    const { data: fam } = await supabase
+      .from("family_members")
+      .select("*")
+      .eq("profile_id", userId);
+    setFamily(fam || []);
+  }
 
-  // Add/Edit modal state
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalData, setModalData] = useState(null);
+  async function handleDelete(idx) {
+    const id = family[idx].id;
+    await supabase.from("family_members").delete().eq("id", id);
+    setFamily(family.filter((_, i) => i !== idx));
+  }
 
-  // Render
+  // Pagination
+  const pagedFamily = family.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.ceil(family.length / pageSize);
+
   return (
-    <div className="space-y-8" data-testid="panel-ov-profile">
-      <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Profile</h2>
-        {loadingProfile ? (
-          <div>Loading…</div>
-        ) : (
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              updateMutation.mutate(form);
-            }}
-          >
-            {[
-              "primary_email",
-              "secondary_email",
-              "mobile_number",
-              "address",
-              "monthly_income",
-              "monthly_expenses",
-              "other_info",
-            ].map((field) => (
-              <div key={field} className="flex flex-col gap-1">
-                <label htmlFor={field} className="font-medium">
-                  {field
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (l) => l.toUpperCase())}
-                </label>
-                {editMode ? (
-                  <input
-                    id={field}
-                    type={
-                      field.includes("income") || field.includes("expenses")
-                        ? "number"
-                        : "text"
-                    }
-                    value={form[field] ?? ""}
-                    onChange={(e) =>
-                      setForm({ ...form, [field]: e.target.value })
-                    }
-                    className="border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                  />
-                ) : (
-                  <div className="px-3 py-2 bg-gray-50 rounded" tabIndex={0}>
-                    {form[field]}
-                  </div>
-                )}
-              </div>
-            ))}
-            <div className="flex gap-4 mt-6">
-              {editMode ? (
-                <>
-                  <button
-                    type="submit"
-                    className="bg-blue-600 text-white px-6 py-2 rounded font-bold"
-                    data-testid="btn-profile-save"
-                    disabled={updateMutation.isLoading}
-                  >
-                    {updateMutation.isLoading ? "Saving…" : "Save"}
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-gray-200 text-gray-700 px-6 py-2 rounded font-bold"
-                    data-testid="btn-profile-cancel"
-                    onClick={() => setEditMode(false)}
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  className="bg-blue-100 text-blue-700 px-6 py-2 rounded font-bold"
-                  onClick={() => setEditMode(true)}
-                >
-                  Edit
-                </button>
-              )}
-            </div>
-          </form>
-        )}
-      </div>
-      <div
-        className="bg-white rounded-xl shadow p-6"
-        data-testid="family-table"
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold">Family Members</h3>
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded font-bold"
-            data-testid="family-add"
-            onClick={() => {
-              setModalOpen(true);
-              setModalData(null);
-            }}
-          >
-            Add Family Member
-          </button>
-        </div>
-        {loadingFamily ? (
-          <div>Loading…</div>
-        ) : !family?.length ? (
-          <div className="text-gray-500">No family members yet.</div>
-        ) : (
-          <table className="min-w-full text-left border">
-            <thead>
-              <tr>
-                {[
-                  "name",
-                  "relation",
-                  "pan",
-                  "dob",
-                  "aadhaar",
-                  "profession",
-                  "marital_status",
-                  "marital_date",
-                  "itr_login_username",
-                  "address",
-                ].map((col) => (
-                  <th key={col} className="border-b p-2">
-                    {col
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </th>
-                ))}
-                <th className="border-b p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {family.map((member) => (
-                <tr key={member.id} className="border-b">
-                  {[
-                    "name",
-                    "relation",
-                    "pan",
-                    "dob",
-                    "aadhaar",
-                    "profession",
-                    "marital_status",
-                    "marital_date",
-                    "itr_login_username",
-                    "address",
-                  ].map((col) => (
-                    <td key={col} className="p-2">
-                      {member[col]}
-                    </td>
-                  ))}
-                  <td className="p-2">
-                    <div
-                      className="relative"
-                      data-testid={`menu-family-${member.id}`}
-                    >
-                      {" "}
-                      {/* 3-dots menu */}
-                      <button
-                        className="px-2 py-1 text-gray-500 hover:text-gray-700"
-                        aria-label="More actions"
-                        tabIndex={0}
-                        onClick={() => {
-                          setModalOpen(true);
-                          setModalData(member);
-                        }}
-                        data-testid={`family-edit-${member.id}`}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="px-2 py-1 text-red-500 hover:text-red-700 ml-2"
-                        aria-label="Delete"
-                        tabIndex={0}
-                        onClick={() => deleteFamilyMutation.mutate(member.id)}
-                        data-testid={`family-delete-${member.id}`}
-                        disabled={deleteFamilyMutation.isLoading}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      {/* Modal for Add/Edit Family Member */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow p-6 max-w-lg mx-auto">
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (modalData?.id) {
-                  updateFamilyMutation.mutate(modalData);
-                } else {
-                  addFamilyMutation.mutate(modalData);
-                }
-                setModalOpen(false);
-              }}
-            >
-              {[
-                "name",
-                "relation",
-                "pan",
-                "dob",
-                "aadhaar",
-                "profession",
-                "marital_status",
-                "marital_date",
-                "itr_login_username",
-                "address",
-              ].map((field) => (
-                <div key={field} className="flex flex-col gap-1">
-                  <label htmlFor={field} className="font-medium">
-                    {field
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </label>
-                  <input
-                    id={field}
-                    type="text"
-                    value={modalData?.[field] ?? ""}
-                    onChange={(e) =>
-                      setModalData({ ...modalData, [field]: e.target.value })
-                    }
-                    className="border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              ))}
-              <div className="flex gap-4 mt-6">
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-6 py-2 rounded font-bold"
-                  disabled={
-                    addFamilyMutation.isLoading ||
-                    updateFamilyMutation.isLoading
-                  }
-                >
-                  {modalData?.id
-                    ? updateFamilyMutation.isLoading
-                      ? "Saving…"
-                      : "Save"
-                    : addFamilyMutation.isLoading
-                    ? "Adding…"
-                    : "Add"}
-                </button>
-                <button
-                  type="button"
-                  className="bg-gray-200 text-gray-700 px-6 py-2 rounded font-bold"
-                  onClick={() => setModalOpen(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+    <div className="max-w-3xl mx-auto py-8">
+      <h2 className="text-2xl font-bold mb-4">Profile</h2>
+      {loading ? (
+        <div>Loading...</div>
+      ) : profile ? (
+        <div className="mb-8 p-4 bg-gray-50 rounded">
+          <div>
+            <strong>Name:</strong> {profile.full_name}
+          </div>
+          <div>
+            <strong>Email:</strong> {profile.email}
+          </div>
+          <div>
+            <strong>Phone:</strong> {profile.phone}
           </div>
         </div>
+      ) : (
+        <div>No profile found.</div>
       )}
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-semibold">Family Members</h3>
+        <button
+          className="px-3 py-1 rounded bg-blue-600 text-white"
+          onClick={() => {
+            setModalOpen(true);
+            setEditIdx(null);
+          }}
+          data-testid="add-family-btn"
+        >
+          Add
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full border rounded">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-2 py-1">Name</th>
+              <th className="px-2 py-1">Relation</th>
+              <th className="px-2 py-1">DOB</th>
+              <th className="px-2 py-1">PAN</th>
+              <th className="px-2 py-1">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pagedFamily.map((m, idx) => (
+              <tr key={m.id}>
+                <td className="px-2 py-1">{m.name}</td>
+                <td className="px-2 py-1">{m.relation}</td>
+                <td className="px-2 py-1">{m.dob}</td>
+                <td className="px-2 py-1">{m.pan}</td>
+                <td className="px-2 py-1">
+                  <button
+                    className="text-blue-600 mr-2"
+                    onClick={() => {
+                      setEditIdx((page - 1) * pageSize + idx);
+                      setModalOpen(true);
+                    }}
+                    data-testid={`edit-family-${m.id}`}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="text-red-600"
+                    onClick={() => handleDelete((page - 1) * pageSize + idx)}
+                    data-testid={`delete-family-${m.id}`}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-4 gap-2">
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              className={`px-2 py-1 rounded ${
+                page === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100"
+              }`}
+              onClick={() => setPage(i + 1)}
+              data-testid={`family-page-${i + 1}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
+      <FamilyModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setEditIdx(null);
+        }}
+        onSave={handleSave}
+        initial={editIdx != null ? family[editIdx] : null}
+        clientId={profile?.id}
+      />
     </div>
   );
 }

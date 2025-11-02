@@ -67,7 +67,139 @@ export default function Overview() {
   );
 }
 
+import { useAdvisorClient } from "../../contexts/AdvisorClientContext";
+// ...existing code...
+
 function OverviewPanel() {
-  // ...existing summary panel code from previous Overview.jsx...
-  return <div data-testid="panel-ov-overview">{/* summary panel here */}</div>;
+  const { clientId } = useAdvisorClient();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [kpi, setKpi] = useState({ netWorth: 0, cashflow: 0 });
+  const [alloc, setAlloc] = useState([]);
+  const [txns, setTxns] = useState([]);
+  const [family, setFamily] = useState([]);
+
+  useEffect(() => {
+    if (!clientId) return;
+    setLoading(true);
+    setError("");
+    Promise.all([
+      supabase
+        .from("vw_net_worth")
+        .select("net_worth")
+        .eq("user_id", clientId)
+        .maybeSingle(),
+      supabase.from("vw_asset_allocation").select("*").eq("user_id", clientId),
+      supabase
+        .from("mf_transactions")
+        .select("*")
+        .eq("user_id", clientId)
+        .order("txn_date", { ascending: false })
+        .limit(5),
+      supabase
+        .from("family_members")
+        .select("*")
+        .eq("user_id", clientId)
+        .limit(5),
+    ])
+      .then(([nw, allocRes, txnRes, famRes]) => {
+        setKpi({ netWorth: nw.data?.net_worth || 0 });
+        setAlloc(allocRes.data || []);
+        setTxns(txnRes.data || []);
+        setFamily(famRes.data || []);
+      })
+      .catch((err) => {
+        setError("Failed to load overview");
+      })
+      .finally(() => setLoading(false));
+  }, [clientId]);
+
+  if (!clientId)
+    return (
+      <div className="p-4" data-testid="panel-ov-empty">
+        Select a client to begin.
+      </div>
+    );
+  if (loading)
+    return (
+      <div className="p-4" data-testid="panel-ov-loading">
+        Loading…
+      </div>
+    );
+  if (error)
+    return (
+      <div className="p-4 text-red-600" data-testid="panel-ov-error">
+        {error}
+      </div>
+    );
+
+  return (
+    <div data-testid="panel-ov-overview" className="space-y-6">
+      <div className="flex gap-6">
+        <div className="bg-white rounded shadow p-4 flex-1">
+          <div className="font-bold text-lg">Net Worth</div>
+          <div className="text-2xl" data-testid="kpi-net-worth">
+            {formatINR(kpi.netWorth)}
+          </div>
+        </div>
+        <div className="bg-white rounded shadow p-4 flex-1">
+          <div className="font-bold text-lg">Asset Allocation</div>
+          <ul>
+            {alloc.map((a) => (
+              <li key={a.category} className="flex justify-between">
+                <span>{a.category}</span>
+                <span>{formatINR(a.value)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="bg-white rounded shadow p-4">
+        <div className="font-bold mb-2">Recent Transactions</div>
+        <table className="w-full text-sm" data-testid="panel-ov-txns">
+          <thead>
+            <tr>
+              <th>Scheme</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {txns.map((t) => (
+              <tr key={t.id}>
+                <td>{t.scheme}</td>
+                <td>{t.txn_type}</td>
+                <td>{t.txn_date}</td>
+                <td>{formatINR(t.amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="bg-white rounded shadow p-4">
+        <div className="font-bold mb-2">Family Members</div>
+        <table className="w-full text-sm" data-testid="panel-ov-family">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Relation</th>
+              <th>PAN</th>
+              <th>DOB</th>
+            </tr>
+          </thead>
+          <tbody>
+            {family.map((f) => (
+              <tr key={f.id}>
+                <td>{f.name}</td>
+                <td>{f.relation}</td>
+                <td>{f.pan}</td>
+                <td>{f.dob}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }

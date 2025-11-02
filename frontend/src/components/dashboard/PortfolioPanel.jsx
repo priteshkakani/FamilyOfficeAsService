@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
+import { useAdvisorClient } from "../../contexts/AdvisorClientContext";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import formatINR from "../../utils/formatINR";
 import { notifyError, notifySuccess } from "../../utils/toast";
@@ -23,6 +24,7 @@ function normalizeCategory(cat) {
 }
 
 export default function PortfolioPanel() {
+  const { clientId } = useAdvisorClient();
   const [assets, setAssets] = useState([]);
   const [alloc, setAlloc] = useState([]);
   const [netWorth, setNetWorth] = useState(0);
@@ -36,10 +38,14 @@ export default function PortfolioPanel() {
   });
 
   useEffect(() => {
+    if (!clientId) return;
     (async () => {
       setLoading(true);
       try {
-        const { data: assetRows } = await supabase.from("assets").select("*");
+        const { data: assetRows } = await supabase
+          .from("assets")
+          .select("*")
+          .eq("user_id", clientId);
         setAssets(assetRows || []);
         // Asset allocation
         const allocMap = {};
@@ -57,6 +63,7 @@ export default function PortfolioPanel() {
         const { data: nwRows } = await supabase
           .from("vw_net_worth")
           .select("net_worth")
+          .eq("user_id", clientId)
           .maybeSingle();
         setNetWorth(nwRows?.net_worth || 0);
       } catch (err) {
@@ -65,7 +72,7 @@ export default function PortfolioPanel() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [clientId]);
 
   const handleEdit = (row) => {
     setEditingId(row.id);
@@ -81,14 +88,18 @@ export default function PortfolioPanel() {
     try {
       if (!form.name || !form.category || !form.amount)
         return notifyError("All fields required");
-      // Get user_id from localStorage/session (example, adjust as needed)
-      const user_id = localStorage.getItem("user_id");
-      const payload = { ...form, amount: Number(form.amount), user_id };
+      if (!clientId) throw new Error("No client selected");
+      const payload = {
+        ...form,
+        amount: Number(form.amount),
+        user_id: clientId,
+      };
       if (editingId) {
         const { error } = await supabase
           .from("assets")
           .update(payload)
-          .eq("id", editingId);
+          .eq("id", editingId)
+          .eq("user_id", clientId);
         if (error) throw error;
         notifySuccess("Asset updated");
       } else {
@@ -99,7 +110,10 @@ export default function PortfolioPanel() {
       setEditingId(null);
       setForm({ name: "", category: "stocks", amount: "", as_of_date: "" });
       // Reload
-      const { data: assetRows } = await supabase.from("assets").select("*");
+      const { data: assetRows } = await supabase
+        .from("assets")
+        .select("*")
+        .eq("user_id", clientId);
       setAssets(assetRows || []);
     } catch (err) {
       notifyError("Save failed");
@@ -109,7 +123,11 @@ export default function PortfolioPanel() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this asset?")) return;
     try {
-      const { error } = await supabase.from("assets").delete().eq("id", id);
+      const { error } = await supabase
+        .from("assets")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", clientId);
       if (error) throw error;
       notifySuccess("Asset deleted");
       setAssets(assets.filter((a) => a.id !== id));
@@ -170,7 +188,7 @@ export default function PortfolioPanel() {
             </tr>
           </thead>
           <tbody>
-            {assets.map((row) => {
+            {assets.slice((page - 1) * 10, page * 10).map((row) => {
               const totalAssets = alloc.reduce((s, a) => s + a.value, 0);
               const catAlloc = alloc.find(
                 (a) => a.category === normalizeCategory(row.category)
@@ -262,22 +280,41 @@ export default function PortfolioPanel() {
                       </>
                     ) : (
                       <>
-                        <button
-                          className="text-blue-600 mr-2"
-                          onClick={() => handleEdit(row)}
+                        <div
+                          className="relative inline-block text-left"
+                          data-testid={`menu-assets-${row.id}`}
                         >
-                          <span role="img" aria-label="edit">
-                            ✏️
-                          </span>
-                        </button>
-                        <button
-                          className="text-red-600"
-                          onClick={() => handleDelete(row.id)}
-                        >
-                          <span role="img" aria-label="delete">
-                            🗑️
-                          </span>
-                        </button>
+                          <button
+                            className="text-gray-600 px-2 py-1 rounded hover:bg-gray-100"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                          >
+                            ⋮
+                          </button>
+                          <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
+                            <button
+                              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                              onClick={() => alert(JSON.stringify(row))}
+                              data-testid="action-view"
+                            >
+                              View
+                            </button>
+                            <button
+                              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                              onClick={() => handleEdit(row)}
+                              data-testid="action-edit"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+                              onClick={() => handleDelete(row.id)}
+                              data-testid="action-delete"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
                       </>
                     )}
                   </td>
@@ -339,6 +376,22 @@ export default function PortfolioPanel() {
           </tbody>
         </table>
       </div>
+      {assets.length > 10 && (
+        <div className="flex gap-2 justify-center mt-2">
+          {[...Array(Math.ceil(assets.length / 10))].map((_, i) => (
+            <button
+              key={i}
+              className={`px-2 py-1 rounded ${
+                page === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100"
+              }`}
+              onClick={() => setPage(i + 1)}
+              data-testid={`assets-page-${i + 1}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

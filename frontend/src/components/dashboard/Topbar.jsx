@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ClientSwitcher from "./ClientSwitcher";
+import ClientPicker from "./ClientPicker";
 import SettingsModal from "./SettingsModal";
 import { useNavigate } from "react-router-dom";
 import supabase from "../../supabaseClient";
@@ -54,7 +54,7 @@ export default function Topbar() {
         <h1 className="text-2xl font-semibold text-gray-800">
           Advisor Dashboard
         </h1>
-        <ClientSwitcher />
+        <ClientPicker />
         <span className="ml-4 inline-block text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
           env: dev
         </span>

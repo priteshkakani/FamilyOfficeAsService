@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useClient } from "../../hooks/useClientContext";
 import useClientData from "../../hooks/useClientData";
 import { getInvestmentRecs, getInsuranceRecs } from "../../lib/ruleEngine";
@@ -69,21 +69,41 @@ import { getInvestmentRecs, getInsuranceRecs } from "../../lib/ruleEngine";
 
 export default function Recommendations() {
   const { selectedClient } = useClient();
-  const { loading, profile, views, goals } = useClientData(selectedClient);
+  const { loading, profile, views, goals, error } = useClientData(selectedClient);
+  const [feedback, setFeedback] = useState("");
 
-  const inv = getInvestmentRecs(
-    profile || {},
-    views.cashflow || [],
-    views.allocation || []
-  );
-  const ins = getInsuranceRecs(profile || {}, [], []);
+  let inv = [];
+  let ins = [];
+  if (profile && views) {
+    try {
+      inv = getInvestmentRecs(profile || {}, views.cashflow || [], views.allocation || []);
+      ins = getInsuranceRecs(profile || {}, [], []);
+    } catch (e) {
+      // fallback to empty
+    }
+  }
+
+  if (loading) return <div data-testid="recommendations-loading" aria-busy="true">Loading recommendations…</div>;
+  if (error) return <div data-testid="recommendations-error" role="alert">Error loading recommendations</div>;
+
+  const handleAddTask = (r) => {
+    window.dispatchEvent(
+      new CustomEvent("task:add", {
+        detail: { title: r.title, notes: r.rationale },
+      })
+    );
+    setFeedback(`Added to Next Steps: ${r.title}`);
+    setTimeout(() => setFeedback(""), 2000);
+  };
 
   return (
-    <div data-testid="recommendations-page">
+    <div data-testid="recommendations-page" className="p-4">
       <h2 className="text-xl font-semibold mb-4">Recommendations</h2>
+      {feedback && <div className="text-green-600 mb-2" role="status" data-testid="recommendations-feedback">{feedback}</div>}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <section>
           <h3 className="text-lg font-medium mb-2">Investments</h3>
+          {inv.length === 0 && <div className="text-gray-500" data-testid="recommendations-empty-inv">No investment recommendations.</div>}
           {inv.map((r) => (
             <div key={r.id} className="bg-white rounded-xl shadow p-4 mb-3">
               <div className="font-semibold">{r.title}</div>
@@ -92,13 +112,8 @@ export default function Recommendations() {
                 <button
                   className="px-3 py-1 bg-blue-600 text-white rounded"
                   data-testid={`rec-addtask-${r.id}`}
-                  onClick={() =>
-                    window.dispatchEvent(
-                      new CustomEvent("task:add", {
-                        detail: { title: r.title, notes: r.rationale },
-                      })
-                    )
-                  }
+                  aria-label={`Add ${r.title} to Next Steps`}
+                  onClick={() => handleAddTask(r)}
                 >
                   Add Task
                 </button>
@@ -108,6 +123,7 @@ export default function Recommendations() {
         </section>
         <section>
           <h3 className="text-lg font-medium mb-2">Insurance</h3>
+          {ins.length === 0 && <div className="text-gray-500" data-testid="recommendations-empty-ins">No insurance recommendations.</div>}
           {ins.map((r) => (
             <div key={r.id} className="bg-white rounded-xl shadow p-4 mb-3">
               <div className="font-semibold">{r.title}</div>
@@ -116,13 +132,8 @@ export default function Recommendations() {
                 <button
                   className="px-3 py-1 bg-blue-600 text-white rounded"
                   data-testid={`rec-addtask-${r.id}`}
-                  onClick={() =>
-                    window.dispatchEvent(
-                      new CustomEvent("task:add", {
-                        detail: { title: r.title, notes: r.rationale },
-                      })
-                    )
-                  }
+                  aria-label={`Add ${r.title} to Next Steps`}
+                  onClick={() => handleAddTask(r)}
                 >
                   Add Task
                 </button>

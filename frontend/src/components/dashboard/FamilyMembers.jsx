@@ -1,10 +1,17 @@
 import React from "react";
 
-export default function FamilyMembers({ members = [], userId, onDelete }) {
+export default function FamilyMembers({
+  members = [],
+  userId,
+  onDelete,
+  onEdit,
+}) {
   return (
     <div className="space-y-3">
       {members.length === 0 && (
-        <div className="text-gray-500">No family members added.</div>
+        <div className="text-gray-500" data-testid="family-empty">
+          No family members added.
+        </div>
       )}
       {members.map((m) => (
         <div
@@ -15,13 +22,24 @@ export default function FamilyMembers({ members = [], userId, onDelete }) {
             <div className="font-semibold">{m.name}</div>
             <div className="text-xs text-gray-500">{m.relationship}</div>
           </div>
-          <button
-            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-            onClick={() => onDelete(m.id)}
-            data-testid={`delete-family-member-${m.id}`}
-          >
-            Delete
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300"
+              onClick={() => onEdit && onEdit(m)}
+              aria-label={`Edit ${m.name}`}
+              data-testid={`edit-family-member-${m.id}`}
+            >
+              Edit
+            </button>
+            <button
+              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+              onClick={() => onDelete(m.id)}
+              aria-label={`Delete ${m.name}`}
+              data-testid={`delete-family-member-${m.id}`}
+            >
+              Delete
+            </button>
+          </div>
         </div>
       ))}
     </div>

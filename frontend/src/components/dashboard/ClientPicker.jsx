@@ -47,10 +47,17 @@ export default function ClientPicker() {
     );
     setRecent(updated);
     localStorage.setItem("advisor-recent-clients", JSON.stringify(updated));
+    // Update URL
+    window.history.replaceState({}, "", `/advisor/${client.id}`);
+    // Optionally: trigger global refetch (if using react-query context)
+    // window.dispatchEvent(new Event('advisor-client-changed'));
   };
 
   return (
-    <div className="relative" data-testid="client-picker">
+    <div
+      className="relative flex items-center gap-2"
+      data-testid="client-picker"
+    >
       <input
         type="text"
         className="border rounded px-3 py-2 w-64"
@@ -58,59 +65,57 @@ export default function ClientPicker() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         data-testid="client-search-input"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") setDebounced(search);
+        }}
       />
+      <button
+        className="ml-2 px-4 py-2 bg-blue-600 text-white rounded font-bold"
+        onClick={() => setDebounced(search)}
+        data-testid="client-search-button"
+      >
+        Search
+      </button>
       <div className="absolute bg-white shadow rounded mt-2 w-64 z-10">
         {isLoading && <div className="p-2">Loading…</div>}
-        {isError && (
-          <div className="p-2 text-red-600">Error loading clients</div>
+        {!isLoading && data && data.length === 0 && debounced && (
+          <div className="p-2 text-gray-500">No clients found.</div>
         )}
-        {!search && recent.length > 0 && (
-          <div className="p-2 text-gray-500">Recent clients</div>
+        {!isLoading && data && data.length > 0 && (
+          <ul className="divide-y">
+            {data.map((client) => (
+              <li
+                key={client.id}
+                className="p-2 cursor-pointer hover:bg-blue-50"
+                onClick={() => handleSelect(client)}
+                data-testid={`client-option-${client.id}`}
+              >
+                <div className="font-semibold">
+                  {client.full_name || client.name}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {client.email} · {client.phone}
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
-        {(search ? data : recent).map((client) => (
-          <div
-            key={client.id}
-            className={`p-2 cursor-pointer hover:bg-blue-50 flex items-center gap-2 ${
-              clientId === client.id ? "bg-blue-100" : ""
-            }`}
-            onClick={() => handleSelect(client)}
-            data-testid={`client-option-${client.id}`}
-            tabIndex={0}
-          >
-            <div className="rounded-full bg-gray-200 w-8 h-8 flex items-center justify-center font-bold">
-              {client.name?.[0] || client.email?.[0] || "?"}
-            </div>
-            <div>
-              <div className="font-medium">{client.name || client.email}</div>
-              <div className="text-xs text-gray-500">
-                {client.email} {client.mobile}
-              </div>
-            </div>
-          </div>
-        ))}
-        <div
-          className="p-2 cursor-pointer text-gray-500 hover:bg-gray-100"
-          onClick={() => setClientId(null)}
-          data-testid="client-clear"
-        >
-          Clear selection
-        </div>
       </div>
-      {clientId && clientMeta && (
-        <div
-          className="ml-4 inline-flex items-center gap-2"
+      {isError && <div className="p-2 text-red-600">Error loading clients</div>}
+      {clientId && clientMeta ? (
+        <span
+          className="ml-4 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold"
           data-testid="selected-client-badge"
         >
-          <span className="rounded-full bg-blue-100 px-3 py-1 font-bold">
-            {clientMeta.name || clientMeta.email}
-          </span>
-          <button
-            className="text-blue-600 underline text-sm"
-            onClick={() => setClientId(null)}
-          >
-            Switch
-          </button>
-        </div>
+          Selected: {clientMeta.full_name || clientMeta.name || clientId}
+        </span>
+      ) : (
+        <span
+          className="ml-4 px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs"
+          data-testid="empty-client-state"
+        >
+          Select a client to begin.
+        </span>
       )}
     </div>
   );
