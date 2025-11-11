@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
 import { notifySuccess, notifyError } from "../../utils/toast";
-import { useClient } from "../../hooks/useClientContext";
+// import { useClient } from "../../hooks/useClientContext";
 
 export default function GoalModal({ open, onClose, clientId, goal }) {
-  const { selectedClient } = useClient();
-  const effectiveClient = clientId || selectedClient;
+  // const { selectedClient } = useClient();
+  const effectiveClient = clientId;
   const [title, setTitle] = useState(goal?.title || "");
   const [amount, setAmount] = useState(goal?.target_amount || "");
   const [date, setDate] = useState(goal?.target_date || "");

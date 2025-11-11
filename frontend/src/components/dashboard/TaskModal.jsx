@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
 import { notifySuccess, notifyError } from "../../utils/toast";
-import { useClient } from "../../hooks/useClientContext";
+// import { useClient } from "../../hooks/useClientContext";
 
 export default function TaskModal({ open, onClose, clientId, task }) {
-  const { selectedClient } = useClient();
-  const effectiveClient = clientId || selectedClient;
+  // const { selectedClient } = useClient();
+  const effectiveClient = clientId;
   const [title, setTitle] = useState(task?.title || "");
   const [type, setType] = useState(task?.type || "followup");
   const [priority, setPriority] = useState(task?.priority || "medium");

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { navigateToDashboardAfterAllSaves } from "./onboardingNavigation";
 import OnboardingLayout from "../../layouts/OnboardingLayout";
 import { supabase } from "../../supabaseClient";
 import { notifyError, notifySuccess } from "../../utils/toast";
@@ -14,7 +15,7 @@ const TEMPLATES = [
   { key: "wealth", title: "Wealth Creation", priority: "Medium" },
 ];
 
-export default function GoalsStep({ userId, data, onChange }) {
+export default function GoalsStep({ userId, data, onChange, onComplete }) {
   const [form, setForm] = useState({
     title: "",
     target_amount: "",
@@ -57,11 +58,10 @@ export default function GoalsStep({ userId, data, onChange }) {
   const handleSave = async () => {
     const controlledMode =
       Array.isArray(data) || (data && Array.isArray(data.goals));
-    // debug help for tests: log controlled mode and form
-    // (temporary - helps diagnose test failures where onChange isn't called)
+    // Diagnostic log
     // eslint-disable-next-line no-console
     console.log(
-      "[GoalsStep] handleSave controlledMode=",
+      "[Onboarding][goals.save] controlledMode=",
       controlledMode,
       "form=",
       form
@@ -80,8 +80,11 @@ export default function GoalsStep({ userId, data, onChange }) {
         target_date: form.target_date,
         priority: form.priority,
         notes: form.notes,
+        is_completed: false,
       };
-      if (Array.isArray(data) || (data && Array.isArray(data.goals))) {
+      // eslint-disable-next-line no-console
+      console.log("[Onboarding][goals.save] payload", payload);
+      if (controlledMode) {
         // controlled mode: tests may click Add without filling form; create a lightweight goal
         const newGoal = {
           id: `local-${Date.now()}`,
@@ -92,6 +95,7 @@ export default function GoalsStep({ userId, data, onChange }) {
             form.target_date || new Date().toISOString().slice(0, 10),
           priority: form.priority || "Medium",
           notes: form.notes || "",
+          is_completed: false,
         };
         const next = [...(goals || []), newGoal];
         setGoals(next);
@@ -110,6 +114,11 @@ export default function GoalsStep({ userId, data, onChange }) {
       const insertRes = await supabase.from("goals").insert(payload);
       if (insertRes?.error) throw insertRes.error;
       notifySuccess("Goal created");
+      // Invalidate React Query cache for dashboard goals
+      if (window.queryClient) {
+        window.queryClient.invalidateQueries(["goals", userId]);
+      }
+      if (typeof onComplete === "function") onComplete();
       const listRes = await supabase
         .from("goals")
         .select("*")
@@ -124,9 +133,8 @@ export default function GoalsStep({ userId, data, onChange }) {
         notes: "",
       });
     } catch (e) {
-      // Log full error for diagnostics in tests
       // eslint-disable-next-line no-console
-      console.error("[GoalsStep][save]", e);
+      console.error("[Onboarding][goals.save] error", e);
       notifyError("Failed to save goal");
     } finally {
       setSaving(false);

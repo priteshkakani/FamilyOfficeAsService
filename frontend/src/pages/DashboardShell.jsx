@@ -5,7 +5,7 @@ import Topbar from "../components/dashboard/Topbar";
 import TopNav from "../components/TopNav";
 import SubTabs from "../components/SubTabs";
 import { useLocation } from "react-router-dom";
-import { ClientProvider } from "../hooks/useClientContext";
+// import { ClientProvider } from "../hooks/useClientContext";
 
 export default function DashboardShell() {
   const location = useLocation();
@@ -15,20 +15,18 @@ export default function DashboardShell() {
       location.pathname.includes(s)
     ) || "overview";
   return (
-    <ClientProvider>
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex">
-          <Sidebar />
-          <div className="flex-1">
-            <Topbar />
-            <TopNav />
-            <SubTabs section={section} />
-            <main className="p-6">
-              <Outlet />
-            </main>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1">
+          <Topbar />
+          <TopNav />
+          <SubTabs section={section} />
+          <main className="p-6">
+            <Outlet />
+          </main>
         </div>
       </div>
-    </ClientProvider>
+    </div>
   );
 }

@@ -36,8 +36,7 @@ export default function Sidebar() {
     <aside className="w-72 bg-white border-r hidden md:block">
       <div className="h-full flex flex-col">
         <div className="p-6 border-b">
-          <h2 className="text-lg font-semibold">Advisor Console</h2>
-          <p className="text-xs text-gray-500 mt-1">Clients & Insights</p>
+          {/* Client Console text removed for Client Mode */}
         </div>
         <nav className="p-4 flex-1">
           <ul className="space-y-1">

@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../supabaseClient";
-import { useAdvisorClient } from "../../contexts/AdvisorClientContext";
+import { useParams } from "react-router-dom";
 
 function Transaction() {
-  const { clientId } = useAdvisorClient();
+  const { clientId } = useParams();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -26,7 +26,10 @@ function Transaction() {
   } = useQuery({
     queryKey: ["transactions", clientId],
     queryFn: async () => {
-      if (!clientId) return [];
+      // UUID v4 regex
+      const uuidRegex =
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+      if (!clientId || !uuidRegex.test(clientId)) return [];
       const { data: mf, error: mfError } = await supabase
         .from("mf_transactions")
         .select("*")

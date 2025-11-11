@@ -1,12 +1,11 @@
 import React from "react";
-import { useAdvisorClient } from "../contexts/AdvisorClientContext";
 import EntityFormPanel from "../components/dashboard/EntityFormPanel";
 
 export default function AdvisorPanelContainer({
   selectedEntity,
   selectedRowId,
 }) {
-  const { clientId, clientMeta, loading, error } = useAdvisorClient();
+  // const { clientId, clientMeta, loading, error } = useAdvisorClient(); // Removed for Client Mode. Use clientId from context, props, or auth.user.id
 
   if (!clientId) {
     return (

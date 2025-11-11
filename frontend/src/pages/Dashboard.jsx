@@ -2,11 +2,8 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import { ClientProvider } from "../hooks/useClientContext";
 import TopNav from "../components/dashboard/TopNav";
-import {
-  AdvisorClientProvider,
-  useAdvisorClient,
-} from "../contexts/AdvisorClientContext";
-import ClientPicker from "../components/dashboard/ClientPicker";
+import { ClientProvider } from "../hooks/useClientContext";
+// ClientPicker removed for Client Mode
 import EntityFormPanel from "../components/dashboard/EntityFormPanel";
 import { useAuth } from "../contexts/AuthProvider";
 import SubTabs from "../components/dashboard/SubTabs";
@@ -75,11 +72,9 @@ export default function Dashboard() {
     </div>
   );
   return (
-    <AdvisorClientProvider>
+    <ClientProvider>
       <div className="max-w-7xl mx-auto px-2 md:px-4 py-8">
-        <div className="flex justify-end items-center mb-6 gap-4">
-          <ClientPicker />
-        </div>
+        {/* ClientPicker removed for Client Mode */}
         {/* Diagnostic Tailwind container for CSS verification */}
         <div className="diagnostic-tailwind mb-4" data-testid="css-diagnostic">
           Tailwind Diagnostic: If you see this yellow box, Tailwind CSS is
@@ -122,6 +117,6 @@ export default function Dashboard() {
           selectedRowId={selectedRowId}
         />
       </div>
-    </AdvisorClientProvider>
+    </ClientProvider>
   );
 }

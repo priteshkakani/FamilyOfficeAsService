@@ -113,23 +113,32 @@ export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
                   htmlFor="full_name"
                   className="block text-sm font-medium text-gray-600 mb-1"
                 >
-                  Full Name
+                  Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="full_name"
                   type="text"
                   data-testid="input-full_name"
-                  {...register("full_name", { required: true })}
+                  {...register("full_name", {
+                    required: "Full name is required",
+                  })}
                   placeholder="Your full name"
-                  className="border border-gray-300 rounded-lg w-full p-2.5 focus:ring-2 focus:ring-blue-200"
+                  className={`border border-gray-300 rounded-lg w-full p-2.5 focus:ring-2 focus:ring-blue-200 ${
+                    errors.full_name ? "border-red-400" : ""
+                  }`}
                 />
+                {errors.full_name && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.full_name.message}
+                  </p>
+                )}
               </div>
               <div>
                 <label
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-600 mb-1"
                 >
-                  Primary Email
+                  Primary Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="email"
@@ -148,7 +157,8 @@ export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
                   htmlFor="email_secondary"
                   className="block text-sm font-medium text-gray-600 mb-1"
                 >
-                  Secondary Email
+                  Secondary Email{" "}
+                  <span className="text-gray-400">(optional)</span>
                 </label>
                 <input
                   id="email_secondary"
@@ -179,7 +189,8 @@ export default function ProfileStep({ onNext, currentStep, showTitle = true }) {
                   htmlFor="mobile_number"
                   className="block text-sm font-medium text-gray-600 mb-1"
                 >
-                  Mobile Number
+                  Mobile Number{" "}
+                  <span className="text-gray-400">(optional)</span>
                 </label>
                 <input
                   id="mobile_number"

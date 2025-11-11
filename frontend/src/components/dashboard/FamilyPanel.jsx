@@ -132,139 +132,150 @@ export default function FamilyPanel({ userId }) {
           Refresh
         </button>
       </div>
-      <table className="w-full text-sm" data-testid="family-table">
-        <thead>
-          <tr className="bg-gray-50">
-            {FIELDS.map((field) => (
-              <th key={field}>{field.replace(/_/g, " ")}</th>
-            ))}
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {family
-            .filter(
-              (row) =>
-                row.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-                row.profession?.toLowerCase().includes(search.toLowerCase())
-            )
-            .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-            .map((row) => (
-              <tr
-                key={row.id}
-                className="border-b"
-                data-testid={`family-row-${row.id}`}
-              >
+      {loading ? (
+        <div className="text-center py-8">Loading…</div>
+      ) : (
+        <>
+          <table className="w-full text-sm" data-testid="family-table">
+            <thead>
+              <tr className="bg-gray-50">
+                {FIELDS.map((field) => (
+                  <th key={field}>{field.replace(/_/g, " ")}</th>
+                ))}
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {family
+                .filter(
+                  (row) =>
+                    row.full_name
+                      ?.toLowerCase()
+                      .includes(search.toLowerCase()) ||
+                    row.profession?.toLowerCase().includes(search.toLowerCase())
+                )
+                .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+                .map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b"
+                    data-testid={`family-row-${row.id}`}
+                  >
+                    {FIELDS.map((field) => (
+                      <td key={field}>
+                        {editingId === row.id ? (
+                          <input
+                            value={form[field] || ""}
+                            onChange={(e) =>
+                              setForm((f) => ({
+                                ...f,
+                                [field]: e.target.value,
+                              }))
+                            }
+                            className="border rounded px-2"
+                          />
+                        ) : (
+                          row[field]
+                        )}
+                      </td>
+                    ))}
+                    <td className="text-right">
+                      {/* 3-dots dropdown menu */}
+                      <div
+                        className="relative inline-block text-left"
+                        data-testid={`family-menu-${row.id}`}
+                      >
+                        <button
+                          className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                          aria-label="Actions"
+                          onClick={() =>
+                            setEditingId(editingId === row.id ? null : row.id)
+                          }
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <circle cx="5" cy="12" r="1.5" />
+                            <circle cx="12" cy="12" r="1.5" />
+                            <circle cx="19" cy="12" r="1.5" />
+                          </svg>
+                        </button>
+                        {editingId === row.id && (
+                          <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-30">
+                            <button
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                              data-testid={`family-edit-${row.id}`}
+                              onClick={() => handleEdit(row)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="w-full text-left px-4 py-2 hover:bg-red-100"
+                              data-testid={`family-delete-${row.id}`}
+                              onClick={() => handleDelete(row.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              {/* Add row */}
+              <tr>
                 {FIELDS.map((field) => (
                   <td key={field}>
-                    {editingId === row.id ? (
-                      <input
-                        value={form[field] || ""}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, [field]: e.target.value }))
-                        }
-                        className="border rounded px-2"
-                      />
-                    ) : (
-                      row[field]
-                    )}
+                    <input
+                      value={form[field] || ""}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, [field]: e.target.value }))
+                      }
+                      className="border rounded px-2"
+                      placeholder={field.replace(/_/g, " ")}
+                      data-testid={`family-form-${field}`}
+                    />
                   </td>
                 ))}
-                <td className="text-right">
-                  {/* 3-dots dropdown menu */}
-                  <div
-                    className="relative inline-block text-left"
-                    data-testid={`family-menu-${row.id}`}
+                <td>
+                  <button
+                    className="text-green-600"
+                    data-testid="family-add"
+                    onClick={handleSave}
                   >
-                    <button
-                      className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
-                      aria-label="Actions"
-                      onClick={() =>
-                        setEditingId(editingId === row.id ? null : row.id)
-                      }
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <circle cx="5" cy="12" r="1.5" />
-                        <circle cx="12" cy="12" r="1.5" />
-                        <circle cx="19" cy="12" r="1.5" />
-                      </svg>
-                    </button>
-                    {editingId === row.id && (
-                      <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-30">
-                        <button
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                          data-testid={`family-edit-${row.id}`}
-                          onClick={() => handleEdit(row)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 hover:bg-red-100"
-                          data-testid={`family-delete-${row.id}`}
-                          onClick={() => handleDelete(row.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                    Add
+                  </button>
                 </td>
               </tr>
-            ))}
-          {/* Add row */}
-          <tr>
-            {FIELDS.map((field) => (
-              <td key={field}>
-                <input
-                  value={form[field] || ""}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, [field]: e.target.value }))
-                  }
-                  className="border rounded px-2"
-                  placeholder={field.replace(/_/g, " ")}
-                  data-testid={`family-form-${field}`}
-                />
-              </td>
-            ))}
-            <td>
+            </tbody>
+          </table>
+          {/* Pagination */}
+          {family.length > PAGE_SIZE && (
+            <div className="flex justify-end items-center mt-2 space-x-2">
               <button
-                className="text-green-600"
-                data-testid="family-add"
-                onClick={handleSave}
+                className="px-2 py-1 rounded bg-gray-100"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
               >
-                Add
+                Prev
               </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      {/* Pagination */}
-      {family.length > PAGE_SIZE && (
-        <div className="flex justify-end items-center mt-2 space-x-2">
-          <button
-            className="px-2 py-1 rounded bg-gray-100"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-          >
-            Prev
-          </button>
-          <span>
-            {page} / {Math.ceil(family.length / PAGE_SIZE)}
-          </span>
-          <button
-            className="px-2 py-1 rounded bg-gray-100"
-            disabled={page === Math.ceil(family.length / PAGE_SIZE)}
-            onClick={() => setPage(page + 1)}
-          >
-            Next
-          </button>
-        </div>
+              <span>
+                {page} / {Math.ceil(family.length / PAGE_SIZE)}
+              </span>
+              <button
+                className="px-2 py-1 rounded bg-gray-100"
+                disabled={page === Math.ceil(family.length / PAGE_SIZE)}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

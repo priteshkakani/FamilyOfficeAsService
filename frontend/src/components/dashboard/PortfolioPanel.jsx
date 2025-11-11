@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
-import { useAdvisorClient } from "../../contexts/AdvisorClientContext";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import formatINR from "../../utils/formatINR";
 import { notifyError, notifySuccess } from "../../utils/toast";
@@ -24,7 +23,7 @@ function normalizeCategory(cat) {
 }
 
 export default function PortfolioPanel() {
-  const { clientId } = useAdvisorClient();
+  // const { clientId } = useAdvisorClient(); // Removed for Client Mode. Use clientId from context, props, or auth.user.id
   const [assets, setAssets] = useState([]);
   const [alloc, setAlloc] = useState([]);
   const [netWorth, setNetWorth] = useState(0);

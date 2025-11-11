@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { navigateToDashboardAfterAllSaves } from "./onboardingNavigation";
 import OnboardingLayout from "../../layouts/OnboardingLayout";
 import { supabase } from "../../supabaseClient";
 import { notifyError, notifySuccess } from "../../utils/toast";
@@ -17,7 +18,12 @@ const EXPENSE_KEYS = [
   "other_expense",
 ];
 
-export default function IncomeExpenseStep({ userId, data, onChange }) {
+export default function IncomeExpenseStep({
+  userId,
+  data,
+  onChange,
+  onComplete,
+}) {
   const [income, setIncome] = useState({});
   const [expenses, setExpenses] = useState({});
   const [loading, setLoading] = useState(true);
@@ -35,15 +41,15 @@ export default function IncomeExpenseStep({ userId, data, onChange }) {
     (async () => {
       const res = await supabase
         .from("profiles")
-        .select("monthly_income_details,monthly_expenses_details")
+        .select(
+          "id, monthly_income, monthly_expenses, monthly_income_details, monthly_expenses_details"
+        )
         .eq("id", userId)
         .maybeSingle();
       setLoading(false);
       const d = res?.data;
-      if (d) {
-        setIncome(d.monthly_income_details || {});
-        setExpenses(d.monthly_expenses_details || {});
-      }
+      setIncome((d && d.monthly_income_details) || {});
+      setExpenses((d && d.monthly_expenses_details) || {});
     })();
   }, [userId, data]);
 
@@ -69,19 +75,36 @@ export default function IncomeExpenseStep({ userId, data, onChange }) {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Defensive: always send all required fields, coerce types, guard for nulls
       const payload = {
         id: userId,
-        monthly_income: totalIncome,
-        monthly_expenses: totalExpenses,
-        monthly_income_details: income,
-        monthly_expenses_details: expenses,
+        monthly_income: Number(totalIncome) || 0,
+        monthly_expenses: Number(totalExpenses) || 0,
+        monthly_income_details: income || {},
+        monthly_expenses_details: expenses || {},
       };
+      // Diagnostic log
+      // eslint-disable-next-line no-console
+      console.log("[IncomeExpenseStep][save]", { payload });
       const { error } = await supabase.from("profiles").upsert(payload);
-      if (error) throw error;
-      notifySuccess("Income & expenses saved");
+      if (error) {
+        // eslint-disable-next-line no-console
+        console.error("[IncomeExpenseStep][save] error", error, payload);
+        notifyError("Could not save Income & Expenses");
+        return;
+      }
+      // Invalidate all relevant queries for charts
+      if (window.queryClient) {
+        window.queryClient.invalidateQueries(["cashflow-profile", userId]);
+        window.queryClient.invalidateQueries(["networth", userId]);
+        window.queryClient.invalidateQueries(["allocation", userId]);
+      }
+      notifySuccess("Income & Expenses saved");
+      if (typeof onComplete === "function") onComplete();
     } catch (e) {
-      console.error("[IncomeExpenseStep][save]", e.message);
-      notifyError("Failed to save income/expenses");
+      // eslint-disable-next-line no-console
+      console.error("[IncomeExpenseStep][save] unexpected", e);
+      notifyError("Could not save Income & Expenses");
     } finally {
       setSaving(false);
     }

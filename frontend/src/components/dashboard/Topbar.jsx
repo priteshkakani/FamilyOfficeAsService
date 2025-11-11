@@ -1,15 +1,31 @@
 import React, { useState } from "react";
-import ClientPicker from "./ClientPicker";
+// ClientPicker removed for Client Mode
 import SettingsModal from "./SettingsModal";
 import { useNavigate } from "react-router-dom";
 import supabase from "../../supabaseClient";
-import { useClient } from "../../hooks/useClientContext";
+import { useAuth } from "../../contexts/AuthProvider";
 import { RefreshCcw, Settings, LogOut } from "lucide-react";
 
 export default function Topbar() {
   const [openSettings, setOpenSettings] = useState(false);
   const navigate = useNavigate();
-  const { client } = useClient();
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    async function fetchProfile() {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", user.id)
+        .maybeSingle();
+      setProfile(data);
+      setLoading(false);
+    }
+    fetchProfile();
+  }, [user]);
 
   const logout = async () => {
     try {
@@ -39,25 +55,12 @@ export default function Topbar() {
       console.log("[Dashboard][onboarding state]", profile);
     });
   }, []);
+  let displayName =
+    profile?.full_name || user?.user_metadata?.full_name || user?.email || "";
   return (
     <header className="flex items-center justify-between py-4 border-b bg-white px-6 shadow-sm">
       <div className="flex items-center gap-4">
-        {showResume && (
-          <a
-            href="/onboarding"
-            className="text-blue-600 underline text-sm ml-2"
-            data-testid="resume-onboarding-link"
-          >
-            Resume Onboarding
-          </a>
-        )}
-        <h1 className="text-2xl font-semibold text-gray-800">
-          Advisor Dashboard
-        </h1>
-        <ClientPicker />
-        <span className="ml-4 inline-block text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
-          env: dev
-        </span>
+        {/* App/logo left, no Client Console text */}
       </div>
       <div className="flex items-center gap-4">
         <button
@@ -77,10 +80,16 @@ export default function Topbar() {
           <Settings size={18} />
         </button>
         <div className="px-3 py-1 text-sm">
-          <div className="text-xs text-gray-500">Selected</div>
-          <div className="font-semibold" data-testid="topbar-client-name">
-            {client?.full_name || client?.name || "—"}
-          </div>
+          {loading ? (
+            <span
+              data-testid="header-username-skeleton"
+              className="animate-pulse bg-gray-200 rounded w-24 h-6 inline-block"
+            ></span>
+          ) : (
+            <span data-testid="header-username" className="font-bold">
+              {displayName}
+            </span>
+          )}
         </div>
         <button
           aria-label="logout"

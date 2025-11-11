@@ -743,7 +743,7 @@ const dashboardTabs = [
   { icon: "🧾", label: "Cashflow & Expenses" },
   { icon: "📁", label: "Documents" },
   { icon: "󰰁", label: "Family Members" },
-  { icon: "📅", label: "Insights & Alerts" },
+  { icon: "📅", label: "Client Console" },
   { icon: "󰞴", label: "Advisor / Chat" },
   { icon: "⚙️", label: "Settings / Billing" },
 ];
@@ -1001,21 +1001,7 @@ function FamilyPage({ familyMembers = [] }) {
   );
 }
 function InsightsPage() {
-  // Hardcoded insights
-  const insights = [
-    "LIC policy renewal in 15 days",
-    "ESOP vesting due next month",
-  ];
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5">Insights & Alerts</Typography>
-      <ul>
-        {insights.map((ins, i) => (
-          <li key={i}>{ins}</li>
-        ))}
-      </ul>
-    </Box>
-  );
+  // InsightsPage removed for Client Mode. Use Client Console tabs instead.
 }
 function AdvisorPage() {
   // Hardcoded advisor contact
@@ -1192,6 +1178,27 @@ export function AppRoutes() {
   const AuditPanel = React.lazy(() => import("./pages/dashboard/Audit.jsx"));
   // ...add other sub-tab lazy imports as needed
   const NotFoundPage = React.lazy(() => import("./NotFoundPage.jsx"));
+  const ClientConsoleLayout = React.lazy(() =>
+    import("./layouts/ClientConsoleLayout.jsx")
+  );
+  const ClientPortfolio = React.lazy(() =>
+    import("./pages/dashboard/Portfolio.jsx")
+  );
+  const ClientTransactions = React.lazy(() =>
+    import("./pages/dashboard/Transaction.jsx")
+  );
+  const ClientAssets = React.lazy(() =>
+    import("./pages/dashboard/Portfolio.jsx")
+  );
+  const ClientLiabilities = React.lazy(() =>
+    import("./pages/dashboard/Liabilities.jsx")
+  );
+  const ClientCashflows = React.lazy(() =>
+    import("./pages/dashboard/Cashflow.jsx")
+  );
+  const ClientProfile = React.lazy(() =>
+    import("./pages/dashboard/Profile.jsx")
+  );
   const ForgotPassword = React.lazy(() => import("./ForgotPassword"));
   const { session } = useAuth();
   const { profile, loading } = useProfile();
@@ -1366,6 +1373,69 @@ export function AppRoutes() {
           </React.Suspense>
         }
       />
+      {/* Client Console routes */}
+      <Route
+        path="/client/:clientId/*"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarded>
+              <React.Suspense fallback={<div>Loading Client Console...</div>}>
+                <ClientConsoleLayout />
+              </React.Suspense>
+            </RequireOnboarded>
+          </ProtectedRoute>
+        }
+      >
+        <Route
+          path="portfolio"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ClientPortfolio />
+            </React.Suspense>
+          }
+        />
+        <Route
+          path="transactions"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ClientTransactions />
+            </React.Suspense>
+          }
+        />
+        <Route
+          path="assets"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ClientAssets />
+            </React.Suspense>
+          }
+        />
+        <Route
+          path="liabilities"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ClientLiabilities />
+            </React.Suspense>
+          }
+        />
+        <Route
+          path="cashflows"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ClientCashflows />
+            </React.Suspense>
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ClientProfile />
+            </React.Suspense>
+          }
+        />
+        <Route path="*" element={<Navigate to="portfolio" replace />} />
+      </Route>
     </Routes>
   );
 }
@@ -1373,18 +1443,16 @@ export function AppRoutes() {
 // App now just provides BrowserRouter and AppRoutes
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
         <ProfileProvider>
           <BrowserRouter>
-            <AdvisorClientProvider>
-              <AppRoutes />
-            </AdvisorClientProvider>
+            <AppRoutes />
           </BrowserRouter>
           <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
         </ProfileProvider>
-      </QueryClientProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

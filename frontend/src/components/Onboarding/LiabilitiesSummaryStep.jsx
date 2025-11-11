@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { navigateToDashboardAfterAllSaves } from "./onboardingNavigation";
 import OnboardingLayout from "../../layouts/OnboardingLayout";
 import { supabase } from "../../supabaseClient";
 import { notifyError, notifySuccess } from "../../utils/toast";
@@ -11,7 +12,11 @@ const ROWS = [
   { key: "other", label: "Other" },
 ];
 
-export default function LiabilitiesSummaryStep({ userId, onChange }) {
+export default function LiabilitiesSummaryStep({
+  userId,
+  onChange,
+  onComplete,
+}) {
   const [rows, setRows] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -35,21 +40,39 @@ export default function LiabilitiesSummaryStep({ userId, onChange }) {
     setSaving(true);
     try {
       const payload = { liabilities_summary: rows };
-      const { error } = await supabase
+      // eslint-disable-next-line no-console
+      console.log("[Onboarding][liabilities.save] payload", { payload });
+      const { error: profileError } = await supabase
         .from("profiles")
         .upsert({ id: userId, ...payload });
-      if (error) throw error;
+      if (profileError) throw profileError;
       // Insert rows into liabilities table
       const toInsert = Object.keys(rows).map((k) => ({
         user_id: userId,
         type: k,
-        ...rows[k],
+        outstanding_amount: Number(rows[k]?.outstanding_amount) || 0,
+        interest_rate: Number(rows[k]?.interest_rate) || 0,
+        emi: Number(rows[k]?.emi_amount) || 0,
+        as_of_date: rows[k]?.next_due_date || null,
       }));
-      if (toInsert.length > 0)
-        await supabase.from("liabilities").insert(toInsert);
+      // Log rows for diagnostics
+      // eslint-disable-next-line no-console
+      console.log("[Onboarding][liabilities.save] rows", toInsert);
+      if (toInsert.length > 0) {
+        const { error: liabError } = await supabase
+          .from("liabilities")
+          .insert(toInsert);
+        if (liabError) throw liabError;
+      }
       notifySuccess("Liabilities saved");
+      // Invalidate React Query cache for dashboard liabilities
+      if (window.queryClient) {
+        window.queryClient.invalidateQueries(["liabilities", userId]);
+      }
+      if (typeof onComplete === "function") onComplete();
     } catch (e) {
-      console.error("[LiabilitiesSummaryStep][save]", e.message);
+      // eslint-disable-next-line no-console
+      console.error("[Onboarding][liabilities.save] error", e);
       notifyError("Failed to save liabilities");
     } finally {
       setSaving(false);

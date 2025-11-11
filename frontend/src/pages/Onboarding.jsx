@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import { navigateToDashboardAfterAllSaves } from "../components/Onboarding/onboardingNavigation";
 
 export default function Onboarding({ onFinish }) {
   const [step, setStep] = useState(() => {
@@ -33,9 +34,12 @@ export default function Onboarding({ onFinish }) {
     markComplete(step);
     if (step < steps.length - 1) {
       goToStep(step + 1);
-    } else {
-      navigate("/dashboard");
     }
+  }
+
+  // Called after the final onboarding save and query invalidation
+  function handleOnboardingComplete() {
+    navigateToDashboardAfterAllSaves(navigate);
   }
 
   return (
@@ -78,6 +82,10 @@ export default function Onboarding({ onFinish }) {
             require("../components/Onboarding/IncomeRecordsStep.jsx").default,
             {
               userId,
+              onComplete:
+                step === steps.length - 1
+                  ? handleOnboardingComplete
+                  : undefined,
             }
           )}
         {step === 3 &&
@@ -85,6 +93,10 @@ export default function Onboarding({ onFinish }) {
             require("../components/Onboarding/LiabilitiesStep.jsx").default,
             {
               userId,
+              onComplete:
+                step === steps.length - 1
+                  ? handleOnboardingComplete
+                  : undefined,
             }
           )}
         {step === 4 &&
@@ -92,6 +104,10 @@ export default function Onboarding({ onFinish }) {
             require("../components/Onboarding/DocumentsUploadStep.jsx").default,
             {
               userId,
+              onComplete:
+                step === steps.length - 1
+                  ? handleOnboardingComplete
+                  : undefined,
             }
           )}
         {step === 5 &&
@@ -99,6 +115,7 @@ export default function Onboarding({ onFinish }) {
             require("../components/Onboarding/OtherInfoTermsStep.jsx").default,
             {
               userId,
+              onComplete: handleOnboardingComplete,
             }
           )}
         {/* Navigation */}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../../supabaseClient";
-import { useClient } from "../../hooks/useClientContext";
+// import { useClient } from "../../hooks/useClientContext";
 import { notifyError, notifySuccess } from "../../utils/toast";
 import ModalWrapper from "../ModalWrapper";
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useClient } from "../../hooks/useClientContext";
+import { useParams } from "react-router-dom";
 import useClientData from "../../hooks/useClientData";
 import DataTable from "../../components/dashboard/DataTable";
 import {
@@ -22,8 +22,7 @@ ChartJS.register(
 );
 
 export default function Cashflow() {
-  const { client } = useClient();
-  const userId = client?.id;
+  const { clientId: userId } = useParams();
   const { loading, views, error } = useClientData(userId);
 
   // Mock expenses for now; replace with Supabase fetch

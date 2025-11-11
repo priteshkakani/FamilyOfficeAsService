@@ -4,7 +4,7 @@ import PortfolioPanel from "./Portfolio";
 import TransactionPanel from "./Transaction";
 import ProfilePanel from "./Profile";
 import formatINR from "../../utils/formatINR";
-import { useClient } from "../../hooks/useClientContext";
+// import { useClient } from "../../hooks/useClientContext";
 import useClientData from "../../hooks/useClientData";
 
 export default function Overview() {
@@ -143,11 +143,10 @@ export default function Overview() {
   }
 }
 
-import { useAdvisorClient } from "../../contexts/AdvisorClientContext";
 // ...existing code...
 
 function OverviewPanel() {
-  const { clientId } = useAdvisorClient();
+  // const { clientId } = useAdvisorClient(); // Removed for Client Mode. Use clientId from context, props, or auth.user.id
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [kpi, setKpi] = useState({ netWorth: 0, cashflow: 0 });
