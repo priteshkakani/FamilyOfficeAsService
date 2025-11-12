@@ -319,14 +319,28 @@ export default function FamilyPanel({ clientId, profileSaved, advisorMode }) {
     return () => clearTimeout(t);
   }, [q]);
 
-  // ...existing code...
+  // Data and loading/error state from hook
+  const {
+    data: family = [],
+    isLoading,
+    error,
+    refetch,
+    totalPages = 1,
+  } = useFamilyMembers({
+    clientId,
+    q: debouncedQ,
+    relation,
+    marital,
+    sort,
+    page,
+    pageSize,
+    enabled: profileSaved,
+  });
 
   // Mutations
   const addMutation = useAddFamilyMember();
   const editMutation = useEditFamilyMember();
   const deleteMutation = useDeleteFamilyMember();
-
-  // ...existing code...
 
   return (
     <>

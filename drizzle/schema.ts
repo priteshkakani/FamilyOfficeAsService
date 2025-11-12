@@ -4,6 +4,8 @@ export const familyMembers = pgTable('family_members', {
   id: serial('id').primaryKey(),
   household_id: integer('household_id').notNull(),
   name: varchar('name', { length: 100 }).notNull(),
+  aadhar: varchar('aadhar', { length: 12 }),
+  aadhar_masked: varchar('aadhar_masked', { length: 20 }),
   age: integer('age'),
   role: varchar('role', { length: 50 }),
   assets: varchar('assets', { length: 50 }),

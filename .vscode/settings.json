@@ -1,3 +1,93 @@
 {
-    "chat.agent.maxRequests": 100
+  // Performance optimizations
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.turbo/**": true,
+    "**/coverage/**": true,
+    "**/.cache/**": true,
+    "**/cypress/videos/**": true,
+    "**/cypress/screenshots/**": true,
+    "**/drizzle/**": true
+  },
+  
+  // TypeScript/JavaScript settings
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "forceWatchFiles": false
+  },
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  
+  // Editor performance
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "off",
+    "strings": "off"
+  },
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.suggest.showKeywords": false,
+  "editor.suggest.showSnippets": false,
+  "editor.suggest.showWords": false,
+  "editor.autoClosingBrackets": "languageDefined",
+  "editor.autoClosingQuotes": "languageDefined",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  
+  // File exclusions
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.turbo": true,
+    "**/coverage": true,
+    "**/.cache": true
+  },
+  
+  // Disable problematic features
+  "typescript.tsserver.log": "off",
+  "typescript.tsserver.trace.server": "off",
+  "git.enableSmartCommit": false,
+  "git.autoRepositoryDetection": "subFolders",
+  "git.confirmSync": false,
+  "git.autofetch": false,
+  "npm.enableScriptExplorer": false,
+  "npm.fetchOnlineUsers": false,
+  "npm.enableRunFromFolder": false,
+  "npm.packageManager": "npm",
+  "npm.runInTerminal": false,
+  
+  // Disable GPU acceleration if needed (uncomment if experiencing crashes)
+  // "disable-hardware-acceleration": true,
+  
+  // Workspace settings
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.turbo": true,
+    "**/coverage": true,
+    "**/.cache": true
+  },
+  
+  // Supabase/PostgreSQL
+  "postgresql.connections": [],
+  "postgresql.showWelcomeOnStartupOverride": false
 }
