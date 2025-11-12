@@ -1,5 +1,5 @@
 import { useProfile } from "./contexts/ProfileContext";
-import { AdvisorClientProvider } from "./contexts/AdvisorClientContext.jsx";
+import { AdvisorClientProvider } from "./contexts/AdvisorClientContext.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const queryClient = new QueryClient();
 import { ProfileProvider } from "./contexts/ProfileContext";
@@ -56,7 +56,7 @@ function RequireOnboarded({ children }) {
   return children;
 }
 
-import OnboardingStepper from "./components/Onboarding/OnboardingStepper.jsx";
+import OnboardingStepper from "./components/Onboarding/OnboardingStepper.tsx";
 import OnboardingFlow from "./pages/OnboardingFlow";
 
 function OnboardingStepperGuard() {
@@ -1140,64 +1140,65 @@ function ProtectedRoute({ children }) {
 // Main App component (restored)
 import { Toaster } from "react-hot-toast";
 import { supabase } from "./supabaseClient";
+import TestConnectionPage from "./pages/TestConnectionPage";
 
 // Extracted AppRoutes for testability
 export function AppRoutes() {
   // Lazy load all dashboard sub-tab pages
-  const DashboardShell = React.lazy(() => import("./pages/DashboardShell.jsx"));
+  const DashboardShell = React.lazy(() => import("./pages/dashboard/DashboardShell.tsx"));
   // Placeholder lazy imports for sub-tab pages
   const OverviewFeeds = React.lazy(() =>
-    import("./pages/dashboard/Overview.jsx")
+    import("./pages/dashboard/Overview.tsx")
   );
   const PortfolioSummary = React.lazy(() =>
-    import("./pages/dashboard/Portfolio.jsx")
+    import("./pages/dashboard/Portfolio.tsx")
   );
   const LiabilitiesPanel = React.lazy(() =>
-    import("./pages/dashboard/Liabilities.jsx")
+    import("./pages/dashboard/Liabilities.tsx")
   );
   const InsurancePanel = React.lazy(() =>
-    import("./pages/dashboard/Insurance.jsx")
+    import("./pages/dashboard/Insurance.tsx")
   );
   const AnalyticsPanel = React.lazy(() =>
-    import("./pages/dashboard/Analytics.jsx")
+    import("./pages/dashboard/Analytics.tsx")
   );
   const CashflowPanel = React.lazy(() =>
-    import("./pages/dashboard/Cashflow.jsx")
+    import("./pages/dashboard/Cashflow.tsx")
   );
-  const GoalsPanel = React.lazy(() => import("./pages/dashboard/Goals.jsx"));
-  const FamilyPanel = React.lazy(() => import("./pages/dashboard/Family.jsx"));
+  const GoalsPanel = React.lazy(() => import("./pages/dashboard/Goals.tsx"));
+  const FamilyPanel = React.lazy(() => import("./pages/dashboard/Family.tsx"));
   const RecommendationsPanel = React.lazy(() =>
-    import("./pages/dashboard/Recommendations.jsx")
+    import("./pages/dashboard/Recommendations.tsx")
   );
   const NextStepsPanel = React.lazy(() =>
-    import("./pages/dashboard/NextSteps.jsx")
+    import("./pages/dashboard/NextSteps.tsx")
   );
   const DocumentsPanel = React.lazy(() =>
-    import("./pages/dashboard/Documents.jsx")
+    import("./pages/dashboard/Documents.tsx")
   );
-  const AuditPanel = React.lazy(() => import("./pages/dashboard/Audit.jsx"));
+  const AuditPanel = React.lazy(() => import("./pages/dashboard/Audit.tsx"));
   // ...add other sub-tab lazy imports as needed
-  const NotFoundPage = React.lazy(() => import("./NotFoundPage.jsx"));
+  const NotFoundPage = React.lazy(() => import("./NotFoundPage.tsx"));
   const ClientConsoleLayout = React.lazy(() =>
-    import("./layouts/ClientConsoleLayout.jsx")
+    import("./layouts/ClientConsoleLayout.tsx")
   );
   const ClientPortfolio = React.lazy(() =>
-    import("./pages/dashboard/Portfolio.jsx")
+    import("./pages/dashboard/Portfolio.tsx")
   );
   const ClientTransactions = React.lazy(() =>
-    import("./pages/dashboard/Transaction.jsx")
+    import("./pages/dashboard/Transaction.tsx")
   );
   const ClientAssets = React.lazy(() =>
-    import("./pages/dashboard/Portfolio.jsx")
+    import("./pages/dashboard/Portfolio.tsx")
   );
   const ClientLiabilities = React.lazy(() =>
-    import("./pages/dashboard/Liabilities.jsx")
+    import("./pages/dashboard/Liabilities.tsx")
   );
   const ClientCashflows = React.lazy(() =>
-    import("./pages/dashboard/Cashflow.jsx")
+    import("./pages/dashboard/Cashflow.tsx")
   );
   const ClientProfile = React.lazy(() =>
-    import("./pages/dashboard/Profile.jsx")
+    import("./pages/dashboard/Profile.tsx")
   );
   const ForgotPassword = React.lazy(() => import("./ForgotPassword"));
   const { session } = useAuth();
@@ -1222,6 +1223,7 @@ export function AppRoutes() {
         }
       />
       <Route path="/signup" element={<AuthForm mode="signup" />} />
+      <Route path="/test-connection" element={<TestConnectionPage />} />
       <Route
         path="/forgot-password"
         element={

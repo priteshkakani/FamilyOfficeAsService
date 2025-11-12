@@ -1,12 +1,7 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
-import { ClientProvider } from "../hooks/useClientContext";
-import TopNav from "../components/dashboard/TopNav";
 import { ClientProvider } from "../hooks/useClientContext";
 // ClientPicker removed for Client Mode
-import EntityFormPanel from "../components/dashboard/EntityFormPanel";
 import { useAuth } from "../contexts/AuthProvider";
-import SubTabs from "../components/dashboard/SubTabs";
 
 export default function Dashboard() {
   const TABS = [

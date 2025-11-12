@@ -49,7 +49,7 @@ export default function Onboarding({ onFinish }) {
         <div className="mb-6">
           {/* import OnboardingStepper dynamically to avoid circular deps */}
           {React.createElement(
-            require("../components/Onboarding/OnboardingStepper.jsx").default,
+            require("../components/Onboarding/OnboardingStepper.tsx").default,
             {
               steps,
               currentStep: step,
@@ -61,7 +61,7 @@ export default function Onboarding({ onFinish }) {
         {/* Step content */}
         {step === 0 &&
           React.createElement(
-            require("../components/Onboarding/ProfileStep.jsx").default,
+            require("../components/Onboarding/ProfileStep.tsx").default,
             {
               onNext: handleNext,
               currentStep: step,
@@ -70,7 +70,7 @@ export default function Onboarding({ onFinish }) {
           )}
         {step === 1 &&
           React.createElement(
-            require("../components/Onboarding/FamilyStep.jsx").default,
+            require("../components/Onboarding/FamilyStep.tsx").default,
             {
               userId,
               onChange: () => {},
@@ -79,7 +79,7 @@ export default function Onboarding({ onFinish }) {
           )}
         {step === 2 &&
           React.createElement(
-            require("../components/Onboarding/IncomeRecordsStep.jsx").default,
+            require("../components/Onboarding/IncomeRecordsStep.tsx").default,
             {
               userId,
               onComplete:
@@ -90,7 +90,7 @@ export default function Onboarding({ onFinish }) {
           )}
         {step === 3 &&
           React.createElement(
-            require("../components/Onboarding/LiabilitiesStep.jsx").default,
+            require("../components/Onboarding/LiabilitiesStep.tsx").default,
             {
               userId,
               onComplete:
@@ -101,7 +101,7 @@ export default function Onboarding({ onFinish }) {
           )}
         {step === 4 &&
           React.createElement(
-            require("../components/Onboarding/DocumentsUploadStep.jsx").default,
+            require("../components/Onboarding/DocumentsUploadStep.tsx").default,
             {
               userId,
               onComplete:
@@ -112,7 +112,7 @@ export default function Onboarding({ onFinish }) {
           )}
         {step === 5 &&
           React.createElement(
-            require("../components/Onboarding/OtherInfoTermsStep.jsx").default,
+            require("../components/Onboarding/OtherInfoTermsStep.tsx").default,
             {
               userId,
               onComplete: handleOnboardingComplete,

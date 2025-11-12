@@ -5,7 +5,6 @@ import Topbar from "../components/dashboard/Topbar";
 import TopNav from "../components/TopNav";
 import SubTabs from "../components/SubTabs";
 import { useLocation } from "react-router-dom";
-// import { ClientProvider } from "../hooks/useClientContext";
 
 export default function DashboardShell() {
   const location = useLocation();

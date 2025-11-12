@@ -9,7 +9,7 @@ import {
   LucideTarget,
   LucideCheckCircle,
 } from "lucide-react";
-import Step2Family from "./Step2Family.jsx";
+import Step2Family from "./Step2Family.tsx";
 import ProfileStep from "../Onboarding/ProfileStep";
 import OnboardingLayout from "../Onboarding/OnboardingLayout";
 import OnboardingStepper from "../Onboarding/OnboardingStepper";

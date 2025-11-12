@@ -4,3 +4,26 @@ node_modules/
 frontend/.env
 frontend/.env.local
 .vercel
+
+# Build artifacts
+.next/
+dist/
+build/
+.turbo/
+coverage/
+.cache/
+
+# Package manager
+pnpm-store/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+
+# IDE
+.vscode/workspaceStorage/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

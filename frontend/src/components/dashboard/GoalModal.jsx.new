@@ -1,0 +1,172 @@
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Button } from "../../components/ui/button";
+import { Textarea } from "../../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+
+export default function GoalModal({ 
+  open, 
+  onOpenChange, 
+  goal,
+  onSave,
+  isLoading = false
+}) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    target_amount: '',
+    target_year: '',
+    priority: 'medium',
+  });
+
+  // Reset form when goal changes or modal opens/closes
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        title: goal?.title || '',
+        description: goal?.description || '',
+        target_amount: goal?.target_amount?.toString() || '',
+        target_year: goal?.target_year?.toString() || '',
+        priority: goal?.priority || 'medium',
+      });
+    }
+  }, [open, goal]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSelectChange = (name, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.title.trim()) {
+      return alert('Title is required');
+    }
+    
+    // Prepare data with proper types
+    const dataToSave = {
+      ...formData,
+      target_amount: formData.target_amount ? parseFloat(formData.target_amount) : null,
+      target_year: formData.target_year ? parseInt(formData.target_year, 10) : null,
+    };
+    
+    onSave(dataToSave);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{goal ? 'Edit Goal' : 'Create New Goal'}</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Title *</Label>
+            <Input
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="E.g., Buy a house"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Add details about your goal"
+              rows={3}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="target_amount">Target Amount (₹)</Label>
+              <Input
+                id="target_amount"
+                name="target_amount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.target_amount}
+                onChange={handleChange}
+                placeholder="E.g., 5000000"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="target_year">Target Year</Label>
+              <Input
+                id="target_year"
+                name="target_year"
+                type="number"
+                min={new Date().getFullYear()}
+                max={2100}
+                value={formData.target_year}
+                onChange={handleChange}
+                placeholder="E.g., 2030"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="priority">Priority</Label>
+            <Select
+              value={formData.priority}
+              onValueChange={(value) => handleSelectChange('priority', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Saving...' : 'Save Goal'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

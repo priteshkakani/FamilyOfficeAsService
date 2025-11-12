@@ -1,30 +1,39 @@
 {
   // Performance optimizations
   "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/node_modules/**": true,
-    "**/.next/**": true,
-    "**/dist/**": true,
-    "**/build/**": true,
-    "**/.turbo/**": true,
-    "**/coverage/**": true,
-    "**/.cache/**": true,
-    "**/cypress/videos/**": true,
-    "**/cypress/screenshots/**": true,
-    "**/drizzle/**": true
+    "**/.git": true,
+    "**/.git/objects": true,
+    "**/.git/subtree-cache": true,
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.turbo": true,
+    "**/coverage": true,
+    "**/.cache": true,
+    "**/cypress/videos": true,
+    "**/cypress/screenshots": true,
+    "**/drizzle": true,
+    "**/pnpm-store": true,
+    "**/venv": true,
+    "**/__pycache__": true
   },
   
   // TypeScript/JavaScript settings
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.tsserver.experimental.enableProjectDiagnostics": false,
-  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.tsserver.maxTsServerMemory": 8192,
   "typescript.tsserver.watchOptions": {
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",
     "forceWatchFiles": false
   },
-  "javascript.updateImportsOnFileMove.enabled": "always",
+  "typescript.tsserver.disableAutomaticTypeAcquisition": true,
+  "typescript.suggest.autoImports": false,
+  "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
   
   // Editor performance
   "editor.quickSuggestions": {
@@ -39,8 +48,11 @@
   "editor.autoClosingBrackets": "languageDefined",
   "editor.autoClosingQuotes": "languageDefined",
   "editor.codeActionsOnSave": {
-    "source.organizeImports": true
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit"
   },
+  "editor.maxTokenizationLineLength": 2000,
+  "editor.quickSuggestionsDelay": 10,
   
   // File exclusions
   "files.exclude": {
@@ -55,12 +67,18 @@
     "**/build": true,
     "**/.turbo": true,
     "**/coverage": true,
-    "**/.cache": true
+    "**/.cache": true,
+    "**/pnpm-store": true,
+    "**/cypress/videos": true,
+    "**/cypress/screenshots": true,
+    "**/venv": true,
+    "**/__pycache__": true
   },
   
   // Disable problematic features
   "typescript.tsserver.log": "off",
   "typescript.tsserver.trace.server": "off",
+  "typescript.tsserver.experimental.suppressDiagnosticCategory": true,
   "git.enableSmartCommit": false,
   "git.autoRepositoryDetection": "subFolders",
   "git.confirmSync": false,
@@ -68,14 +86,12 @@
   "npm.enableScriptExplorer": false,
   "npm.fetchOnlineUsers": false,
   "npm.enableRunFromFolder": false,
-  "npm.packageManager": "npm",
+  "npm.packageManager": "pnpm",
   "npm.runInTerminal": false,
-  
-  // Disable GPU acceleration if needed (uncomment if experiencing crashes)
-  // "disable-hardware-acceleration": true,
   
   // Workspace settings
   "search.exclude": {
+    "**/.git": true,
     "**/node_modules": true,
     "**/bower_components": true,
     "**/*.code-search": true,
@@ -84,10 +100,41 @@
     "**/build": true,
     "**/.turbo": true,
     "**/coverage": true,
-    "**/.cache": true
+    "**/.cache": true,
+    "**/pnpm-store": true,
+    "**/cypress/videos": true,
+    "**/cypress/screenshots": true,
+    "**/venv": true,
+    "**/__pycache__": true,
+    "**/*.min.js": true,
+    "**/*.map": true
   },
+  "search.useIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": true,
+  "search.followSymlinks": false,
+  
+  // Window and workspace behavior
+  "window.restoreWindows": "none",
+  "workbench.startupEditor": "welcomePage",
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.perEditorGroup": true,
+  "workbench.editor.limit.value": 1,
+  "workbench.list.openMode": "singleClick",
+  "workbench.editor.enablePreview": true,
+  "workbench.editor.enablePreviewFromQuickOpen": false,
+  "workbench.editor.showTabs": "single",
+  "workbench.editor.showIcons": false,
+  "workbench.editor.highlightModifiedTabs": true,
+  "workbench.tree.indent": 16,
+  "workbench.tree.renderIndentGuides": "none",
   
   // Supabase/PostgreSQL
   "postgresql.connections": [],
-  "postgresql.showWelcomeOnStartupOverride": false
+  "postgresql.showWelcomeOnStartupOverride": false,
+  
+  // Extensions
+  "extensions.autoUpdate": false,
+  "extensions.autoCheckUpdates": false,
+  "extensions.ignoreRecommendations": true,
+  "extensions.showRecommendationsOnlyOnDemand": true
 }

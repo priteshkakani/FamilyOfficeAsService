@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 // Ensure supabaseAuth is mocked before AppRoutes/useAuthState imports it.
 vi.mock("../supabaseAuth");
 // Mock OnboardingWizard and DashboardHomeTab to avoid real rendering and network calls
-vi.mock("../components/OnboardingWizard/OnboardingWizard.jsx", () => ({
+vi.mock("../components/OnboardingWizard/OnboardingWizard.tsx", () => ({
   __esModule: true,
   default: () => <div>Profile</div>,
 }));
