@@ -1,3 +1,13 @@
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+/**
+ * Combines multiple class names and merges Tailwind classes
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
 /**
  * Format file size in bytes to a human-readable string
  */
@@ -95,7 +105,7 @@ export function truncate(text: string, maxLength: number): string {
  */
 export function toTitleCase(str: string): string {
   if (!str) return '';
-  return str.replace(\w\S*/g, (txt) => 
+  return str.replace(/\w\S*/g, (txt) => 
     txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
   );
 }

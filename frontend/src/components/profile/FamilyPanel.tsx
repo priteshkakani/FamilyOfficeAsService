@@ -1,4 +1,13 @@
-import React, { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useAuth } from "../../contexts/AuthProvider";
+import {
+  maskAadhaar,
+  maskPan,
+  useAddFamilyMember,
+  useDeleteFamilyMember,
+  useEditFamilyMember,
+  useFamilyMembers,
+} from "./familyHooks";
 // Modal skeletons for View, Edit, Add, Delete
 function FamilyViewModal({ open, member, onClose }) {
   if (!open || !member) return null;
@@ -276,14 +285,6 @@ function FamilyDeleteConfirm({ open, member, onClose, onDelete }) {
     </div>
   );
 }
-import {
-  useFamilyMembers,
-  useAddFamilyMember,
-  useEditFamilyMember,
-  useDeleteFamilyMember,
-  maskPan,
-  maskAadhaar,
-} from "./familyHooks";
 // Simple toast utility
 function showToast(msg, type = "info") {
   // Replace with your app's toast system if available
@@ -300,7 +301,18 @@ function showToast(msg, type = "info") {
  * - Table: data-testid="family-table"
  * - Edge banners: data-testid="family-banner"
  */
-export default function FamilyPanel({ clientId, profileSaved, advisorMode }) {
+interface FamilyPanelProps {
+  profileSaved: boolean;
+  advisorMode?: boolean;
+}
+
+export default function FamilyPanel({ profileSaved, advisorMode = false }: FamilyPanelProps) {
+  const { user } = useAuth();
+  const userId = user?.id;
+
+  if (!userId) {
+    return <div>Please sign in to view family members.</div>;
+  }
   // State for modals, search, filters, sort, pagination, etc.
   const [showAdd, setShowAdd] = useState(false);
   const [viewMember, setViewMember] = useState(null);
@@ -320,22 +332,23 @@ export default function FamilyPanel({ clientId, profileSaved, advisorMode }) {
   }, [q]);
 
   // Data and loading/error state from hook
-  const {
-    data: family = [],
-    isLoading,
-    error,
-    refetch,
-    totalPages = 1,
-  } = useFamilyMembers({
-    clientId,
+  const { data: response = { members: [], totalCount: 0 }, isLoading, error, refetch } = useFamilyMembers({
+    userId,
     q: debouncedQ,
-    relation,
-    marital,
     sort,
     page,
-    pageSize,
-    enabled: profileSaved,
+    pageSize
   });
+
+  // Extract members and total count from response
+  const familyMembers = Array.isArray(response) ? response : response?.members || [];
+  const totalCount = response?.totalCount || familyMembers.length;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Use paginated family members directly from the API response
+  const paginatedFamily = familyMembers;
 
   // Mutations
   const addMutation = useAddFamilyMember();
@@ -416,29 +429,25 @@ export default function FamilyPanel({ clientId, profileSaved, advisorMode }) {
             </thead>
             <tbody>
               {isLoading ? (
-                [...Array(pageSize)].map((_, i) => (
-                  <tr key={i}>
-                    <td colSpan={8} className="py-2">
-                      <div className="animate-pulse h-4 bg-gray-200 rounded w-3/4 mx-auto" />
-                    </td>
-                  </tr>
-                ))
-              ) : error ? (
                 <tr>
-                  <td colSpan={8} className="text-red-600 text-center py-4">
-                    {error.code === 403
-                      ? "You don’t have access to this record."
-                      : "Failed to load family members."}
+                  <td colSpan={8} className="text-center py-4">
+                    Loading...
                   </td>
                 </tr>
-              ) : family.length === 0 ? (
+              ) : error ? (
+                <tr>
+                  <td colSpan={8} className="text-red-500 text-center py-4">
+                    {error.message || 'Failed to load family members'}
+                  </td>
+                </tr>
+              ) : familyMembers.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-gray-400 text-center py-4">
                     No family members yet.
                   </td>
                 </tr>
               ) : (
-                family.map((m) => (
+                paginatedFamily.map((m) => (
                   <tr key={m.id}>
                     <td>{m.name}</td>
                     <td>{m.relation}</td>
@@ -482,7 +491,7 @@ export default function FamilyPanel({ clientId, profileSaved, advisorMode }) {
           </table>
         </div>
         {/* Pagination */}
-        {totalPages > 1 && (
+        {totalPages > 0 && (
           <div className="flex gap-2 justify-end mt-2">
             <button
               className="px-2 py-1 border rounded"

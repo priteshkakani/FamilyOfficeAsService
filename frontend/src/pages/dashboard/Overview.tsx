@@ -143,10 +143,8 @@ export default function Overview() {
   }
 }
 
-// ...existing code...
-
 function OverviewPanel() {
-  // const { clientId } = useAdvisorClient(); // Removed for Client Mode. Use clientId from context, props, or auth.user.id
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [kpi, setKpi] = useState({ netWorth: 0, cashflow: 0 });
@@ -155,38 +153,29 @@ function OverviewPanel() {
   const [family, setFamily] = useState([]);
 
   useEffect(() => {
-    // UUID v4 regex
-    const uuidRegex =
-      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-    if (
-      !clientId ||
-      typeof clientId !== "string" ||
-      !uuidRegex.test(clientId)
-    ) {
-      console.error("Invalid clientId for overview queries:", clientId);
-      setError("Invalid client ID");
-      setLoading(false);
-      return;
-    }
+    if (!user?.id) return;
+    
+    setLoading(true);
+    setError("");
     setLoading(true);
     setError("");
     Promise.all([
       supabase
         .from("vw_net_worth")
         .select("net_worth")
-        .eq("user_id", clientId)
+        .eq("user_id", user.id)
         .maybeSingle(),
-      supabase.from("vw_asset_allocation").select("*").eq("user_id", clientId),
+      supabase.from("vw_asset_allocation").select("*").eq("user_id", user.id),
       supabase
         .from("mf_transactions")
         .select("*")
-        .eq("user_id", clientId)
+        .eq("user_id", user.id)
         .order("txn_date", { ascending: false })
         .limit(5),
       supabase
         .from("family_members")
         .select("*")
-        .eq("user_id", clientId)
+        .eq("user_id", user.id)
         .limit(5),
     ])
       .then(([nw, allocRes, txnRes, famRes]) => {
@@ -201,10 +190,10 @@ function OverviewPanel() {
       .finally(() => setLoading(false));
   }, [clientId]);
 
-  if (!clientId)
+  if (!user?.id)
     return (
       <div className="p-4" data-testid="panel-ov-empty">
-        Select a client to begin.
+        Please sign in to view your overview.
       </div>
     );
   if (loading)

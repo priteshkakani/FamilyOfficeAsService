@@ -1,35 +1,51 @@
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthProvider";
 import supabase from "../../supabaseClient";
 
-export default function GoalsTab({ clientId }) {
+execute
+
+```typescript
+export default function GoalsTab() {
+  const { user } = useAuth();
   const [goals, setGoals] = useState([]);
   const [investments, setInvestments] = useState([]);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
-    if (!clientId) return;
-    setLoading(true);
-    Promise.all([
-      supabase
-        .from("goals")
-        .select("*", { count: "exact" })
-        .eq("user_id", clientId),
-      supabase
-        .from("investments")
-        .select("*", { count: "exact" })
-        .eq("user_id", clientId),
-      supabase
-        .from("goal_notes")
-        .select("*", { count: "exact" })
-        .eq("user_id", clientId)
-        .maybeSingle(),
-    ]).then(([goalsRes, invRes, notesRes]) => {
-      setGoals(goalsRes.data || []);
-      setInvestments(invRes.data || []);
-      setNotes(notesRes?.data?.notes || "");
-      setLoading(false);
-    });
-  }, [clientId]);
+    if (!user?.id) return;
+    
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [goalsRes, invRes, notesRes] = await Promise.all([
+          supabase
+            .from("goals")
+            .select("*", { count: "exact" })
+            .eq("user_id", user.id),
+          supabase
+            .from("investments")
+            .select("*", { count: "exact" })
+            .eq("user_id", user.id),
+          supabase
+            .from("goal_notes")
+            .select("*", { count: "exact" })
+            .eq("user_id", user.id)
+            .maybeSingle(),
+        ]);
+
+        setGoals(goalsRes.data || []);
+        setInvestments(invRes.data || []);
+        setNotes(notesRes?.data?.notes || "");
+      } catch (error) {
+        console.error("Error fetching goals data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user?.id]);
 
   // Calculate summary
   const totalCorpus = goals.reduce((sum, g) => sum + (g.target_amount || 0), 0);
@@ -245,9 +261,10 @@ export default function GoalsTab({ clientId }) {
         <button
           className="mt-2 px-4 py-2 bg-blue-600 text-white rounded"
           onClick={async () => {
+            if (!user?.id) return;
             await supabase
               .from("goal_notes")
-              .upsert({ user_id: clientId, notes });
+              .upsert({ user_id: user.id, notes });
           }}
         >
           Save Notes

@@ -1,19 +1,63 @@
 import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react";
-import * as supabaseClient from "../supabaseClient";
+import { render, fireEvent, waitFor, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router-dom";
+import "@testing-library/jest-dom";
 
-// Mock the client context so tests don't import JSX-containing module at top-level
-vi.mock("../hooks/useClientContext", () => ({
-  ClientProvider: ({ children }) => <div>{children}</div>,
-  useClient: () => ({
-    selectedClient: "client-123",
-    setSelectedClient: vi.fn(),
-  }),
+// Create a test wrapper with all necessary providers
+const TestWrapper = ({ children }) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        {children}
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+};
+
+// Mock the auth context
+const mockUser = { id: "test-user-id", email: "test@example.com" };
+const mockUseAuth = vi.fn(() => ({
+  user: mockUser,
+  isLoading: false,
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+  signUp: vi.fn(),
+  resetPassword: vi.fn(),
+  updatePassword: vi.fn(),
+  updateEmail: vi.fn(),
+  updateProfile: vi.fn(),
+  refreshSession: vi.fn(),
 }));
 
+vi.mock("../contexts/AuthProvider", () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
+// Mock supabase client
+vi.mock("../supabaseClient", () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+    })),
+  },
+}));
+
+import { supabase } from "../supabaseClient";
 import TaskModal from "../components/dashboard/TaskModal";
-import { ClientProvider } from "../hooks/useClientContext";
-vi.mock("../supabaseClient");
+import { useAuth } from "../contexts/AuthProvider";
 
 describe("TaskModal", () => {
   beforeEach(() => {
@@ -21,23 +65,36 @@ describe("TaskModal", () => {
   });
 
   test("creates a task when Save clicked (insert path)", async () => {
-    const fakeFrom = vi.fn().mockReturnValue({
-      insert: vi.fn().mockResolvedValue({ data: [{}], error: null }),
+    const mockInsert = vi.fn().mockResolvedValue({ 
+      data: [{ 
+        id: "task-123", 
+        user_id: "test-user-id",
+        title: "Test Task",
+        description: "Test Description",
+        due_date: "2025-12-31",
+        priority: "medium",
+        status: "not_started"
+      }], 
+      error: null 
     });
-    if (supabaseClient.__setSupabase)
-      supabaseClient.__setSupabase({ from: fakeFrom });
+    
+    (supabase.from as jest.Mock).mockReturnValue({
+      insert: mockInsert,
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+    });
 
     const onClose = vi.fn();
 
-    const { getByText, getByLabelText } = render(
-      <ClientProvider>
+    render(
+      <TestWrapper>
         <TaskModal
           open={true}
           onClose={onClose}
-          clientId={"client-123"}
           task={null}
         />
-      </ClientProvider>
+      </TestWrapper>
     );
 
     const titleInput = document.querySelector(

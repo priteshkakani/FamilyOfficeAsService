@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../contexts/AuthProvider";
 import { useClientAndAdvisor } from "../../hooks/useClientAndAdvisor";
-import { useClient } from "../../hooks/useClientContext";
 import useClientData from "../../hooks/useClientData";
 
 const tabGroups = [
@@ -20,17 +20,18 @@ const tabGroups = [
 ];
 
 export default function Documents() {
-  const { client } = useClient();
-  const userId = client?.id;
+  const { user } = useAuth();
+  const userId = user?.id;
 
-  // Use the new hook for robust client/advisor name fetching
+  // Use the hook for fetching client/advisor names
   const {
     data: names,
     isLoading: namesLoading,
     error: namesError,
-  } = useClientAndAdvisor(userId);
+  } = useClientAndAdvisor();
+  
   const [selectedTab, setSelectedTab] = useState("identity");
-  const { loading, documents = [], refresh, error } = useClientData(userId);
+  const { loading, documents = [], refresh, error } = useClientData();
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState(null);
   const [page, setPage] = useState(1);

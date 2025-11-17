@@ -1,20 +1,39 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-const ClientContext = createContext();
+interface Client {
+  id: string;
+  email?: string;
+  // Add other client properties as needed
+  [key: string]: any; // Allow additional properties
+}
 
-export function ClientProvider({ children }) {
-  const [client, setClientState] = useState(null);
+interface ClientContextType {
+  client: Client | null;
+  setClient: (client: Client | null) => void;
+}
+
+const ClientContext = createContext<ClientContextType | undefined>(undefined);
+
+interface ClientProviderProps {
+  children: ReactNode;
+}
+
+export function ClientProvider({ children }: ClientProviderProps) {
+  const [client, setClientState] = useState<Client | null>(null);
 
   useEffect(() => {
     const raw = localStorage.getItem("advisor:selectedClient");
+    if (!raw) return;
+    
     try {
-      if (raw) setClientState(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+      setClientState(parsed);
     } catch (e) {
-      setClientState(raw);
+      console.error("Failed to parse client data from localStorage", e);
     }
   }, []);
 
-  const setClient = (c) => {
+  const setClient = (c: Client | null) => {
     setClientState(c);
     try {
       if (c) localStorage.setItem("advisor:selectedClient", JSON.stringify(c));

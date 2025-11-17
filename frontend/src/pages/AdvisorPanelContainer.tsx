@@ -1,63 +1,55 @@
 import React from "react";
+import { useAuth } from "../contexts/AuthProvider";
 import EntityFormPanel from "../components/dashboard/EntityFormPanel";
 
 export default function AdvisorPanelContainer({
   selectedEntity,
   selectedRowId,
+}: {
+  selectedEntity: string;
+  selectedRowId?: string;
 }) {
-  // const { clientId, clientMeta, loading, error } = useAdvisorClient(); // Removed for Client Mode. Use clientId from context, props, or auth.user.id
+  const { user } = useAuth();
+  const userId = user?.id;
 
-  if (!clientId) {
+  if (!userId) {
+    return (
+      <div
+        className="bg-white rounded-lg shadow p-6 mt-6 text-center"
+        data-testid="advisor-panel-unauthorized"
+      >
+        <div className="text-lg font-bold mb-2">
+          Please sign in to continue
+        </div>
+        <div className="text-gray-500">
+          You need to be signed in to access this feature.
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedEntity) {
     return (
       <div
         className="bg-white rounded-lg shadow p-6 mt-6 text-center"
         data-testid="advisor-panel-empty"
       >
         <div className="text-lg font-bold mb-2">
-          Select a client to continue
+          Select an entity to continue
         </div>
         <div className="text-gray-500">
-          Use the picker above to search and select a client.
+          Use the navigation to select an entity to view or edit.
         </div>
       </div>
     );
   }
-  if (loading) {
-    return (
-      <div
-        className="bg-white rounded-lg shadow p-6 mt-6 text-center"
-        data-testid="advisor-panel-loading"
-      >
-        Loading client data…
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div
-        className="bg-white rounded-lg shadow p-6 mt-6 text-center text-red-600"
-        data-testid="advisor-panel-error"
-      >
-        {error}
-      </div>
-    );
-  }
-  if (!clientMeta) {
-    return (
-      <div
-        className="bg-white rounded-lg shadow p-6 mt-6 text-center text-red-600"
-        data-testid="advisor-panel-notfound"
-      >
-        Client not found. Please select another.
-      </div>
-    );
-  }
-  // Render entity panel for selected client
+
+  // Render entity panel for the current user
   return (
     <div className="mt-6" data-testid={`advisor-panel-${selectedEntity}`}>
       <EntityFormPanel
         entity={selectedEntity}
-        userId={clientId}
+        userId={userId}
         rowId={selectedRowId}
         onClose={() => {}}
       />

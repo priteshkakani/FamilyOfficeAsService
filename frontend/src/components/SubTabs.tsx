@@ -78,18 +78,18 @@ export default function SubTabs({ section }) {
   return (
     <nav
       ref={navRef}
-      className="sticky top-12 z-30 bg-white border-b flex items-center px-2 md:px-6 py-1"
+      className="sticky top-12 z-30 bg-white border-b flex items-center px-2 md:px-6 py-1 border-2 border-green-500"
       role="tablist"
       aria-label="Subtabs"
+      style={{ zIndex: 900 }}
     >
       {subtabs.map((subtab) => (
         <button
           key={subtab.key}
           className={`px-3 py-1 mx-1 rounded focus:outline-none font-medium transition-all
-            ${
-              activeSubtab === subtab.key
-                ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600"
-                : "text-gray-500 hover:bg-gray-100"
+            ${activeSubtab === subtab.key
+              ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600"
+              : "text-gray-500 hover:bg-gray-100"
             }`}
           onClick={() => {
             setActiveSubtab(subtab.key);

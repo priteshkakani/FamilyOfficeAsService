@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../contexts/AuthProvider";
 import supabase from "../../supabaseClient";
 
 // Mask PAN: AA***1234A, Aadhaar: XXXX-XXXX-1234
@@ -20,29 +21,31 @@ export function validateAadhaar(aadhaar) {
   return /^\d{12}$/.test(aadhaar);
 }
 
-// Fetch family members for a clientId with filters, search, sort, pagination
+// Fetch family members for the current user with filters, search, sort, pagination
 export function useFamilyMembers({
-  clientId,
   q,
   relation,
   marital,
   sort,
   page,
   pageSize,
-  enabled,
+  enabled = true,
 }) {
+  const { user } = useAuth();
+  const userId = user?.id;
+  
   return useQuery({
     queryKey: [
       "family",
-      clientId,
+      userId,
       { q, relation, marital, sort, page, pageSize },
     ],
-    enabled: !!clientId && enabled !== false,
+    enabled: !!userId && enabled !== false,
     queryFn: async () => {
       let query = supabase
         .from("family_members")
         .select("*", { count: "exact" })
-        .eq("user_id", clientId);
+        .eq("user_id", userId);
       if (q) {
         query = query.or(
           `name.ilike.%${q}%,pan.ilike.%${q}%,aadhaar.ilike.%${q}%`
@@ -73,53 +76,70 @@ export function useFamilyMembers({
 
 // Mutations for add, edit, delete
 export function useAddFamilyMember() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const userId = user?.id;
+  
   return useMutation({
-    mutationFn: async (payload) => {
-      const { error, data } = await supabase
+    mutationFn: async (values) => {
+      if (!userId) throw new Error("User not authenticated");
+      
+      const { data, error } = await supabase
         .from("family_members")
-        .insert([{ ...payload }])
+        .insert([{ ...values, user_id: userId }])
+        .select()
         .single();
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["family", vars.user_id] });
+    onSuccess: () => {
+      queryClient.invalidateQueries(["family"]);
     },
   });
 }
 export function useEditFamilyMember() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const userId = user?.id;
+  
   return useMutation({
-    mutationFn: async ({ id, user_id, ...rest }) => {
-      const { error, data } = await supabase
+    mutationFn: async ({ id, ...updates }) => {
+      if (!userId) throw new Error("User not authenticated");
+      
+      const { data, error } = await supabase
         .from("family_members")
-        .update(rest)
+        .update(updates)
         .eq("id", id)
-        .eq("user_id", user_id)
+        .eq("user_id", userId)
+        .select()
         .single();
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["family", vars.user_id] });
+    onSuccess: () => {
+      queryClient.invalidateQueries(["family"]);
     },
   });
 }
 export function useDeleteFamilyMember() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const userId = user?.id;
+  
   return useMutation({
-    mutationFn: async ({ id, user_id }) => {
+    mutationFn: async (id) => {
+      if (!userId) throw new Error("User not authenticated");
+      
       const { error } = await supabase
         .from("family_members")
         .delete()
         .eq("id", id)
-        .eq("user_id", user_id);
+        .eq("user_id", userId);
       if (error) throw error;
       return id;
     },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["family", vars.user_id] });
+    onSuccess: () => {
+      queryClient.invalidateQueries(["family"]);
     },
   });
 }

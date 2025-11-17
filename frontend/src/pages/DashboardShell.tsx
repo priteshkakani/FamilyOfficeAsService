@@ -1,10 +1,7 @@
-import React from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import Sidebar from "../components/dashboard/Sidebar";
+import { Outlet, useLocation } from "react-router-dom";
 import Topbar from "../components/dashboard/Topbar";
-import TopNav from "../components/TopNav";
 import SubTabs from "../components/SubTabs";
-import { useLocation } from "react-router-dom";
+import TopNav from "../components/TopNav";
 
 export default function DashboardShell() {
   const location = useLocation();
@@ -13,15 +10,23 @@ export default function DashboardShell() {
     ["overview", "portfolio", "plan", "activity", "transactions"].find((s) =>
       location.pathname.includes(s)
     ) || "overview";
+  console.log('Current section:', section, 'Path:', location.pathname);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1">
+    <div className="min-h-screen bg-gray-50 flex relative">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="sticky top-0 z-50 w-full">
           <Topbar />
-          <TopNav />
-          <SubTabs section={section} />
-          <main className="p-6">
+        </div>
+        <div className="flex-1 overflow-auto">
+          <div className="sticky top-16 z-40 w-full">
+            <TopNav />
+          </div>
+          <div className="sticky top-28 z-30 w-full">
+            <SubTabs section={section} />
+          </div>
+          <main className="p-6 relative z-0">
             <Outlet />
           </main>
         </div>

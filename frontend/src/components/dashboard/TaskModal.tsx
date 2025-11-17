@@ -1,11 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
 import { notifySuccess, notifyError } from "../../utils/toast";
-// import { useClient } from "../../hooks/useClientContext";
+import { useAuth } from "../../contexts/AuthProvider";
 
-export default function TaskModal({ open, onClose, clientId, task }) {
-  // const { selectedClient } = useClient();
-  const effectiveClient = clientId;
+interface TaskModalProps {
+  open: boolean;
+  onClose: (saved?: boolean) => void;
+  task?: {
+    id?: string;
+    title?: string;
+    type?: string;
+    priority?: string;
+    due_date?: string;
+    notes?: string;
+  } | null;
+}
+
+export default function TaskModal({ open, onClose, task = null }: TaskModalProps) {
+  const { user } = useAuth();
+  const userId = user?.id;
   const [title, setTitle] = useState(task?.title || "");
   const [type, setType] = useState(task?.type || "followup");
   const [priority, setPriority] = useState(task?.priority || "medium");
@@ -27,13 +40,13 @@ export default function TaskModal({ open, onClose, clientId, task }) {
           .from("tasks")
           .update({ title, type, priority, due_date: due, notes })
           .eq("id", task.id)
-          .eq("user_id", effectiveClient);
+          .eq("user_id", userId);
         if (error) throw error;
         notifySuccess("Task updated");
       } else {
         const { data, error } = await supabase.from("tasks").insert([
           {
-            user_id: effectiveClient,
+            user_id: userId,
             title,
             type,
             priority,

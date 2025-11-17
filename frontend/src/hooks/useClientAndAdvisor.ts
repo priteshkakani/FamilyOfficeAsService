@@ -1,5 +1,6 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { supabase } from "../supabaseClient";
+import { useAuth } from "../contexts/AuthProvider";
 import { Database } from '../../database.types';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -13,23 +14,22 @@ export interface ClientAndAdvisorData {
 
 /**
  * useClientAndAdvisor
- * Fetches client and advisor names for a given clientId.
+ * Fetches client and advisor information for the current authenticated user.
  * 
- * @param {string | undefined} clientId - The ID of the client to fetch data for
  * @returns {UseQueryResult<ClientAndAdvisorData>} Query result containing client and advisor information
  * 
  * @example
- * const { data: { clientName, advisorName } = {}, isLoading } = useClientAndAdvisor(clientId);
+ * const { data: { clientName, advisorName } = {}, isLoading } = useClientAndAdvisor();
  */
-export function useClientAndAdvisor(
-  clientId: string | undefined
-): UseQueryResult<ClientAndAdvisorData> {
+export function useClientAndAdvisor(): UseQueryResult<ClientAndAdvisorData> {
+  const { user } = useAuth();
+  const userId = user?.id;
   return useQuery<ClientAndAdvisorData, Error>({
-    queryKey: ["names", clientId],
+    queryKey: ["userProfile", userId],
     queryFn: async (): Promise<ClientAndAdvisorData> => {
-      if (!clientId) {
+      if (!userId) {
         return {
-          clientName: "Unnamed Client",
+          clientName: "Unnamed User",
           clientEmail: undefined,
           advisorName: null,
           advisorEmail: undefined,
@@ -38,26 +38,27 @@ export function useClientAndAdvisor(
 
       // Default values
       const result: ClientAndAdvisorData = {
-        clientName: "Unnamed Client",
+        clientName: "Unnamed User",
         advisorName: null,
       };
 
       try {
-        // Fetch client profile
-        const { data: clientProfile, error: clientError } = await supabase
+        // Fetch user profile
+        const { data: userProfile, error: userError } = await supabase
           .from("profiles")
           .select("full_name, email")
-          .eq("id", clientId)
-          .single();
+          .eq("id", userId)
 
-        if (clientError) {
-          console.error("Error fetching client profile:", clientError);
-          throw clientError;
+        // Handle user profile fetch error
+        if (userError) {
+          console.error("Error fetching user profile:", userError);
+          return result;
         }
 
-        if (clientProfile) {
-          result.clientName = clientProfile.full_name || result.clientName;
-          result.clientEmail = clientProfile.email;
+        // Update user info if available
+        if (userProfile) {
+          result.clientName = userProfile.full_name || "Unnamed User";
+          result.clientEmail = userProfile.email;
         }
 
         return result;
@@ -72,6 +73,6 @@ export function useClientAndAdvisor(
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     keepPreviousData: true,
-    enabled: !!clientId, // Only run the query if clientId is provided
+    enabled: !!userId, // Only run the query if user is authenticated
   });
 }

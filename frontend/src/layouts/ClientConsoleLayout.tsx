@@ -1,39 +1,45 @@
-import React from "react";
-import { Outlet, NavLink, useParams, useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import Topbar from "../components/Topbar";
+import { useAuth } from "../contexts/AuthProvider";
 
-function Tabs({ clientId }) {
+function Tabs() {
   const tabs = [
-    { key: "portfolio", label: "Portfolio", to: "portfolio" },
-    { key: "transactions", label: "Transactions", to: "transactions" },
-    { key: "assets", label: "Assets", to: "assets" },
-    { key: "liabilities", label: "Liabilities", to: "liabilities" },
-    { key: "cashflows", label: "Cash Flows", to: "cashflows" },
-    { key: "profile", label: "Profile", to: "profile" },
+    { key: "portfolio", label: "Portfolio", to: "/dashboard/portfolio" },
+    { key: "transactions", label: "Transactions", to: "/dashboard/transactions" },
+    { key: "assets", label: "Assets", to: "/dashboard/assets" },
+    { key: "liabilities", label: "Liabilities", to: "/dashboard/liabilities" },
+    { key: "cashflows", label: "Cash Flows", to: "/dashboard/cashflows" },
+    { key: "profile", label: "Profile", to: "/dashboard/profile" },
   ];
+  
+  // Get current path to determine active tab
+  const currentPath = window.location.pathname;
+  
   return (
     <div className="sticky top-16 bg-white z-20 border-b">
       <nav className="max-w-7xl mx-auto px-4">
         <ul className="flex gap-4 py-3 overflow-auto">
-          {tabs.map((t) => (
-            <li key={t.key}>
-              <NavLink
-                to={`/client/${clientId}/${t.to}`}
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded ${
+          {tabs.map((t) => {
+            const isActive = currentPath.startsWith(t.to);
+            return (
+              <li key={t.key}>
+                <NavLink
+                  to={t.to}
+                  className={`px-3 py-2 rounded ${
                     isActive
                       ? "bg-blue-600 text-white"
                       : "text-gray-700 hover:bg-blue-50"
-                  }`
-                }
-                data-testid={`tab-${t.key}`}
-              >
-                {t.label}
-              </NavLink>
-            </li>
-          ))}
+                  }`}
+                  data-testid={`tab-${t.key}`}
+                >
+                  {t.label}
+                </NavLink>
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </div>
@@ -41,26 +47,28 @@ function Tabs({ clientId }) {
 }
 
 export default function ClientConsoleLayout() {
-  const { clientId } = useParams();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const { data: profile, isLoading } = useQuery({
-    queryKey: ["client", clientId, "profile"],
+    queryKey: ["user", user?.id, "profile"],
     queryFn: async () => {
-      if (!clientId) return null;
+      if (!user?.id) return null;
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, email")
-        .eq("id", clientId)
+        .select("id, full_name, email, avatar_url")
+        .eq("id", user.id)
         .maybeSingle();
-      return data;
+      return data || { full_name: user.email?.split('@')[0], email: user.email };
     },
-    enabled: !!clientId,
+    enabled: !!user?.id,
   });
 
-  React.useEffect(() => {
-    if (!clientId) navigate("/dashboard/overview");
-  }, [clientId, navigate]);
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   return (
     <div>
@@ -74,7 +82,7 @@ export default function ClientConsoleLayout() {
           </div>
         </div>
       </header>
-      <Tabs clientId={clientId} />
+      <Tabs />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <Outlet />
       </main>

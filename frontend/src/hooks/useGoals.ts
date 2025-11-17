@@ -50,7 +50,12 @@ export function useGoals(): UseGoalsReturn {
   // Create a new goal
   const createGoal = useMutation<Goal, Error, CreateGoalInput>({
     mutationFn: async (goalData) => {
+      // Get current session with proper error handling
       const session = await getSession();
+      
+      if (!session?.user?.id) {
+        throw new Error('Authentication required');
+      }
       
       // Validate required fields
       if (!goalData.title?.trim()) {
@@ -65,17 +70,43 @@ export function useGoals(): UseGoalsReturn {
         target_year: goalData.target_year ? Number(goalData.target_year) : null,
         priority: (goalData.priority || 'medium') as GoalPriority,
         is_completed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
-      const { data, error } = await supabase
+      // Add debug logging
+      console.log('Creating goal with payload:', payload);
+      
+      const { data, error, status, statusText } = await supabase
         .from('goals')
         .insert(payload)
         .select()
         .single();
         
       if (error) {
-        console.error('Create goal error:', error);
+        console.error('Create goal error:', {
+          error,
+          status,
+          statusText,
+          payload,
+          hasUserId: !!payload.user_id,
+          userId: payload.user_id
+        });
+        
+        // Provide more specific error messages based on the error code
+        if (error.code === '42501') {
+          throw new Error('Permission denied. Please check if you have the proper permissions to create goals.');
+        } else if (error.code === '23505') { // Unique violation
+          throw new Error('A goal with this title already exists');
+        } else if (error.code === '23503') { // Foreign key violation
+          throw new Error('Invalid user reference');
+        }
+        
         throw new Error(error.message || 'Failed to create goal');
+      }
+      
+      if (!data) {
+        throw new Error('No data returned from the server');
       }
       
       return data;

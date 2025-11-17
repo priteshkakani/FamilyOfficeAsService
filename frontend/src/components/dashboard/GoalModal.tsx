@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
 import { notifySuccess, notifyError } from "../../utils/toast";
-// import { useClient } from "../../hooks/useClientContext";
+import { useAuth } from "../../contexts/AuthProvider";
 
-export default function GoalModal({ open, onClose, clientId, goal }) {
-  // const { selectedClient } = useClient();
-  const effectiveClient = clientId;
+interface GoalModalProps {
+  open: boolean;
+  onClose: (saved?: boolean) => void;
+  goal?: {
+    id?: string;
+    title?: string;
+    target_amount?: number | string;
+    target_date?: string;
+    priority?: string;
+    notes?: string;
+    status?: string;
+  } | null;
+}
+
+export default function GoalModal({ open, onClose, goal = null }: GoalModalProps) {
+  const { user } = useAuth();
+  const userId = user?.id;
   const [title, setTitle] = useState(goal?.title || "");
   const [amount, setAmount] = useState(goal?.target_amount || "");
   const [date, setDate] = useState(goal?.target_date || "");
@@ -22,39 +36,44 @@ export default function GoalModal({ open, onClose, clientId, goal }) {
   if (!open) return null;
 
   const save = async () => {
+    if (!userId) {
+      notifyError("You must be logged in to save goals");
+      return;
+    }
+    
     try {
       if (goal?.id) {
         const { data, error } = await supabase
           .from("goals")
           .update({
             title,
-            target_amount: amount,
+            target_amount: Number(amount) || 0,
             target_date: date,
             priority,
             notes,
           })
           .eq("id", goal.id)
-          .eq("user_id", effectiveClient);
+          .eq("user_id", userId);
         if (error) throw error;
         notifySuccess("Goal updated");
       } else {
         const { data, error } = await supabase.from("goals").insert([
           {
-            user_id: effectiveClient,
+            user_id: userId,
             title,
-            target_amount: amount,
+            target_amount: Number(amount) || 0,
             target_date: date,
             priority,
             notes,
+            status: "in_progress",
           },
         ]);
         if (error) throw error;
         notifySuccess("Goal created");
       }
       onClose(true);
-      window.dispatchEvent(new Event("refresh-client-data"));
-    } catch (err) {
-      console.error("[GoalModal][save]", err);
+    } catch (error) {
+      console.error("Error saving goal:", error);
       notifyError("Failed to save goal");
     }
   };

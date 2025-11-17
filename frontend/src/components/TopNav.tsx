@@ -17,9 +17,10 @@ export default function TopNav() {
 
   return (
     <nav
-      className="sticky top-0 z-40 bg-white border-b flex items-center px-2 md:px-6 py-2"
+      className="sticky top-0 z-40 bg-white border-b flex items-center px-2 md:px-6 py-2 border-2 border-red-500"
       role="tablist"
       aria-label="Dashboard Sections"
+      style={{ zIndex: 1000 }}
     >
       {SECTIONS.map((section) => (
         <button

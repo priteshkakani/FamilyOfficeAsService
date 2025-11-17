@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import formatINR from "../../utils/formatINR";
 import { notifyError, notifySuccess } from "../../utils/toast";
 import chartColors from "./chartColors";
+import { useAuth } from "../../contexts/AuthProvider";
 
 const CATEGORIES = [
   "stocks",
@@ -22,10 +23,20 @@ function normalizeCategory(cat) {
   return "others";
 }
 
+interface Asset {
+  id: string;
+  name: string;
+  category: string;
+  amount: number;
+  as_of_date: string;
+  metadata?: Record<string, any>;
+}
+
 export default function PortfolioPanel() {
-  // const { clientId } = useAdvisorClient(); // Removed for Client Mode. Use clientId from context, props, or auth.user.id
-  const [assets, setAssets] = useState([]);
-  const [alloc, setAlloc] = useState([]);
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [alloc, setAlloc] = useState<{name: string; value: number}[]>([]);
   const [netWorth, setNetWorth] = useState(0);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
@@ -37,14 +48,17 @@ export default function PortfolioPanel() {
   });
 
   useEffect(() => {
-    if (!clientId) return;
-    (async () => {
+    if (!userId) return;
+    
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const { data: assetRows } = await supabase
+        const { data: assetRows, error: assetError } = await supabase
           .from("assets")
           .select("*")
-          .eq("user_id", clientId);
+          .eq("user_id", userId);
+          
+        if (assetError) throw assetError;
         setAssets(assetRows || []);
         // Asset allocation
         const allocMap = {};
@@ -59,19 +73,24 @@ export default function PortfolioPanel() {
         })).filter((a) => a.value > 0);
         setAlloc(allocArr);
         // Net worth
-        const { data: nwRows } = await supabase
+        const { data: nwRows, error: nwError } = await supabase
           .from("vw_net_worth")
           .select("net_worth")
-          .eq("user_id", clientId)
+          .eq("user_id", userId)
           .maybeSingle();
+          
+        if (nwError) throw nwError;
         setNetWorth(nwRows?.net_worth || 0);
       } catch (err) {
-        notifyError("Failed to load portfolio");
+        console.error("Error fetching portfolio:", err);
+        notifyError("Failed to load portfolio data");
       } finally {
         setLoading(false);
       }
-    })();
-  }, [clientId]);
+    };
+    
+    fetchData();
+  }, [userId]);
 
   const handleEdit = (row) => {
     setEditingId(row.id);
@@ -83,55 +102,60 @@ export default function PortfolioPanel() {
     });
   };
 
-  const handleSave = async () => {
+  const handleSave = async (form: Omit<Asset, 'id' | 'user_id'>, editingId?: string) => {
     try {
-      if (!form.name || !form.category || !form.amount)
+      if (!form.name || !form.category || !form.amount) {
         return notifyError("All fields required");
-      if (!clientId) throw new Error("No client selected");
+      }
+      if (!userId) {
+        return notifyError("You must be logged in to save assets");
+      }
+      
       const payload = {
         ...form,
         amount: Number(form.amount),
-        user_id: clientId,
+        user_id: userId,
       };
+      
       if (editingId) {
         const { error } = await supabase
           .from("assets")
           .update(payload)
           .eq("id", editingId)
-          .eq("user_id", clientId);
+          .eq("user_id", userId);
         if (error) throw error;
         notifySuccess("Asset updated");
       } else {
-        const { error } = await supabase.from("assets").insert(payload);
+        const { error } = await supabase.from("assets").insert([payload]);
         if (error) throw error;
         notifySuccess("Asset added");
       }
       setEditingId(null);
       setForm({ name: "", category: "stocks", amount: "", as_of_date: "" });
-      // Reload
-      const { data: assetRows } = await supabase
-        .from("assets")
-        .select("*")
-        .eq("user_id", clientId);
-      setAssets(assetRows || []);
     } catch (err) {
       notifyError("Save failed");
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm("Delete this asset?")) return;
+    if (!userId) {
+      notifyError("You must be logged in to delete assets");
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from("assets")
         .delete()
         .eq("id", id)
-        .eq("user_id", clientId);
+        .eq("user_id", userId);
       if (error) throw error;
       notifySuccess("Asset deleted");
       setAssets(assets.filter((a) => a.id !== id));
     } catch (err) {
-      notifyError("Delete failed");
+      console.error("Error deleting asset:", err);
+      notifyError("Failed to delete asset");
     }
   };
 

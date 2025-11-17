@@ -11,13 +11,16 @@ import {
   Task,
   Consent
 } from "../types/client";
+import { useAuth } from "../contexts/AuthProvider";
 
 /**
  * Hook to fetch and manage client data
- * @param {string} clientId - The ID of the client to fetch data for
  * @returns {UseClientDataReturn} Client data and loading state
  */
-const useClientData = (clientId: string | undefined): UseClientDataReturn => {
+export default function useClientData() {
+  const { user } = useAuth();
+  const userId = user?.id;
+
   const [loading, setLoading] = useState<boolean>(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [views, setViews] = useState<{
@@ -34,7 +37,7 @@ const useClientData = (clientId: string | undefined): UseClientDataReturn => {
   const [consents, setConsents] = useState<Consent[]>([]);
 
   const fetchAll = useCallback(async () => {
-    if (!clientId) return;
+    if (!userId) return;
     
     setLoading(true);
     try {
@@ -47,37 +50,37 @@ const useClientData = (clientId: string | undefined): UseClientDataReturn => {
         tasksRes, 
         consentsRes
       ] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", clientId).single(),
+        supabase.from("profiles").select("*").eq("id", userId).single(),
         supabase
           .from("vw_net_worth")
           .select("*")
-          .eq("user_id", clientId)
+          .eq("user_id", userId)
           .single(),
         supabase
           .from("vw_monthly_cashflow")
           .select("*")
-          .eq("user_id", clientId)
+          .eq("user_id", userId)
           .order("month", { ascending: true })
           .limit(12),
         supabase
           .from("vw_asset_allocation")
           .select("*")
-          .eq("user_id", clientId),
+          .eq("user_id", userId),
         supabase
           .from("goals")
           .select("*")
-          .eq("user_id", clientId)
+          .eq("user_id", userId)
           .order("target_date", { ascending: true }),
         supabase
           .from("tasks")
           .select("*")
-          .eq("user_id", clientId)
+          .eq("user_id", userId)
           .order("due_date", { ascending: true })
           .limit(50),
         supabase
           .from("consents")
           .select("*")
-          .eq("user_id", clientId)
+          .eq("user_id", userId)
       ]);
 
       if (pRes.error) throw pRes.error;
@@ -97,7 +100,7 @@ const useClientData = (clientId: string | undefined): UseClientDataReturn => {
     } finally {
       setLoading(false);
     }
-  }, [clientId]);
+  }, [userId]);
 
   useEffect(() => {
     fetchAll();
@@ -124,5 +127,3 @@ const useClientData = (clientId: string | undefined): UseClientDataReturn => {
     refresh: fetchAll 
   };
 };
-
-export default useClientData;

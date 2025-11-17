@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../supabaseClient";
-import { useParams } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthProvider";
 
 function Transaction() {
-  const { clientId } = useParams();
+  const { user } = useAuth();
+  const userId = user?.id;
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -24,64 +25,70 @@ function Transaction() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["transactions", clientId],
+    queryKey: ["transactions", userId],
     queryFn: async () => {
-      // UUID v4 regex
-      const uuidRegex =
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-      if (!clientId || !uuidRegex.test(clientId)) return [];
+      if (!userId) return [];
+      
       const { data: mf, error: mfError } = await supabase
         .from("mf_transactions")
         .select("*")
-        .eq("user_id", clientId);
+        .eq("user_id", userId);
+        
       const { data: stocks, error: stocksError } = await supabase
         .from("stock_trades")
         .select("*")
-        .eq("user_id", clientId);
+        .eq("user_id", userId);
+        
       if (mfError || stocksError) throw mfError || stocksError;
       return [...(mf || []), ...(stocks || [])].sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
     },
-    enabled: !!clientId,
+    enabled: !!userId,
     staleTime: 1000 * 60 * 10,
   });
 
   // Add transaction mutation (example for MF)
-  const addMutation = useMutation({
+  const createMutation = useMutation({
     mutationFn: async (values) => {
+      if (!userId) throw new Error("User not authenticated");
+      
       const { error } = await supabase
         .from("mf_transactions")
-        .insert([{ ...values, user_id: clientId }]);
+        .insert([{ ...values, user_id: userId }]);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries(["transactions", clientId]),
+    onSuccess: () => queryClient.invalidateQueries(["transactions", userId]),
   });
 
   // Edit transaction mutation
-  const editMutation = useMutation({
+  const updateMutation = useMutation({
     mutationFn: async (values) => {
+      if (!userId) throw new Error("User not authenticated");
+      
       const { error } = await supabase
         .from("mf_transactions")
         .update(values)
         .eq("id", editId)
-        .eq("user_id", clientId);
+        .eq("user_id", userId);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries(["transactions", clientId]),
+    onSuccess: () => queryClient.invalidateQueries(["transactions", userId]),
   });
 
   // Delete transaction mutation
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
+      if (!userId) throw new Error("User not authenticated");
+      
       const { error } = await supabase
         .from("mf_transactions")
         .delete()
         .eq("id", id)
-        .eq("user_id", clientId);
+        .eq("user_id", userId);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries(["transactions", clientId]),
+    onSuccess: () => queryClient.invalidateQueries(["transactions", userId]),
   });
 
   const handleView = (tx) => {

@@ -1,34 +1,51 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthProvider";
 import FamilyPanel from "../../components/profile/FamilyPanel";
 
 function Profile() {
-  const { clientId } = useParams();
+  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
+    
     async function fetchData() {
-      setLoading(true);
-      if (!clientId) {
+      if (!user?.id) {
         setLoading(false);
         return;
       }
-      const { data: prof } = await import("../../supabaseClient").then(
-        ({ default: supabase }) =>
-          supabase.from("profiles").select("*").eq("id", clientId).maybeSingle()
-      );
-      if (mounted) {
-        setProfile(prof);
-        setLoading(false);
+      
+      setLoading(true);
+      
+      try {
+        const { default: supabase } = await import("../../supabaseClient");
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        if (mounted) {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
+    
     fetchData();
+    
     return () => {
       mounted = false;
     };
-  }, [clientId]);
+  }, [user?.id]);
 
   return (
     <div className="max-w-3xl mx-auto py-8" data-testid="panel-profile">
@@ -51,7 +68,7 @@ function Profile() {
         <div>No profile found.</div>
       )}
       {/* FamilyPanel with all new features and requirements */}
-      <FamilyPanel clientId={clientId} profileSaved={!!profile} />
+      <FamilyPanel profileSaved={!!profile} />
     </div>
   );
 }

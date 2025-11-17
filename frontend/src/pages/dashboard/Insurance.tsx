@@ -25,14 +25,17 @@ export default function Insurance() {
   const pageSize = 10;
 
   useEffect(() => {
+    // Skip if selectedClient is not available yet
+    if (!selectedClient) {
+      setLoading(false);
+      return;
+    }
+
     // UUID v4 regex
     const uuidRegex =
       /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-    if (
-      !selectedClient ||
-      typeof selectedClient !== "string" ||
-      !uuidRegex.test(selectedClient)
-    ) {
+    
+    if (typeof selectedClient !== "string" || !uuidRegex.test(selectedClient)) {
       console.error(
         "Invalid selectedClient for insurance query:",
         selectedClient

@@ -41,7 +41,6 @@ export default function DashboardShell() {
             setTaskPayload(null);
             if (saved) window.dispatchEvent(new Event("refresh-client-data"));
           }}
-          clientId={null}
           task={taskPayload}
         />
         <GoalModal
@@ -51,7 +50,6 @@ export default function DashboardShell() {
             setGoalPayload(null);
             if (saved) window.dispatchEvent(new Event("refresh-client-data"));
           }}
-          clientId={null}
           goal={goalPayload}
         />
       </div>

@@ -7,12 +7,15 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      '@': path.resolve(__dirname, './src'),
       react: path.resolve("./node_modules/react"),
       "react-dom": path.resolve("./node_modules/react-dom"),
     },
   },
   server: {
     port: 3000,
+    host: '0.0.0.0', // Listen on all network interfaces
+    strictPort: true, // Don't try other ports if 3000 is in use
     open: true,
     proxy: {
       // Proxy /api to backend (FastAPI) in development

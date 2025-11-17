@@ -1,20 +1,39 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { toast } from "react-hot-toast";
 import formatINR from "../../utils/formatINR";
 import { useClient } from "../../hooks/useClientContext";
 import useClientData from "../../hooks/useClientData";
+import { useGoals } from "../../hooks/useGoals";
 import GoalModal from "../../components/dashboard/GoalModal";
+
+interface GoalPayload {
+  id?: string;
+  title: string;
+  description?: string;
+  target_amount?: number;
+  target_date?: string;
+  priority: 'low' | 'medium' | 'high';
+  progress?: number;
+}
 
 export default function Goals() {
   const { selectedClient } = useClient();
   const userId = selectedClient;
   const { loading, goals = [], refresh } = useClientData(userId);
+  const { 
+    createGoal, 
+    updateGoal, 
+    deleteGoal 
+  } = useGoals();
+  
   const [openGoal, setOpenGoal] = React.useState(false);
-  const [goalPayload, setGoalPayload] = React.useState(null);
+  const [editingGoal, setEditingGoal] = React.useState<GoalPayload | null>(null);
   const [sortBy, setSortBy] = React.useState("upcoming");
   const [page, setPage] = React.useState(1);
   const pageSize = 6;
   const [error, setError] = React.useState("");
+  
+  const isLoading = loading || createGoal.isLoading || updateGoal.isLoading || deleteGoal.isLoading;
 
   // Sort goals
   const sortedGoals = [...goals].sort((a, b) => {
@@ -34,39 +53,73 @@ export default function Goals() {
   const pagedGoals = sortedGoals.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.ceil(sortedGoals.length / pageSize);
 
-  // Delete goal
-  const handleDelete = async (goalId) => {
+  // Handle form submission
+  const handleSubmit = useCallback(async (goalData: GoalPayload) => {
     setError("");
     try {
-      const res = await fetch(`/api/goals/${goalId}?user_id=${userId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Delete failed");
-      toast.success("Goal deleted");
-      refresh && refresh();
-    } catch (e) {
-      setError("Failed to delete goal");
+      if (editingGoal?.id) {
+        await updateGoal.mutate({
+          id: editingGoal.id,
+          updates: goalData
+        });
+        toast.success("Goal updated successfully");
+      } else {
+        await createGoal.mutate(goalData);
+        toast.success("Goal created successfully");
+      }
+      setOpenGoal(false);
+      setEditingGoal(null);
+      refresh();
+    } catch (error) {
+      console.error("Error saving goal:", error);
+      setError(error.message || "Failed to save goal");
     }
-  };
+  }, [createGoal, updateGoal, editingGoal, refresh]);
 
-  if (loading)
+  // Delete goal
+  const handleDelete = useCallback(async (goalId: string) => {
+    if (!window.confirm("Are you sure you want to delete this goal?")) return;
+    
+    setError("");
+    try {
+      await deleteGoal.mutate(goalId);
+      toast.success("Goal deleted");
+      refresh();
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      setError(error.message || "Failed to delete goal");
+    }
+  }, [deleteGoal, refresh]);
+  
+  // Open edit modal
+  const handleEdit = useCallback((goal: GoalPayload) => {
+    setEditingGoal(goal);
+    setOpenGoal(true);
+  }, []);
+
+  if (isLoading && goals.length === 0) {
     return (
-      <div data-testid="goals-loading" aria-busy="true">
-        Loading goals…
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
+  }
 
   return (
     <div data-testid="goals-page" className="p-4">
       <h2 className="text-xl font-semibold mb-4">Goals</h2>
       <div className="mb-4 flex gap-2 items-center">
         <button
-          className="px-3 py-1 bg-blue-600 text-white rounded"
-          onClick={() => setOpenGoal(true)}
+          className={`px-3 py-1 bg-blue-600 text-white rounded ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          onClick={() => {
+            setEditingGoal(null);
+            setOpenGoal(true);
+          }}
+          disabled={isLoading}
           data-testid="add-goal-btn"
           aria-label="Add goal"
         >
-          Add Goal
+          {isLoading ? 'Saving...' : 'Add Goal'}
         </button>
         <select
           value={sortBy}
@@ -197,19 +250,16 @@ export default function Goals() {
           </button>
         </div>
       )}
+      
       <GoalModal
         open={openGoal}
-        onClose={(saved) => {
+        onClose={() => {
           setOpenGoal(false);
-          setGoalPayload(null);
-          if (saved) {
-            toast.success("Goal saved");
-            refresh && refresh();
-          }
+          setEditingGoal(null);
         }}
-        clientId={userId}
-        goal={goalPayload}
-        data-testid="goal-save"
+        goal={editingGoal}
+        onSubmit={handleSubmit}
+        isSubmitting={createGoal.isLoading || updateGoal.isLoading}
       />
     </div>
   );

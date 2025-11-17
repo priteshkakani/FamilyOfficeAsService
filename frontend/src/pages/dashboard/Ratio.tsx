@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthProvider";
 import { supabase } from "../../supabaseClient";
 
-export default function RatioForm({ clientId }) {
+export default function RatioForm() {
+  const { user } = useAuth();
   const [ratios, setRatios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -14,33 +16,51 @@ export default function RatioForm({ clientId }) {
 
   useEffect(() => {
     async function load() {
+      if (!user?.id) return;
+      
       setLoading(true);
       setError("");
-      if (!clientId) return;
-      const { data, error } = await supabase
-        .from("ratios")
-        .select("*")
-        .eq("user_id", clientId)
-        .order("name", { ascending: true });
-      if (error) setError("Failed to load ratios");
-      setRatios(data || []);
-      setLoading(false);
+      
+      try {
+        const { data, error } = await supabase
+          .from("ratios")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("name", { ascending: true });
+          
+        if (error) throw error;
+        setRatios(data || []);
+      } catch (error) {
+        console.error("Error loading ratios:", error);
+        setError("Failed to load ratios");
+      } finally {
+        setLoading(false);
+      }
     }
+    
     load();
-  }, [clientId]);
+  }, [user?.id]);
 
   const handleDelete = async (id) => {
+    if (!user?.id) return;
+    
     setError("");
     const prev = ratios;
-    setRatios(ratios.filter((r) => r.id !== id));
-    const { error } = await supabase
-      .from("ratios")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", clientId);
-    if (error) {
+    
+    try {
+      setRatios(ratios.filter((r) => r.id !== id));
+      
+      const { error } = await supabase
+        .from("ratios")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting ratio:", error);
       setRatios(prev);
-      setError("Delete failed");
+      setError("Failed to delete ratio");
     }
   };
   const handleEdit = (row) => {
@@ -48,30 +68,40 @@ export default function RatioForm({ clientId }) {
     setForm({ ...row });
   };
   const handleSave = async () => {
+    if (!user?.id) return;
+    
     setError("");
-    const payload = { ...form, user_id: clientId };
+    const payload = { ...form, user_id: user.id };
     let res;
-    if (editRow) {
-      res = await supabase
-        .from("ratios")
-        .update(payload)
-        .eq("id", editRow.id)
-        .eq("user_id", clientId);
-    } else {
-      res = await supabase.from("ratios").insert([payload]);
-    }
-    if (res.error) {
-      setError("Save failed");
-    } else {
+    
+    try {
+      if (editRow) {
+        res = await supabase
+          .from("ratios")
+          .update(payload)
+          .eq("id", editRow.id)
+          .eq("user_id", user.id);
+      } else {
+        res = await supabase.from("ratios").insert([payload]);
+      }
+      
+      if (res.error) throw res.error;
+      
       setEditRow(null);
       setForm({ name: "", value: "", notes: "" });
-      // refetch
-      const { data } = await supabase
+      
+      // Refetch updated data
+      const { data, error } = await supabase
         .from("ratios")
         .select("*")
-        .eq("user_id", clientId)
+        .eq("user_id", user.id)
         .order("name", { ascending: true });
+        
+      if (error) throw error;
       setRatios(data || []);
+    } catch (error) {
+      console.error("Error saving ratio:", error);
+      setError("Failed to save ratio");
     }
   };
 
