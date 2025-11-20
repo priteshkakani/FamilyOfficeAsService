@@ -1,10 +1,8 @@
-import { useProfile } from "./contexts/ProfileContext";
-import { AdvisorClientProvider } from "./contexts/AdvisorClientContext.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-const queryClient = new QueryClient();
-import { ProfileProvider } from "./contexts/ProfileContext";
-import { AuthProvider, useAuth } from "./contexts/AuthProvider";
 import React from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthProvider";
+import { ProfileProvider, useProfile } from "./contexts/ProfileContext";
+const queryClient = new QueryClient();
 console.log("React version:", React.version);
 // Fallbacks for missing dashboard pages
 const AssetsPage = () => <Box sx={{ p: 4 }}>Assets Page (placeholder)</Box>;
@@ -18,10 +16,9 @@ const EPFOPage = () => <Box sx={{ p: 4 }}>EPFO Page (placeholder)</Box>;
 const ReportsPage = () => <Box sx={{ p: 4 }}>Reports Page (placeholder)</Box>;
 // --- RequireOnboarded: Checks if user is onboarded, redirects if not ---
 
-import { Suspense } from "react";
-import CircularProgress from "@mui/material/CircularProgress";
-import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 
 import { useNavigate } from "react-router-dom";
@@ -56,6 +53,14 @@ function RequireOnboarded({ children }) {
   return children;
 }
 
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
+import AuthForm from "./AuthForm";
 import OnboardingStepper from "./components/Onboarding/OnboardingStepper.tsx";
 import OnboardingFlow from "./pages/OnboardingFlow";
 
@@ -72,15 +77,6 @@ function OnboardingStepperGuard() {
   if (profile?.is_onboarded) return null;
   return <OnboardingStepper />;
 }
-import AuthForm from "./AuthForm";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-} from "react-router-dom";
-import IncomeExpensePage from "./pages/IncomeExpensePage";
 // EPFO Data Table Component
 function EPFODataTable({ userId }) {
   const { data, isLoading, isError, refetch } = useQuery({
@@ -555,7 +551,7 @@ function DashboardHomeTab() {
                     key={`cell-${idx}`}
                     fill={
                       ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#00C49F"][
-                        idx % 5
+                      idx % 5
                       ]
                     }
                   />
@@ -1139,13 +1135,13 @@ function ProtectedRoute({ children }) {
 
 // Main App component (restored)
 import { Toaster } from "react-hot-toast";
-import { supabase } from "./supabaseClient";
 import TestConnectionPage from "./pages/TestConnectionPage";
+import { supabase } from "./supabaseClient";
 
 // Extracted AppRoutes for testability
 export function AppRoutes() {
   // Lazy load all dashboard sub-tab pages
-  const DashboardShell = React.lazy(() => import("./pages/dashboard/DashboardShell.tsx"));
+  const DashboardShell = React.lazy(() => import("./pages/dashboard/DashboardShell"));
   // Placeholder lazy imports for sub-tab pages
   const OverviewFeeds = React.lazy(() =>
     import("./pages/dashboard/Overview.tsx")

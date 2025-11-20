@@ -1,6 +1,6 @@
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
-import MainDashboardLayout from './layouts/MainDashboardLayout';
 import { lazy, Suspense } from 'react';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
+import MainDashboardLayout from './layouts/MainDashboardLayout';
 
 // Lazy load page components
 const OverviewPage = lazy(() => import('./pages/dashboard/OverviewPage'));
@@ -23,6 +23,8 @@ const AssetsPage = lazy(() => import('./pages/dashboard/portfolio/AssetsPage'));
 const LiabilitiesPage = lazy(() => import('./pages/dashboard/portfolio/LiabilitiesPage'));
 const PortfolioInsurancePage = lazy(() => import('./pages/dashboard/portfolio/InsurancePage'));
 const AnalyticsPage = lazy(() => import('./pages/dashboard/portfolio/AnalyticsPage'));
+const NewLiabilityPage = lazy(() => import('./pages/dashboard/portfolio/NewLiabilityPage'));
+const NewInsurancePage = lazy(() => import('./pages/dashboard/portfolio/NewInsurancePage'));
 
 // Plan subtabs
 const PlanSummaryPage = lazy(() => import('./pages/dashboard/plan/SummaryPage'));
@@ -65,7 +67,7 @@ const router = createBrowserRouter([
         index: true,
         element: <Navigate to="overview" replace />,
       },
-      
+
       // Overview section with subtabs
       {
         path: 'overview',
@@ -78,7 +80,7 @@ const router = createBrowserRouter([
           { path: 'profile', element: <ProfilePage /> },
         ],
       },
-      
+
       // Portfolio section with subtabs
       {
         path: 'portfolio',
@@ -88,11 +90,13 @@ const router = createBrowserRouter([
           { path: 'summary', element: <PortfolioSummaryPage /> },
           { path: 'assets', element: <AssetsPage /> },
           { path: 'liabilities', element: <LiabilitiesPage /> },
+          { path: 'liabilities/new', element: <NewLiabilityPage /> },
           { path: 'insurance', element: <PortfolioInsurancePage /> },
+          { path: 'insurance/new', element: <NewInsurancePage /> },
           { path: 'analytics', element: <AnalyticsPage /> },
         ],
       },
-      
+
       // Plan section with subtabs
       {
         path: 'plan',
@@ -106,7 +110,7 @@ const router = createBrowserRouter([
           { path: 'goals', element: <GoalsPage /> },
         ],
       },
-      
+
       // Activity section with subtabs
       {
         path: 'activity',
@@ -117,7 +121,7 @@ const router = createBrowserRouter([
           { path: 'calculators', element: <CalculatorsPage /> },
         ],
       },
-      
+
       // Transactions section with subtabs
       {
         path: 'transactions',
@@ -129,7 +133,7 @@ const router = createBrowserRouter([
           { path: 'stocks', element: <StocksPage /> },
         ],
       },
-      
+
       // Family section (no subtabs)
       {
         path: 'family',

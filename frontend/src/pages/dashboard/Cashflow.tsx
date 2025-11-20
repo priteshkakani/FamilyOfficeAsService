@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../../contexts/AuthProvider";
-import { supabase } from "../../supabaseClient";
-import DataTable from "../../components/dashboard/DataTable";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
   BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
   Title,
   Tooltip,
-  Legend,
 } from "chart.js";
-import { Bar } from "react-chartjs-2";
 import { Trash2 } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Bar } from "react-chartjs-2";
+import { useAuth } from "../../contexts/AuthProvider";
+import { supabase } from "../../supabaseClient";
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -37,75 +36,72 @@ export default function Cashflow() {
   const [expenses, setExpenses] = useState<CashflowData[]>([]);
   const [income, setIncome] = useState<CashflowData[]>([]);
 
+  const fetchData = async () => {
+    if (!user?.id) return;
+    try {
+      setLoading(true);
+      // Fetch income data
+      const { data: incomeData, error: incomeError } = await supabase
+        .from('income')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('month', { ascending: true });
+
+      if (incomeError) throw incomeError;
+
+      // Fetch expenses data
+      const { data: expensesData, error: expensesError } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('month', { ascending: true });
+
+      if (expensesError) throw expensesError;
+
+      // Process data to match the expected format
+      const processedIncome = (incomeData || []).map((item: any) => ({
+        month: item.month,
+        income: item.amount,
+      }));
+
+      const processedExpenses = (expensesData || []).map((item: any) => ({
+        month: item.month,
+        expense: item.amount,
+        category: item.category,
+      }));
+
+      // Calculate savings if needed
+      const combinedData = processedIncome.map((inc: any) => ({
+        month: inc.month,
+        income: inc.income,
+        expense: processedExpenses.find((e) => e.month === inc.month)?.expense || 0,
+        savings: inc.income - (processedExpenses.find((e) => e.month === inc.month)?.expense || 0),
+      }));
+
+      setIncome(processedIncome);
+      setExpenses(processedExpenses);
+      setCashflowData(combinedData);
+    } catch (err) {
+      console.error('Error fetching cashflow data:', err);
+      setError('Failed to load cashflow data');
+      // Fallback to mock data in case of error
+      setExpenses([
+        { month: "Jan", expense: 25000 },
+        { month: "Feb", expense: 22000 },
+        { month: "Mar", expense: 27000 },
+      ]);
+      setIncome([
+        { month: "Jan", income: 40000 },
+        { month: "Feb", income: 42000 },
+        { month: "Mar", income: 41000 },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchCashflowData = async () => {
-      if (!user?.id) return;
-      
-      try {
-        setLoading(true);
-        
-        // Fetch income data
-        const { data: incomeData, error: incomeError } = await supabase
-          .from('income')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('month', { ascending: true });
-
-        if (incomeError) throw incomeError;
-
-        // Fetch expenses data
-        const { data: expensesData, error: expensesError } = await supabase
-          .from('expenses')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('month', { ascending: true });
-
-        if (expensesError) throw expensesError;
-
-        // Process data to match the expected format
-        const processedIncome = (incomeData || []).map(item => ({
-          month: item.month,
-          income: item.amount
-        }));
-
-        const processedExpenses = (expensesData || []).map(item => ({
-          month: item.month,
-          expense: item.amount,
-          category: item.category
-        }));
-
-        // Calculate savings if needed
-        const combinedData = processedIncome.map((inc, index) => ({
-          month: inc.month,
-          income: inc.income,
-          expense: processedExpenses[index]?.expense || 0,
-          savings: inc.income - (processedExpenses[index]?.expense || 0)
-        }));
-
-        setIncome(processedIncome);
-        setExpenses(processedExpenses);
-        setCashflowData(combinedData);
-      } catch (error) {
-        console.error('Error fetching cashflow data:', error);
-        setError('Failed to load cashflow data');
-        
-        // Fallback to mock data in case of error
-        setExpenses([
-          { month: "Jan", expense: 25000 },
-          { month: "Feb", expense: 22000 },
-          { month: "Mar", expense: 27000 },
-        ]);
-        setIncome([
-          { month: "Jan", income: 40000 },
-          { month: "Feb", income: 42000 },
-          { month: "Mar", income: 41000 },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCashflowData();
+    fetchData();
   }, [user?.id]);
 
   // CRUD handlers
@@ -117,64 +113,84 @@ export default function Cashflow() {
 
   const handleAddRecord = async () => {
     if (!newMonth || !user?.id) return;
-    
+
     try {
       setLoading(true);
-      
+
       if (newIncome) {
         const { error } = await supabase
           .from('income')
           .upsert([
-            { 
-              month: newMonth, 
+            {
+              month: newMonth,
               amount: Number(newIncome),
               user_id: user.id
             }
           ]);
-          
+
         if (error) throw error;
       }
-      
+
       if (newExpense && newExpenseCategory) {
         const { error } = await supabase
           .from('expenses')
           .upsert([
-            { 
-              month: newMonth, 
+            {
+              month: newMonth,
               amount: Number(newExpense),
               category: newExpenseCategory,
               user_id: user.id
             }
           ]);
-          
+
         if (error) throw error;
       }
-      
+
       // Refresh data
-      await fetchCashflowData();
-      
+      await fetchData();
+
       // Reset form
       setNewIncome("");
       setNewExpense("");
       setNewExpenseCategory("");
       setNewMonth("");
-      
+
     } catch (error) {
       console.error('Error adding record:', error);
       setError('Failed to add record');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteRecord = async (month: string, kind: 'income' | 'expense', category?: string) => {
+    if (!user?.id) return;
+    try {
+      setLoading(true);
+      if (kind === 'income') {
+        const { error } = await supabase
+          .from('income')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('month', month);
+        if (error) throw error;
+      } else {
+        let query = supabase
+          .from('expenses')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('month', month);
+        if (category) query = query.eq('category', category);
+        const { error } = await query;
+        if (error) throw error;
+      }
+      await fetchData();
+    } catch (err) {
+      console.error('Error deleting record:', err);
+      setError('Failed to delete record');
+    } finally {
+      setLoading(false);
     }
-    if (newExpense) {
-      setExpenses([
-        ...expenses,
-        { month: newMonth, expense: Number(newExpense) },
-      ]);
-    }
-    setNewMonth("");
-    setNewIncome("");
-    setNewExpense("");
   };
 
   const handleDeleteExpense = (idx) => {
@@ -216,7 +232,7 @@ export default function Cashflow() {
   return (
     <div className="space-y-6 p-4">
       <h2 className="text-2xl font-bold text-gray-800">Cashflow Management</h2>
-      
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg shadow">
@@ -235,7 +251,7 @@ export default function Cashflow() {
           <h3 className="text-sm font-medium text-gray-500">Net Savings</h3>
           <p className="text-2xl font-semibold text-blue-600">
             ₹{(
-              income.reduce((sum, item) => sum + (item.income || 0), 0) - 
+              income.reduce((sum, item) => sum + (item.income || 0), 0) -
               expenses.reduce((sum, item) => sum + (item.expense || 0), 0)
             ).toLocaleString()}
           </p>
@@ -418,7 +434,7 @@ export default function Cashflow() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={() => handleDeleteRecord(item.month, 'expense', item.id)}
+                        onClick={() => handleDeleteRecord(item.month, 'expense', item.category as any)}
                         className="text-red-600 hover:text-red-900"
                         title="Delete"
                       >

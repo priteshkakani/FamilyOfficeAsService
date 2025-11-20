@@ -25,10 +25,10 @@ export default function DashboardShell() {
     <ClientProvider>
       <div className="min-h-screen flex bg-gray-50">
         <Sidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col pt-16"> {/* Add padding-top to account for fixed header */}
           <Topbar />
-          <main className="p-6 lg:p-8">
-            <div data-testid="panel-right" className="min-h-[60vh]">
+          <main className="flex-1 p-6 lg:p-8">
+            <div data-testid="panel-right" className="min-h-[calc(100vh-8rem)]">
               <Outlet />
             </div>
           </main>

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../../contexts/AuthProvider";
+import { MoreVertical, Plus, Save, Trash2, X } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DataTable from "../../components/dashboard/DataTable";
+import { useAuth } from "../../contexts/AuthProvider";
 import { supabase } from "../../supabaseClient";
-import { Plus, MoreVertical, X, Save, Trash2 } from 'lucide-react';
 
 interface Liability {
   id?: string;
@@ -22,6 +23,7 @@ interface Liability {
 const Liabilities: React.FC = () => {
   const { user } = useAuth();
   const userId = user?.id;
+  const navigate = useNavigate();
   const [rows, setRows] = useState<Liability[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -40,14 +42,14 @@ const Liabilities: React.FC = () => {
     emi_date: "",
     as_of_date: "",
   });
-  
+
   const pageSize = 10;
-  
+
   // Fetch liabilities for the current user
   useEffect(() => {
     const fetchLiabilities = async () => {
       if (!userId) return;
-      
+
       setLoading(true);
       try {
         const { data, error } = await supabase
@@ -55,7 +57,7 @@ const Liabilities: React.FC = () => {
           .select('*')
           .eq('user_id', userId)
           .order('as_of_date', { ascending: false });
-          
+
         if (error) throw error;
         setRows(data || []);
       } catch (err) {
@@ -65,31 +67,31 @@ const Liabilities: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     fetchLiabilities();
   }, [userId]);
-  
+
   // Handle delete liability
   const handleDelete = async (id: string) => {
     if (!userId) {
       setError('User not authenticated');
       return;
     }
-    
+
     if (!window.confirm('Are you sure you want to delete this liability?')) {
       return;
     }
-    
+
     const prevRows = [...rows];
     try {
       setRows(prev => prev.filter(row => row.id !== id));
-      
+
       const { error } = await supabase
         .from('liabilities')
         .delete()
         .eq('id', id)
         .eq('user_id', userId);
-        
+
       if (error) throw error;
     } catch (err) {
       console.error('Error deleting liability:', err);
@@ -97,7 +99,7 @@ const Liabilities: React.FC = () => {
       setError('Failed to delete liability');
     }
   };
-  
+
   // Handle edit liability
   const handleEdit = (row: Liability) => {
     setEditRow(row);
@@ -114,17 +116,27 @@ const Liabilities: React.FC = () => {
       as_of_date: row.as_of_date || "",
     });
   };
-  
+
   // Handle save liability
   const handleSave = async () => {
     if (!userId) {
       setError('User not authenticated');
       return;
     }
-    
+
     setError('');
-    const payload = { ...form, user_id: userId };
-    
+    const payload = {
+      ...form,
+      user_id: userId,
+      total_amount: form.total_amount ? Number(form.total_amount) : null,
+      outstanding_amount: form.outstanding_amount ? Number(form.outstanding_amount) : null,
+      emi_amount: form.emi_amount ? Number(form.emi_amount) : null,
+      interest_rate: form.interest_rate ? Number(form.interest_rate) : null,
+      remaining_emis: form.remaining_emis ? Number(form.remaining_emis) : null,
+      emi_date: form.emi_date || null,
+      as_of_date: form.as_of_date || null,
+    } as any;
+
     try {
       if (editRow?.id) {
         // Update existing liability
@@ -133,26 +145,26 @@ const Liabilities: React.FC = () => {
           .update(payload)
           .eq('id', editRow.id)
           .eq('user_id', userId);
-          
+
         if (error) throw error;
       } else {
         // Create new liability
         const { error } = await supabase
           .from('liabilities')
           .insert([payload]);
-          
+
         if (error) throw error;
       }
-      
+
       // Refresh the list
       const { data, error } = await supabase
         .from('liabilities')
         .select('*')
         .eq('user_id', userId)
         .order('as_of_date', { ascending: false });
-        
+
       if (error) throw error;
-      
+
       setRows(data || []);
       setEditRow(null);
       setForm({
@@ -181,7 +193,7 @@ const Liabilities: React.FC = () => {
       [name]: value
     }));
   };
-  
+
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,20 +222,20 @@ const Liabilities: React.FC = () => {
       title: "EMI",
       render: (r: Liability) => `₹${Number(r.emi_amount || 0).toLocaleString("en-IN")}`,
     },
-    { 
-      key: "interest_rate", 
+    {
+      key: "interest_rate",
       title: "Interest Rate",
       render: (r: Liability) => r.interest_rate ? `${r.interest_rate}%` : 'N/A'
     },
     { key: "schedule", title: "Schedule" },
     { key: "remaining_emis", title: "Remaining EMIs" },
-    { 
-      key: "emi_date", 
+    {
+      key: "emi_date",
       title: "EMI Date",
       render: (r: Liability) => r.emi_date ? new Date(r.emi_date).toLocaleDateString() : 'N/A'
     },
-    { 
-      key: "as_of_date", 
+    {
+      key: "as_of_date",
       title: "As of Date",
       render: (r: Liability) => r.as_of_date ? new Date(r.as_of_date).toLocaleDateString() : 'N/A'
     },
@@ -290,21 +302,7 @@ const Liabilities: React.FC = () => {
         <h2 className="text-2xl font-semibold text-gray-800">Liabilities</h2>
         <button
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          onClick={() => {
-            setEditRow(null);
-            setForm({
-              type: "",
-              institution: "",
-              total_amount: "",
-              outstanding_amount: "",
-              emi_amount: "",
-              interest_rate: "",
-              schedule: "",
-              remaining_emis: "",
-              emi_date: "",
-              as_of_date: "",
-            });
-          }}
+          onClick={() => navigate('/dashboard/portfolio/liabilities/new')}
           data-testid="btn-add-liability"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -333,7 +331,7 @@ const Liabilities: React.FC = () => {
               rowClassName="hover:bg-gray-50 cursor-pointer"
             />
           </div>
-          
+
           {totalPages > 1 && (
             <div className="flex justify-between items-center mt-4 px-2">
               <button
@@ -368,7 +366,7 @@ const Liabilities: React.FC = () => {
               <h3 className="text-xl font-semibold text-gray-800">
                 {editRow.id ? "Edit Liability" : "Add New Liability"}
               </h3>
-              <button 
+              <button
                 onClick={() => setEditRow(null)}
                 className="text-gray-500 hover:text-gray-700"
                 aria-label="Close"
@@ -376,7 +374,7 @@ const Liabilities: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">

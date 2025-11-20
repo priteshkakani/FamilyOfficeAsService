@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { supabase } from "../supabaseClient";
-import { notifySuccess, notifyError } from "../utils/toast";
+import { useEffect, useState } from "react";
 
 export default function SettingsModal({
   open,
@@ -15,11 +13,6 @@ export default function SettingsModal({
     timezone: advisorSettings?.timezone || "Asia/Kolkata",
     currency: advisorSettings?.currency || "INR",
     theme: advisorSettings?.theme || "system",
-    emergency_months: advisorSettings?.emergency_months || 6,
-    di_ratio_limit: advisorSettings?.di_ratio_limit || 0.4,
-    term_multiplier: advisorSettings?.term_multiplier || 10,
-    health_cover_default: advisorSettings?.health_cover_default || 10,
-    auto_refresh: advisorSettings?.auto_refresh || false,
     retention_months: advisorSettings?.retention_months || 24,
   });
   useEffect(() => {
@@ -31,11 +24,6 @@ export default function SettingsModal({
         timezone: advisorSettings.timezone || "Asia/Kolkata",
         currency: advisorSettings.currency || "INR",
         theme: advisorSettings.theme || "system",
-        emergency_months: advisorSettings.emergency_months || 6,
-        di_ratio_limit: advisorSettings.di_ratio_limit || 0.4,
-        term_multiplier: advisorSettings.term_multiplier || 10,
-        health_cover_default: advisorSettings.health_cover_default || 10,
-        auto_refresh: advisorSettings.auto_refresh || false,
         retention_months: advisorSettings.retention_months || 24,
       });
     }
@@ -46,17 +34,8 @@ export default function SettingsModal({
     setFields((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
   };
 
-  const saveSettings = async () => {
-    const payload = { ...fields, updated_at: new Date().toISOString() };
-    const { error } = await supabase
-      .from("advisor_settings")
-      .upsert([payload], { onConflict: "advisor_id" });
-    if (!error) {
-      notifySuccess("Settings updated");
-      onClose();
-    } else {
-      notifyError(error.message || "Failed to update settings");
-    }
+  const saveSettings = () => {
+    onClose();
   };
 
   if (!open) return null;
@@ -143,66 +122,7 @@ export default function SettingsModal({
           </select>
         </div>
         {/* Recommendation Defaults */}
-        <div>
-          <label className="text-sm text-gray-500">Emergency Fund Months</label>
-          <input
-            name="emergency_months"
-            type="number"
-            value={fields.emergency_months}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
-        <div>
-          <label className="text-sm text-gray-500">
-            Max DI Ratio Threshold
-          </label>
-          <input
-            name="di_ratio_limit"
-            type="number"
-            step="0.01"
-            value={fields.di_ratio_limit}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
-        <div>
-          <label className="text-sm text-gray-500">
-            Term Insurance Multiplier
-          </label>
-          <input
-            name="term_multiplier"
-            type="number"
-            value={fields.term_multiplier}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
-        <div>
-          <label className="text-sm text-gray-500">
-            Health Cover Default (₹ lakhs)
-          </label>
-          <input
-            name="health_cover_default"
-            type="number"
-            value={fields.health_cover_default}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
         {/* Data & Privacy */}
-        <div>
-          <label className="text-sm text-gray-500">
-            Auto-refresh Feeds/Charts
-          </label>
-          <input
-            name="auto_refresh"
-            type="checkbox"
-            checked={fields.auto_refresh}
-            onChange={handleChange}
-            className="ml-2"
-          />
-        </div>
         <div>
           <label className="text-sm text-gray-500">
             Data Retention (months)

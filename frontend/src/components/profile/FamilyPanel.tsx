@@ -527,7 +527,7 @@ export default function FamilyPanel({ profileSaved, advisorMode = false }: Famil
         onClose={() => setShowAdd(false)}
         onSave={async (form) => {
           try {
-            await addMutation.mutateAsync({ ...form, user_id: clientId });
+            await addMutation.mutateAsync({ ...form, user_id: userId });
             setShowAdd(false);
             showToast("Family member added", "success");
             refetch();
@@ -549,7 +549,7 @@ export default function FamilyPanel({ profileSaved, advisorMode = false }: Famil
             await editMutation.mutateAsync({
               ...form,
               id: editMember.id,
-              user_id: clientId,
+              user_id: userId,
             });
             setEditMember(null);
             showToast("Family member updated", "success");
@@ -570,7 +570,7 @@ export default function FamilyPanel({ profileSaved, advisorMode = false }: Famil
           try {
             await deleteMutation.mutateAsync({
               id: deleteMember.id,
-              user_id: clientId,
+              user_id: userId,
             });
             setDeleteMember(null);
             showToast("Family member deleted", "success");

@@ -1,15 +1,14 @@
-import { useState } from "react";
 import { format } from "date-fns";
-import { toast } from "react-hot-toast";
-import { Plus, Loader2, Edit, Trash2, Users } from "lucide-react";
+import { Edit, Loader2, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useFamilyMembers } from "../../components/profile/familyHooks";
-import { Input } from "../../components/ui/input";
+import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
-import { Badge } from "../../components/ui/badge";
-import { Select, Option } from "../../components/ui/select";
+import { Input } from "../../components/ui/input";
+import { Option, Select } from "../../components/ui/select";
 import { Skeleton } from "../../components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 
 interface FamilyMember {
   id: string;
@@ -53,10 +52,10 @@ const formatDateForInput = (dateString?: string | null) => {
 
 export default function Family() {
   // Using hooks from familyHooks
-  const { 
-    members = [], 
-    isLoading, 
-    error, 
+  const {
+    members = [],
+    isLoading,
+    error,
     addMember,
     updateMember,
     deleteMember,
@@ -83,14 +82,14 @@ export default function Family() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingId) {
         await updateMember({ id: editingId, ...formData });
       } else {
         await addMember(formData);
       }
-      
+
       setIsFormOpen(false);
       setEditingId(null);
       setFormData({
@@ -304,226 +303,6 @@ export default function Family() {
           </Card>
         </div>
       )}
-    </div>
-  );
-
-  if (!userId) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-gray-500">Please sign in to view family members</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Family Members</h1>
-          <p className="text-muted-foreground">
-            Manage your family members and their details
-          </p>
-        </div>
-        <Button onClick={openAddModal} data-testid="add-family-member-btn">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Family Member
-        </Button>
-      </div>
-
-      {isMembersLoading ? (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : error ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>
-              {error.message || 'Failed to load family members'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              Retry
-            </Button>
-          </CardContent>
-        </Card>
-      ) : members.length === 0 ? (
-        <Card className="text-center p-8">
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <Users className="h-12 w-12 text-muted-foreground" />
-            <h3 className="text-lg font-medium">No family members added yet</h3>
-            <p className="text-sm text-muted-foreground">
-              Get started by adding your first family member
-            </p>
-            <Button onClick={openAddModal} className="mt-4">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Family Member
-            </Button>
-          </div>
-        </Card>
-      ) : (
-        <>
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Relationship</TableHead>
-                  <TableHead>Date of Birth</TableHead>
-                  <TableHead>Added On</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pagedMembers.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell className="font-medium">{member.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {member.relationship}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {member.date_of_birth ? formatDate(member.date_of_birth) : 'N/A'}
-                    </TableCell>
-                    <TableCell>{formatDate(member.created_at)}</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditModal(member)}
-                          aria-label="Edit"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(member.id)}
-                          aria-label="Delete"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-end space-x-2 py-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                data-testid="family-prev-page"
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                data-testid="family-next-page"
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Add/Edit Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title={editingMember ? 'Edit Family Member' : 'Add Family Member'}
-      >
-        <form onSubmit={handleFormSubmit} className="space-y-4">
-          {formError && (
-            <div className="p-3 bg-red-100 text-red-700 rounded-md mb-4 text-sm">
-              {formError}
-            </div>
-          )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name *</Label>
-            <Input
-              id="name"
-              name="name"
-              value={form.name}
-              onChange={handleFormChange}
-              placeholder="John Doe"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Select
-              label="Relationship *"
-              name="relationship"
-              value={form.relationship}
-              onChange={handleSelectChange}
-              required
-            >
-              <Option value="">Select relationship</Option>
-              {RELATIONSHIPS.map((rel) => (
-                <Option key={rel} value={rel.toLowerCase()}>
-                  {rel}
-                </Option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="date_of_birth">Date of Birth</Label>
-            <Input
-              type="date"
-              id="date_of_birth"
-              name="date_of_birth"
-              value={form.date_of_birth || ''}
-              onChange={handleFormChange}
-              max={new Date().toISOString().split('T')[0]}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowModal(false)}
-              disabled={isMutating}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isMutating}>
-              {isMutating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {editingMember ? 'Saving...' : 'Adding...'}
-                </>
-              ) : editingMember ? (
-                'Save Changes'
-              ) : (
-                'Add Member'
-              )}
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };

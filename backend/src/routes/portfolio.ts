@@ -1,7 +1,7 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { db } from '../lib/supabase';
 import { authenticateToken } from '../middleware/auth';
-import { z } from 'zod';
 
 const router = Router();
 
@@ -21,7 +21,7 @@ const assetSchema = z.object({
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     // Fetch all assets for the user
     const { data: assets, error: assetsError } = await db
       .from('assets')
@@ -41,7 +41,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const assetAllocation = assets.reduce((acc, asset) => {
       const value = asset.currentPrice * asset.quantity;
       const existing = acc.find(a => a.type === asset.type);
-      
+
       if (existing) {
         existing.value += value;
       } else {
@@ -145,14 +145,14 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     // Update asset
     const updatedFields = validation.data;
     const updatedAsset = { ...currentAsset, ...updatedFields };
-    
+
     // Recalculate derived fields if necessary
     if (updatedFields.quantity !== undefined || updatedFields.currentPrice !== undefined) {
       updatedAsset.total_value = updatedAsset.current_price * updatedAsset.quantity;
       updatedAsset.cost_basis = updatedAsset.avg_price * updatedAsset.quantity;
       updatedAsset.gain_loss = updatedAsset.total_value - updatedAsset.cost_basis;
-      updatedAsset.gain_loss_percentage = updatedAsset.cost_basis > 0 
-        ? (updatedAsset.gain_loss / updatedAsset.cost_basis) * 100 
+      updatedAsset.gain_loss_percentage = updatedAsset.cost_basis > 0
+        ? (updatedAsset.gain_loss / updatedAsset.cost_basis) * 100
         : 0;
     }
 
@@ -201,7 +201,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 router.post('/refresh-prices', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     // Get all user's assets
     const { data: assets, error: fetchError } = await db
       .from('assets')
@@ -219,8 +219,8 @@ router.post('/refresh-prices', authenticateToken, async (req, res) => {
         const currentPrice = asset.current_price * (1 + priceChange);
         const totalValue = currentPrice * asset.quantity;
         const gainLoss = totalValue - asset.cost_basis;
-        const gainLossPercentage = asset.cost_basis > 0 
-          ? (gainLoss / asset.cost_basis) * 100 
+        const gainLossPercentage = asset.cost_basis > 0
+          ? (gainLoss / asset.cost_basis) * 100
           : 0;
 
         const { data: updatedAsset, error } = await db
@@ -260,6 +260,30 @@ router.post('/refresh-prices', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error refreshing prices:', error);
     res.status(500).json({ error: 'Failed to refresh prices' });
+  }
+});
+
+// Bulk delete assets by name (case-insensitive)
+router.delete('/purge-by-name', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const raw = (req.query.name || (req.body && (req.body as any).name) || 'Reliance Industries');
+    const name = typeof raw === 'string' ? raw.trim() : String(raw);
+    if (!name) return res.status(400).json({ error: 'name is required' });
+
+    // Return deleted rows to count them
+    const { data: deleted, error } = await db
+      .from('assets')
+      .delete()
+      .eq('user_id', userId)
+      .ilike('name', name)
+      .select('id');
+
+    if (error) throw error;
+    res.json({ deletedCount: deleted?.length || 0, name });
+  } catch (error) {
+    console.error('Error purging assets by name:', error);
+    res.status(500).json({ error: 'Failed to purge assets by name' });
   }
 });
 

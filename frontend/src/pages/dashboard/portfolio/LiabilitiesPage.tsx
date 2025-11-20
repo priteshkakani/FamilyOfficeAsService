@@ -1,14 +1,16 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
 export default function LiabilitiesPage() {
+  const navigate = useNavigate();
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Liabilities</h1>
-        <Button>Add Liability</Button>
+        <Button onClick={() => navigate('/dashboard/portfolio/liabilities/new')}>Add Liability</Button>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Your Liabilities</CardTitle>
@@ -37,7 +39,7 @@ export default function LiabilitiesPage() {
                 <Button variant="outline" size="sm">View</Button>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-5 p-4 border rounded-lg items-center">
               <div>
                 <p className="font-medium">Auto Loan</p>

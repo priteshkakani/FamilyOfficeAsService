@@ -80,14 +80,14 @@ export const useFamilyMembers = (options: UseFamilyMembersOptions = {}) => {
 
     try {
       console.log('Adding family member:', data);
+      const insertPayload: Partial<FamilyMember> & { user_id: string } = {
+        name: data.name,
+        relationship: data.relationship,
+        user_id: userId,
+      };
       const { data: newMember, error } = await supabase
         .from('family_members')
-        .insert([{
-          ...data,
-          user_id: userId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
+        .insert([insertPayload])
         .select()
         .single();
 
@@ -115,12 +115,13 @@ export const useFamilyMembers = (options: UseFamilyMembersOptions = {}) => {
 
     try {
       console.log('Updating family member:', data);
+      const updatePayload: Partial<FamilyMember> = {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.relationship !== undefined ? { relationship: data.relationship } : {}),
+      };
       const { data: updatedMember, error } = await supabase
         .from('family_members')
-        .update({
-          ...data,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('id', data.id)
         .eq('user_id', userId)
         .select()

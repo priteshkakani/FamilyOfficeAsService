@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthProvider';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Loader2, MoreHorizontal, Calendar as CalendarIcon } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { supabase } from '../../lib/supabase';
+import { Loader2, MoreHorizontal, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthProvider';
+import { useTableColumns } from '../../hooks/useTableColumns';
+import { supabase } from '../../supabaseClient';
 
 // Types
 type Asset = {
@@ -24,11 +25,7 @@ type SupabaseAsset = Omit<Asset, 'id' | 'created_at' | 'updated_at'> & {
   updated_at?: string;
 };
 
-type TableColumn = {
-  column_name: string;
-  data_type: string;
-  is_nullable: string;
-};
+// TableColumn type is now imported from the useTableColumns hook
 
 // Components
 const SkeletonRow = () => (
@@ -53,7 +50,7 @@ const SkeletonRow = () => (
 
 const AssetRow = ({ asset, onEdit, onDelete }: { asset: Asset; onEdit: (asset: Asset) => void; onDelete: (id: string) => void }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+
   return (
     <tr key={asset.id} className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap">
@@ -87,7 +84,7 @@ const AssetRow = ({ asset, onEdit, onDelete }: { asset: Asset; onEdit: (asset: A
           >
             <MoreHorizontal className="h-5 w-5" />
           </button>
-          
+
           {isMenuOpen && (
             <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
               <div className="py-1" role="menu" aria-orientation="vertical">
@@ -124,6 +121,7 @@ const AssetRow = ({ asset, onEdit, onDelete }: { asset: Asset; onEdit: (asset: A
 function Portfolio() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { columns: tableColumns, loading: loadingColumns } = useTableColumns('assets');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
 
@@ -132,43 +130,33 @@ function Portfolio() {
     queryKey: ['assets', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
+
       // First, get the table structure using a direct query
-      const { data: tableColumns, error: columnsError } = await supabase
-        .from('information_schema.columns')
-        .select('column_name')
-        .eq('table_name', 'assets');
-      
-      if (columnsError) {
-        console.error('Error fetching table columns:', columnsError);
-        throw columnsError;
-      }
-      
       const columnNames = tableColumns?.map(col => col.column_name) || [];
-      
+
       // Build the select columns dynamically based on what exists
       const columns = ['id', 'name', 'category', 'amount', 'as_of_date', 'user_id']
         .filter(col => columnNames.includes(col));
-      
+
       // Only include created_at and updated_at if they exist
       if (columnNames.includes('created_at')) columns.push('created_at');
       if (columnNames.includes('updated_at')) columns.push('updated_at');
       if (columnNames.includes('metadata')) columns.push('metadata');
-      
+
       // Execute the query with only existing columns
       const { data, error: fetchError } = await supabase
         .from('assets')
         .select(columns.join(', '))
         .eq('user_id', user.id)
         .order('as_of_date', { ascending: false });
-        
+
       if (fetchError) {
         console.error('Error fetching assets:', fetchError);
         throw fetchError;
       }
-      
+
       if (!data) return [];
-      
+
       // Ensure all required fields have default values and proper types
       return data.map((asset: any) => ({
         id: String(asset.id || ''),
@@ -190,25 +178,25 @@ function Portfolio() {
     mutationFn: async (asset: Omit<Asset, 'id' | 'created_at' | 'updated_at'>) => {
       // Only include the fields that exist in the database
       const { metadata, ...dbFields } = asset;
-      const dataToInsert: Record<string, any> = { 
+      const dataToInsert: Record<string, any> = {
         name: dbFields.name,
         category: dbFields.category,
         amount: dbFields.amount,
         as_of_date: dbFields.as_of_date,
         user_id: dbFields.user_id
       };
-      
+
       // Only include metadata if it exists and has values
       if (metadata && Object.keys(metadata).length > 0) {
         dataToInsert.metadata = metadata;
       }
-      
+
       const { data, error } = await supabase
         .from('assets')
         .insert(dataToInsert)
         .select()
         .single();
-      
+
       if (error) throw error;
       return { ...data, metadata: data.metadata || {} };
     },
@@ -229,19 +217,19 @@ function Portfolio() {
         amount: dbFields.amount,
         as_of_date: dbFields.as_of_date
       };
-      
+
       // Only include metadata if it exists and has values
       if (metadata && Object.keys(metadata).length > 0) {
         dataToUpdate.metadata = metadata;
       }
-      
+
       const { data, error } = await supabase
         .from('assets')
         .update(dataToUpdate)
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return { ...data, metadata: data.metadata || {} };
     },
@@ -259,7 +247,7 @@ function Portfolio() {
         .from('assets')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -269,7 +257,7 @@ function Portfolio() {
 
   const handleSubmit = async (data: Omit<Asset, 'id' | 'created_at' | 'updated_at'>) => {
     if (!user) return;
-    
+
     // Create a properly typed asset data object
     const assetData: SupabaseAsset = {
       name: String(data.name || ''),
@@ -300,7 +288,7 @@ function Portfolio() {
 
   const totalValue = assets.reduce((sum, asset) => sum + asset.amount, 0);
   // Get the most recent date, either from updated_at or as_of_date
-  const lastUpdated = assets.length > 0 
+  const lastUpdated = assets.length > 0
     ? (assets[0].updated_at || assets[0].as_of_date || new Date().toISOString())
     : new Date().toISOString();
 
@@ -316,7 +304,7 @@ function Portfolio() {
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Assets</h2>
               <p className="mt-1 text-sm text-gray-500">
-                {assets.length} {assets.length === 1 ? 'asset' : 'assets'} • 
+                {assets.length} {assets.length === 1 ? 'asset' : 'assets'} •
                 Last updated: {format(lastUpdated, 'dd MMM yyyy, hh:mm a')}
               </p>
             </div>
@@ -335,7 +323,7 @@ function Portfolio() {
               </button>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             <div className="inline-block min-w-full align-middle">
               <div className="overflow-hidden border-b border-gray-200 sm:rounded-lg">
